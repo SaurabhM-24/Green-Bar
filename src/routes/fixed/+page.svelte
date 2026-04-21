@@ -28,12 +28,15 @@
 			// 1. Fetch Budgets
 			const { data: budgetData } = await supabase
 				.from('budgets')
-				.select('*')
-				.in('budget_type', ['corpus', 'fixed']);
+				.select('*');
 
+			let totalMonthlyLimits = 0;
 			if (budgetData) {
 				corpusBudgets = budgetData.filter((b) => b.budget_type === 'corpus');
 				fixedBudgets = budgetData.filter((b) => b.budget_type === 'fixed');
+				budgetData.forEach((b) => {
+					totalMonthlyLimits += Number(b.monthly_limit || 0);
+				});
 			}
 
 			// 2. Fetch Transactions for the checklist
@@ -65,22 +68,27 @@
 			// 3. Global All Time Sum query for Personal Corpus
 			const { data: allHistory } = await supabase
 				.from('transactions')
-				.select('amount, transaction_type, transaction_date');
+				.select('amount, transaction_type, transaction_date, category');
 			
-			let liquid = 0;
+			let liquidTillLastMonth = 0;
 			let monthCorpusDebits = 0;
 			if (allHistory) {
 				allHistory.forEach(tx => {
 					const val = Math.abs(Number(tx.amount));
-					if (tx.transaction_type.toLowerCase() === 'credit') liquid += val;
-					else liquid -= val;
+					
+					if (tx.transaction_date < startDate) {
+						if (tx.transaction_type.toLowerCase() === 'credit') liquidTillLastMonth += val;
+						else liquidTillLastMonth -= val;
+					}
 					
 					if (tx.transaction_type.toLowerCase() === 'debit' && tx.transaction_date >= startDate && tx.transaction_date <= endDate) {
-						monthCorpusDebits += val;
+						if (tx.category && tx.category.toLowerCase() === 'personal corpus') {
+							monthCorpusDebits += val;
+						}
 					}
 				});
 			}
-			globalLiquidBalance = liquid;
+			globalLiquidBalance = liquidTillLastMonth - totalMonthlyLimits;
 			currentMonthCorpusUsed = monthCorpusDebits;
 
 			loading = false;
