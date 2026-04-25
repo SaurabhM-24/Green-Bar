@@ -22,6 +22,7 @@
 	let successMsg = $state(false);
 
 	// Dynamic categories fetched from DB
+	/** @type {any[]} */
 	let categories = $state([]);
 
 	$effect(() => {

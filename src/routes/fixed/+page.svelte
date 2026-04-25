@@ -5,14 +5,20 @@
 	import FixedItem from '$lib/components/FixedItem.svelte';
 
 	let loading = $state(true);
+	/** @type {any[]} */
 	let corpusBudgets = $state([]);
+	/** @type {any[]} */
 	let fixedBudgets = $state([]);
 	let transactionCategories = $state(new Set());
-	
+
 	let globalLiquidBalance = $state(0);
 	let currentMonthCorpusUsed = $state(0);
 
 	$effect(() => {
+		/**
+		 * @param {number} m
+		 * @param {number} y
+		 */
 		async function loadData(m, y) {
 			loading = true;
 			const startDate = `${y}-${String(m).padStart(2, '0')}-01`;
@@ -26,9 +32,7 @@
 			const prevMonthStart = `${prevY}-${String(prevM).padStart(2, '0')}-01`;
 
 			// 1. Fetch Budgets
-			const { data: budgetData } = await supabase
-				.from('budgets')
-				.select('*');
+			const { data: budgetData } = await supabase.from('budgets').select('*');
 
 			let totalMonthlyLimits = 0;
 			if (budgetData) {
@@ -69,27 +73,32 @@
 			const { data: allHistory } = await supabase
 				.from('transactions')
 				.select('amount, transaction_type, transaction_date, category');
-			
+
 			let liquidTillLastMonth = 0;
-			let monthCorpusDebits = 0;
+			let monthCorpusSum = 0;
 			if (allHistory) {
-				allHistory.forEach(tx => {
+				allHistory.forEach((tx) => {
 					const val = Math.abs(Number(tx.amount));
-					
+
 					if (tx.transaction_date < startDate) {
 						if (tx.transaction_type.toLowerCase() === 'credit') liquidTillLastMonth += val;
 						else liquidTillLastMonth -= val;
 					}
-					
-					if (tx.transaction_type.toLowerCase() === 'debit' && tx.transaction_date >= startDate && tx.transaction_date <= endDate) {
-						if (tx.category && tx.category.toLowerCase() === 'personal corpus') {
-							monthCorpusDebits += val;
-						}
+
+					if (
+						tx.transaction_date >= startDate &&
+						tx.transaction_date <= endDate &&
+						tx.category &&
+						tx.category.toLowerCase() === 'personal corpus'
+					) {
+						if (tx.transaction_type.toLowerCase() === 'credit') monthCorpusSum += val;
+						else monthCorpusSum -= val;
 					}
 				});
 			}
 			globalLiquidBalance = liquidTillLastMonth - totalMonthlyLimits;
-			currentMonthCorpusUsed = monthCorpusDebits;
+			// Pass raw negative state downstream. UI will invert it to represent 'used' spent tally.
+			currentMonthCorpusUsed = monthCorpusSum;
 
 			loading = false;
 		}
@@ -113,8 +122,8 @@
 					<CorpusCard
 						title={b.category}
 						lockedData={Number(b.monthly_limit || 0)}
-						leftData={globalLiquidBalance - Number(b.monthly_limit || 0)}
-						usedData={currentMonthCorpusUsed}
+						leftData={globalLiquidBalance + currentMonthCorpusUsed}
+						usedData={-currentMonthCorpusUsed}
 					/>
 				{/each}
 			</div>

@@ -4,10 +4,16 @@
 	import CategoryCard from '$lib/components/CategoryCard.svelte';
 
 	let loading = $state(true);
+	/** @type {any[]} */
 	let budgets = $state([]);
+	/** @type {Record<string, number>} */
 	let categoryTotals = $state({});
 
 	$effect(() => {
+		/**
+		 * @param {number} m
+		 * @param {number} y
+		 */
 		async function loadData(m, y) {
 			loading = true;
 			const startDate = `${y}-${String(m).padStart(2, '0')}-01`;
@@ -27,15 +33,14 @@
 				.from('transactions')
 				.select('category, amount, transaction_type')
 				.gte('transaction_date', startDate)
-				.lte('transaction_date', endDate)
-				.eq('transaction_type', 'debit');
+				.lte('transaction_date', endDate);
 
-			// Calculate sums
+			/** @type {Record<string, number>} */
 			const totals = {};
 			if (txData) {
 				txData.forEach((tx) => {
 					if (tx.category) {
-						totals[tx.category] = (totals[tx.category] || 0) + Math.abs(Number(tx.amount));
+						totals[tx.category] = (totals[tx.category] || 0) - Number(tx.amount);
 					}
 				});
 			}

@@ -5,12 +5,12 @@
 	// leftData is the current exact balance left. usedData is what we spent this month.
 	// Therefore, at the start of the month, we had (leftData + usedData) expendable cash.
 	let maxExpendableThisMonth = $derived(leftData + usedData);
-	
+
 	// Visual total scale = locked base + what we started the month with.
 	let visualTotal = $derived(lockedData + maxExpendableThisMonth);
 
 	let lockedProgress = $derived(visualTotal > 0 ? (lockedData / visualTotal) * 100 : 0);
-	
+
 	// The leftProgress will shrink mathematically as usedData increases (which inherently drops leftData)
 	let leftProgress = $derived(visualTotal > 0 ? (leftData / visualTotal) * 100 : 0);
 </script>

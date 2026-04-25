@@ -8,6 +8,7 @@
 	let errorMsg = $state('');
 	let loading = $state(false);
 
+	/** @param {Event} e */
 	async function handleLogin(e) {
 		e.preventDefault();
 		loading = true;

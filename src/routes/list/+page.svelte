@@ -7,13 +7,20 @@
 	import { ChevronDown } from 'lucide-svelte';
 
 	let loading = $state(true);
+	/** @type {any[]} */
 	let transactions = $state([]);
+	/** @type {any[]} */
 	let categories = $state([]);
 
 	// Read initial category from URL param if available, otherwise just "All"
 	let selectedCategory = $state($page.url.searchParams.get('category') || 'All');
 
 	$effect(() => {
+		/**
+		 * @param {number} m
+		 * @param {number} y
+		 * @param {string} [cat]
+		 */
 		async function loadData(m, y, cat) {
 			loading = true;
 			const startDate = `${y}-${String(m).padStart(2, '0')}-01`;
@@ -48,8 +55,9 @@
 		loadData(appState.month, appState.year, selectedCategory);
 	});
 
+	/** @param {Event & { currentTarget: HTMLSelectElement }} e */
 	function handleCategoryChange(e) {
-		selectedCategory = e.target.value;
+		selectedCategory = e.currentTarget.value;
 	}
 </script>
 

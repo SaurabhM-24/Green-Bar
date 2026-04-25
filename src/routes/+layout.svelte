@@ -9,6 +9,7 @@
 
 	let { children } = $props();
 
+	/** @type {import('@supabase/supabase-js').Session | null} */
 	let session = $state(null);
 	let loading = $state(true);
 

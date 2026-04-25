@@ -2,7 +2,9 @@
 	let { title, totalData, usedData } = $props();
 
 	// Avoid division by zero, reverse logic so bar shrinks as it is used
-	let progress = $derived(totalData > 0 ? Math.max(((totalData - usedData) / totalData) * 100, 0) : 0);
+	let progress = $derived(
+		totalData > 0 ? Math.max(((totalData - usedData) / totalData) * 100, 0) : 0
+	);
 	let amountLeft = $derived(totalData - usedData);
 </script>
 
