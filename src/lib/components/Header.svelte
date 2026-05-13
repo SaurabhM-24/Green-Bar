@@ -18,7 +18,7 @@
 </script>
 
 <header
-	class="fixed top-0 w-full h-[88px] bg-[#0a0a0a]/90 backdrop-blur-2xl border-b border-gray-900 flex items-center justify-between px-8 z-50"
+	class="fixed top-6 left-4 right-4 h-[80px] bg-[#0a0a0a]/90 backdrop-blur-2xl border border-gray-900 rounded-3xl flex items-center justify-between px-6 z-50 shadow-2xl"
 >
 	<div class="flex items-center gap-3">
 		<h2 class="text-2xl font-light tracking-wide text-white">
@@ -44,7 +44,7 @@
 
 	<!-- Modal -->
 	<div
-		class="fixed top-24 right-4 w-64 bg-[#111111] border border-gray-800 rounded-3xl p-5 shadow-2xl z-[70] transform transition-all"
+		class="fixed top-32 right-4 w-64 bg-[#111111] border border-gray-800 rounded-3xl p-5 shadow-2xl z-[70] transform transition-all"
 	>
 		<div class="flex items-center justify-between mb-4">
 			<button

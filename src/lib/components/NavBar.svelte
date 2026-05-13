@@ -13,7 +13,7 @@
 </script>
 
 <nav
-	class="fixed bottom-0 w-full h-[104px] bg-[#0a0a0a]/90 backdrop-blur-3xl border-t border-gray-900 flex justify-around items-center pb-safe box-border z-50 px-2"
+	class="fixed bottom-6 left-4 right-4 h-[88px] bg-[#0a0a0a]/90 backdrop-blur-3xl border border-gray-900 rounded-3xl flex justify-around items-center z-50 px-2 shadow-2xl"
 >
 	{#each links as link}
 		<a

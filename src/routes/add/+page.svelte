@@ -85,7 +85,7 @@
 	}
 </script>
 
-<div class="px-4 pt-4 pb-20 relative min-h-full">
+<div class="px-4 pt-6 pb-20 relative min-h-full">
 	{#if successMsg}
 		<div
 			class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/90 backdrop-blur-md rounded-3xl animate-in fade-in zoom-in duration-300"
@@ -214,7 +214,6 @@
 	<div class="mt-14 flex flex-col items-center">
 		<p class="text-[10px] uppercase tracking-widest text-gray-600 mb-3">Slide to Confirm</p>
 		<div class="relative w-full h-16 flex items-center justify-center">
-			
 			<!-- Track container -->
 			<div
 				class="absolute inset-x-0 h-14 bg-[#0a0a0a] border border-gray-900 rounded-full overflow-hidden shadow-inner flex items-center justify-center"

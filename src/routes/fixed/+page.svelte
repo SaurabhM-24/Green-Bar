@@ -107,7 +107,7 @@
 	});
 </script>
 
-<div class="px-2 pt-2 pb-6">
+<div class="px-2 pt-6 pb-6">
 	{#if loading}
 		<div class="flex justify-center mt-12">
 			<div

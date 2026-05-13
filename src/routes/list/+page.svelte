@@ -61,10 +61,10 @@
 	}
 </script>
 
-<div class="px-2 pt-2 pb-6">
+<div class="px-2 pt-6 pb-6">
 	<!-- Filter Header -->
 	<div class="mb-6 flex items-center justify-between pl-2 pr-2">
-		<h1 class="text-3xl font-light tracking-wide text-white">History</h1>
+		<h1 class="text-2xl font-light tracking-wide text-white">History</h1>
 
 		<div class="relative">
 			<select
