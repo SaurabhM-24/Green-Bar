@@ -7,7 +7,8 @@
 		FileText,
 		Tags,
 		SortDesc,
-		CheckCircle2
+		CheckCircle2,
+		ChevronRight
 	} from 'lucide-svelte';
 
 	// Form bindings
@@ -212,25 +213,29 @@
 	<!-- Slider Friction -->
 	<div class="mt-14 flex flex-col items-center">
 		<p class="text-[10px] uppercase tracking-widest text-gray-600 mb-3">Slide to Confirm</p>
-		<div
-			class="relative w-full h-14 bg-[#0a0a0a] border border-gray-900 rounded-full overflow-hidden shadow-inner flex items-center justify-center"
-		>
-			<!-- Background text -->
-			<span
-				class="absolute text-gray-600 font-medium tracking-widest uppercase text-sm pointer-events-none flex items-center gap-2"
-			>
-				{#if loading}
-					Processing...
-				{:else}
-					Slide >>>
-				{/if}
-			</span>
-
-			<!-- Fill progress -->
+		<div class="relative w-full h-16 flex items-center justify-center">
+			
+			<!-- Track container -->
 			<div
-				class="absolute top-0 left-0 h-full bg-white/20 backdrop-blur-md pointer-events-none"
-				style="width: {slideValue}%"
-			></div>
+				class="absolute inset-x-0 h-14 bg-[#0a0a0a] border border-gray-900 rounded-full overflow-hidden shadow-inner flex items-center justify-center"
+			>
+				<!-- Background text -->
+				<span
+					class="absolute text-gray-600 font-medium tracking-widest uppercase text-sm pointer-events-none flex items-center gap-2 z-0"
+				>
+					{#if loading}
+						Processing...
+					{:else}
+						Slide >>>
+					{/if}
+				</span>
+
+				<!-- Fill progress -->
+				<div
+					class="absolute top-0 left-0 h-full bg-white/20 backdrop-blur-md pointer-events-none z-0"
+					style="width: calc(2rem + (100% - 4rem) * ({slideValue} / 100));"
+				></div>
+			</div>
 
 			<!-- The invisible slider -->
 			<input
@@ -240,15 +245,43 @@
 				bind:value={slideValue}
 				ontouchend={handleSlideEnd}
 				onmouseup={handleSlideEnd}
-				class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+				class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20 custom-slider touch-none"
 				disabled={loading}
 			/>
 
 			<!-- Visual thumb that moves with the slider -->
 			<div
-				class="absolute top-1 bottom-1 w-12 bg-white rounded-full shadow-lg pointer-events-none transition-none flex items-center justify-center transform -translate-x-1/2"
-				style="left: calc({slideValue}% * 0.82 + 8%)"
-			></div>
+				class="absolute w-16 h-16 bg-white rounded-full shadow-lg pointer-events-none transition-none flex items-center justify-center transform -translate-x-1/2 z-10"
+				style="left: calc(2rem + (100% - 4rem) * ({slideValue} / 100));"
+			>
+				<ChevronRight class="w-6 h-6 text-gray-800" />
+			</div>
 		</div>
 	</div>
 </div>
+
+<style>
+	/* Make the native thumb same size as visual thumb so their centers align perfectly */
+	.custom-slider {
+		-webkit-appearance: none;
+		appearance: none;
+		background: transparent;
+	}
+	.custom-slider::-webkit-slider-thumb {
+		-webkit-appearance: none;
+		appearance: none;
+		width: 4rem;
+		height: 4rem;
+		border-radius: 50%;
+		background: transparent;
+		cursor: pointer;
+	}
+	.custom-slider::-moz-range-thumb {
+		width: 4rem;
+		height: 4rem;
+		border-radius: 50%;
+		background: transparent;
+		cursor: pointer;
+		border: none;
+	}
+</style>
