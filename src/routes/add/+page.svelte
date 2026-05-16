@@ -8,7 +8,8 @@
 		Tags,
 		SortDesc,
 		CheckCircle2,
-		ChevronRight
+		ChevronRight,
+		ChevronDown
 	} from 'lucide-svelte';
 
 	// Form bindings
@@ -83,9 +84,29 @@
 	function handleSlideEnd() {
 		if (slideValue < 100) slideValue = 0;
 	}
+
+	let isCategoryDropdownOpen = $state(false);
+	function toggleCategoryDropdown() {
+		isCategoryDropdownOpen = !isCategoryDropdownOpen;
+	}
+	/** @param {string} cat */
+	function selectCategory(cat) {
+		category = cat;
+		isCategoryDropdownOpen = false;
+	}
+
+	let isTypeDropdownOpen = $state(false);
+	function toggleTypeDropdown() {
+		isTypeDropdownOpen = !isTypeDropdownOpen;
+	}
+	/** @param {string} t */
+	function selectType(t) {
+		type = t;
+		isTypeDropdownOpen = false;
+	}
 </script>
 
-<div class="px-4 pt-6 pb-20 relative min-h-full">
+<div class="px-6 pt-16 pb-32 relative min-h-full">
 	{#if successMsg}
 		<div
 			class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/90 backdrop-blur-md rounded-3xl animate-in fade-in zoom-in duration-300"
@@ -96,14 +117,13 @@
 		</div>
 	{/if}
 
-	<h1 class="text-2xl font-light tracking-wide text-white mb-8 pl-1">New Transaction</h1>
+	<h1 class="text-3xl tracking-wide text-white mb-10 px-2">New Transaction</h1>
 
-	<div class="space-y-5">
+	<div class="space-y-7">
 		<!-- Date -->
 		<div>
-			<label
-				for="date"
-				class="block text-[10px] uppercase tracking-widest text-gray-500 mb-1.5 pl-1">Date</label
+			<label for="date" class="block text-xs uppercase tracking-wider text-gray-500 mb-1.5 pl-1"
+				>Date</label
 			>
 			<div class="relative">
 				<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -113,16 +133,15 @@
 					id="date"
 					type="date"
 					bind:value={date}
-					class="w-full bg-[#111111] border border-gray-900 rounded-3xl pl-11 pr-4 py-4 text-base text-gray-200 focus:outline-none focus:border-gray-600 font-light"
+					class="w-full bg-[#111111] rounded-3xl pl-11 pr-4 py-5 text-base tracking-wide text-gray-200 focus:outline-none focus:border-gray-600 box-3d"
 				/>
 			</div>
 		</div>
 
 		<!-- Amount -->
 		<div>
-			<label
-				for="amount"
-				class="block text-[10px] uppercase tracking-widest text-gray-500 mb-1.5 pl-1">Amount</label
+			<label for="amount" class="block text-xs uppercase tracking-wider text-gray-500 mb-1.5 pl-1"
+				>Amount</label
 			>
 			<div class="relative">
 				<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -134,16 +153,15 @@
 					bind:value={amount}
 					placeholder="0.00"
 					step="0.01"
-					class="w-full bg-[#111111] border border-gray-900 rounded-3xl pl-11 pr-4 py-4 text-base text-white placeholder-gray-700 focus:outline-none focus:border-gray-600 font-medium text-lg"
+					class="w-full bg-[#111111] rounded-3xl pl-11 pr-4 py-5 text-lg tracking-wide text-white placeholder-gray-700 focus:outline-none box-3d"
 				/>
 			</div>
 		</div>
 
 		<!-- Details -->
 		<div>
-			<label
-				for="details"
-				class="block text-[10px] uppercase tracking-widest text-gray-500 mb-1.5 pl-1">Details</label
+			<label for="details" class="block text-xs uppercase tracking-wider text-gray-500 mb-1.5 pl-1"
+				>Details</label
 			>
 			<div class="relative">
 				<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -154,69 +172,108 @@
 					type="text"
 					bind:value={details}
 					placeholder="What was this for?"
-					class="w-full bg-[#111111] border border-gray-900 rounded-3xl pl-11 pr-4 py-4 text-base text-gray-200 placeholder-gray-700 focus:outline-none focus:border-gray-600 font-light"
+					class="w-full bg-[#111111] rounded-3xl pl-11 pr-4 py-5 text-base tracking-wide text-gray-200 placeholder-gray-700 focus:outline-none box-3d"
 				/>
 			</div>
 		</div>
 
 		<div class="grid grid-cols-2 gap-4">
 			<!-- Category -->
-			<div>
+			<div class="relative z-50">
 				<label
 					for="category"
-					class="block text-[10px] uppercase tracking-widest text-gray-500 mb-1.5 pl-1"
-					>Category</label
+					class="block text-xs uppercase tracking-wider text-gray-500 mb-1.5 pl-1">Category</label
 				>
-				<div class="relative">
+				<button
+					id="category"
+					class="w-full bg-[#111111] rounded-3xl pl-10 pr-4 py-5 text-sm tracking-wide {category
+						? 'text-gray-200'
+						: 'text-gray-500'} focus:outline-none box-3d flex items-center justify-between"
+					onclick={toggleCategoryDropdown}
+				>
 					<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
 						<Tags class="h-4 w-4 text-gray-600" />
 					</div>
-					<select
-						id="category"
-						bind:value={category}
-						class="w-full bg-[#111111] border border-gray-900 rounded-3xl pl-10 pr-2 py-4 text-base text-gray-200 focus:outline-none focus:border-gray-600 font-light appearance-none text-sm"
+					<span class="truncate">{category || 'Select...'}</span>
+					<ChevronDown class="w-4 h-4 text-gray-500 shrink-0 ml-1" />
+				</button>
+
+				{#if isCategoryDropdownOpen}
+					<div
+						class="fixed inset-0 z-40"
+						onclick={() => (isCategoryDropdownOpen = false)}
+						role="presentation"
+					></div>
+					<div
+						class="absolute left-0 right-0 mt-2 max-h-64 overflow-y-auto bg-[#1a1a1a] rounded-xl box-3d z-50 p-2 flex flex-col gap-1"
 					>
-						<option value="" disabled selected>Select...</option>
 						{#each categories as cat}
-							<option value={cat}>{cat}</option>
+							<button
+								class="text-left px-4 py-3 text-base tracking-wide rounded-lg transition-colors {category ===
+								cat
+									? 'bg-white text-black box-3d'
+									: 'text-gray-200 hover:bg-[#2a2a2a]'}"
+								onclick={() => selectCategory(cat)}
+							>
+								{cat}
+							</button>
 						{/each}
-					</select>
-				</div>
+					</div>
+				{/if}
 			</div>
 
 			<!-- Type -->
-			<div>
-				<label
-					for="type"
-					class="block text-[10px] uppercase tracking-widest text-gray-500 mb-1.5 pl-1">Type</label
+			<div class="relative z-40">
+				<label for="type" class="block text-xs uppercase tracking-wider text-gray-500 mb-1.5 pl-1"
+					>Type</label
 				>
-				<div class="relative">
+				<button
+					id="type"
+					class="w-full bg-[#111111] rounded-3xl pl-10 pr-4 py-5 text-sm tracking-wide focus:outline-none box-3d flex items-center justify-between {type ===
+					'debit'
+						? 'text-[#ff6b6b]'
+						: 'text-[#69db7c]'}"
+					onclick={toggleTypeDropdown}
+				>
 					<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
 						<SortDesc class="h-4 w-4 text-gray-600" />
 					</div>
-					<select
-						id="type"
-						bind:value={type}
-						class="w-full bg-[#111111] border border-gray-900 rounded-3xl pl-10 pr-2 py-4 text-base text-gray-200 focus:outline-none focus:border-gray-600 font-light appearance-none text-sm {type ===
-						'debit'
-							? 'text-[#ff6b6b]'
-							: 'text-[#69db7c]'}"
+					<span>{type === 'debit' ? 'Debit' : 'Credit'}</span>
+					<ChevronDown class="w-4 h-4 text-gray-500 shrink-0 ml-1" />
+				</button>
+
+				{#if isTypeDropdownOpen}
+					<div
+						class="fixed inset-0 z-40"
+						onclick={() => (isTypeDropdownOpen = false)}
+						role="presentation"
+					></div>
+					<div
+						class="absolute left-0 right-0 mt-2 bg-[#1a1a1a] rounded-xl box-3d z-50 p-2 flex flex-col gap-1"
 					>
-						<option value="debit">Debit</option>
-						<option value="credit">Credit</option>
-					</select>
-				</div>
+						{#each ['debit', 'credit'] as t}
+							<button
+								class="text-left px-4 py-3 text-base tracking-wide rounded-lg transition-colors {type ===
+								t
+									? 'bg-white text-black box-3d'
+									: 'text-gray-200 hover:bg-[#2a2a2a]'}"
+								onclick={() => selectType(t)}
+							>
+								{t === 'debit' ? 'Debit' : 'Credit'}
+							</button>
+						{/each}
+					</div>
+				{/if}
 			</div>
 		</div>
 	</div>
 
 	<!-- Slider Friction -->
 	<div class="mt-14 flex flex-col items-center">
-		<p class="text-[10px] uppercase tracking-widest text-gray-600 mb-3">Slide to Confirm</p>
+		<p class="text-xs uppercase tracking-wider text-gray-600 mb-3">Slide to Confirm</p>
 		<div class="relative w-full h-16 flex items-center justify-center">
-			<!-- Track container -->
 			<div
-				class="absolute inset-x-0 h-14 bg-[#0a0a0a] border border-gray-900 rounded-full overflow-hidden shadow-inner flex items-center justify-center"
+				class="absolute inset-x-0 h-14 bg-[#0a0a0a] rounded-full overflow-hidden flex items-center justify-center box-3d"
 			>
 				<!-- Background text -->
 				<span

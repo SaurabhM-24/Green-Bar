@@ -32,7 +32,8 @@
 				.select('*')
 				.gte('transaction_date', startDate)
 				.lte('transaction_date', endDate)
-				.order('transaction_date', { ascending: false });
+				.order('transaction_date', { ascending: false })
+				.order('created_at', { ascending: false });
 
 			if (cat && cat !== 'All') {
 				query = query.eq('category', cat);
@@ -59,26 +60,46 @@
 	function handleCategoryChange(e) {
 		selectedCategory = e.currentTarget.value;
 	}
+
+	let isCategoryDropdownOpen = $state(false);
+	function toggleCategoryDropdown() {
+		isCategoryDropdownOpen = !isCategoryDropdownOpen;
+	}
+	/** @param {string} cat */
+	function selectCategory(cat) {
+		selectedCategory = cat;
+		isCategoryDropdownOpen = false;
+	}
 </script>
 
-<div class="px-2 pt-6 pb-6">
+<div class="px-4 pt-16 pb-16">
 	<!-- Filter Header -->
-	<div class="mb-6 flex items-center justify-between pl-2 pr-2">
-		<h1 class="text-2xl font-light tracking-wide text-white">History</h1>
+	<div class="mb-8 flex items-center justify-between px-4">
+		<h1 class="text-3xl tracking-wide text-white">History</h1>
 
-		<div class="relative">
-			<select
-				bind:value={selectedCategory}
-				onchange={handleCategoryChange}
-				class="appearance-none bg-[#111111] border border-gray-800 text-gray-300 text-xs py-3 pl-4 pr-10 rounded-xl focus:outline-none focus:border-gray-500 font-medium tracking-wide"
+		<div class="relative z-50">
+			<button
+				class="bg-[#111111] text-gray-300 text-sm tracking-wide py-3 pl-4 pr-4 rounded-xl focus:outline-none box-3d flex items-center gap-3"
+				onclick={toggleCategoryDropdown}
 			>
-				{#each categories as cat}
-					<option value={cat}>{cat}</option>
-				{/each}
-			</select>
-			<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+				{selectedCategory}
 				<ChevronDown class="w-4 h-4 text-gray-500" />
-			</div>
+			</button>
+			
+			{#if isCategoryDropdownOpen}
+				<div class="fixed inset-0 z-40" onclick={() => isCategoryDropdownOpen = false} role="presentation"></div>
+				
+				<div class="absolute right-0 mt-2 w-48 max-h-64 overflow-y-auto bg-[#1a1a1a] rounded-xl box-3d z-50 p-2 flex flex-col gap-1">
+					{#each categories as cat}
+						<button 
+							class="text-left px-4 py-3 text-base tracking-wide rounded-lg transition-colors {selectedCategory === cat ? 'bg-white text-black box-3d' : 'text-gray-200 hover:bg-[#2a2a2a]'}"
+							onclick={() => selectCategory(cat)}
+						>
+							{cat}
+						</button>
+					{/each}
+				</div>
+			{/if}
 		</div>
 	</div>
 
@@ -90,19 +111,17 @@
 			></div>
 		</div>
 	{:else if transactions.length === 0}
-		<div
-			class="text-center mt-12 bg-[#0a0a0a] border border-gray-900 rounded-3xl p-8 flex flex-col items-center"
-		>
-			<span class="text-gray-500 font-light text-sm mb-4">No transactions found.</span>
+		<div class="text-center mt-12 bg-[#0a0a0a] rounded-3xl p-8 flex flex-col items-center box-3d">
+			<span class="text-gray-500 tracking-wide text-base mb-4">No transactions found.</span>
 			<button
 				onclick={() => goto('/add')}
-				class="px-5 py-3.5 bg-white text-black text-sm font-medium rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.15)] hover:bg-gray-200"
+				class="px-5 py-3.5 bg-white text-black text-sm tracking-wide rounded-xl box-3d hover:bg-gray-200"
 			>
 				Add Transaction
 			</button>
 		</div>
 	{:else}
-		<div class="bg-[#0a0a0a] border border-gray-900 rounded-[1.5rem] overflow-hidden shadow-2xl">
+		<div class="bg-[#0a0a0a] rounded-[1.5rem] overflow-hidden box-3d">
 			{#each transactions as tx}
 				<TransactionCard
 					details={tx.details}

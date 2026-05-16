@@ -1,16 +1,16 @@
 <script>
 	import { Check } from 'lucide-svelte';
-	let { title, isChecked } = $props();
+	let { title, isChecked, isLast = false } = $props();
 </script>
 
-<div class="flex items-center gap-5 bg-[#0f0f0f] p-5 px-6 rounded-2xl border border-gray-900 mb-3">
+<div class="flex items-center gap-5 py-6 px-4 relative {isLast ? '' : 'after:absolute after:bottom-0 after:left-2 after:right-2 after:h-px after:bg-gray-800/60'}">
 	<div
-		class="w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 transition-colors duration-300 {isChecked
+		class="w-8 h-8 rounded-lg border flex items-center justify-center shrink-0 transition-colors duration-300 {isChecked
 			? 'bg-white border-white'
 			: 'bg-[#151515] border-gray-800'}"
 	>
 		{#if isChecked}
-			<Check class="w-5 h-5 text-black" strokeWidth={3} />
+			<Check class="w-6 h-6 text-black" strokeWidth={3} />
 		{/if}
 	</div>
 
