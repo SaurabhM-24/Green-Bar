@@ -44,9 +44,17 @@
 
 			// If not fetching by specific category, extract all unique categories
 			if (appState.month && appState.year) {
-				const { data: budgetData } = await supabase.from('budgets').select('category');
+				const { data: budgetData } = await supabase.from('budgets').select('category, icon_name, budget_type, sort_order');
 				if (budgetData) {
-					categories = ['All', ...budgetData.map((b) => b.category)];
+					/** @type {Record<string, number>} */
+					const typeOrder = { variable: 1, corpus: 2, fixed: 3 };
+					budgetData.sort((a, b) => {
+						const orderA = typeOrder[a.budget_type] || 99;
+						const orderB = typeOrder[b.budget_type] || 99;
+						if (orderA !== orderB) return orderA - orderB;
+						return (a.sort_order || 0) - (b.sort_order || 0);
+					});
+					categories = [{ category: 'All' }, ...budgetData];
 				}
 			}
 
@@ -70,6 +78,10 @@
 		selectedCategory = cat;
 		isCategoryDropdownOpen = false;
 	}
+
+	let selectedCategoryIcon = $derived(
+		categories.find((c) => c.category === selectedCategory)?.icon_name
+	);
 </script>
 
 <div class="px-4 pt-16 pb-16">
@@ -82,7 +94,15 @@
 				class="bg-[#111111] text-gray-300 text-sm tracking-wide py-3 pl-4 pr-4 rounded-xl focus:outline-none box-3d flex items-center gap-3"
 				onclick={toggleCategoryDropdown}
 			>
-				{selectedCategory}
+				<div class="flex items-center gap-2">
+					{#if selectedCategoryIcon}
+						<picture>
+							<source srcset="/icons/{selectedCategoryIcon}.avif" type="image/avif" />
+							<img src="/icons/{selectedCategoryIcon}.webp" alt="" class="h-4 w-4 object-contain" />
+						</picture>
+					{/if}
+					{selectedCategory}
+				</div>
 				<ChevronDown class="w-4 h-4 text-gray-500" />
 			</button>
 			
@@ -92,10 +112,16 @@
 				<div class="absolute right-0 mt-2 w-48 max-h-64 overflow-y-auto bg-[#1a1a1a] rounded-xl box-3d z-50 p-2 flex flex-col gap-1">
 					{#each categories as cat}
 						<button 
-							class="text-left px-4 py-3 text-base tracking-wide rounded-lg transition-colors {selectedCategory === cat ? 'bg-white text-black box-3d' : 'text-gray-200 hover:bg-[#2a2a2a]'}"
-							onclick={() => selectCategory(cat)}
+							class="flex items-center gap-3 text-left px-4 py-3 text-base tracking-wide rounded-lg transition-colors {selectedCategory === cat.category ? 'bg-white text-black box-3d' : 'text-gray-200 hover:bg-[#2a2a2a]'}"
+							onclick={() => selectCategory(cat.category)}
 						>
-							{cat}
+							{#if cat.icon_name}
+								<picture>
+									<source srcset="/icons/{cat.icon_name}.avif" type="image/avif" />
+									<img src="/icons/{cat.icon_name}.webp" alt="" class="h-5 w-5 object-contain" />
+								</picture>
+							{/if}
+							<span>{cat.category}</span>
 						</button>
 					{/each}
 				</div>

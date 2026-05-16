@@ -1,5 +1,5 @@
 <script>
-	let { title, totalData, usedData } = $props();
+	let { title, totalData, usedData, iconName } = $props();
 
 	// Avoid division by zero, reverse logic so bar shrinks as it is used
 	let progress = $derived(
@@ -14,6 +14,12 @@
 >
 	<div class="flex justify-between items-center mb-7">
 		<h3 class="text-2xl text-gray-200 tracking-wide">{title}</h3>
+		{#if iconName}
+			<picture>
+				<source srcset="/icons/{iconName}.avif" type="image/avif" />
+				<img src="/icons/{iconName}.webp" alt="{title} icon" class="h-12 w-12 object-contain" />
+			</picture>
+		{/if}
 	</div>
 
 	<div class="h-8 w-full bg-[#1a1a1a] rounded-xl overflow-hidden mb-6 box-3d">

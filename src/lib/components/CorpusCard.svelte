@@ -1,5 +1,5 @@
 <script>
-	let { title, lockedData, leftData, usedData } = $props();
+	let { title, lockedData, leftData, usedData, iconName } = $props();
 
 	// Calculate the starting expendable capacity for the month.
 	// leftData is the current exact balance left. usedData is what we spent this month.
@@ -21,6 +21,12 @@
 >
 	<div class="flex justify-between items-center mb-7">
 		<h3 class="text-2xl text-gray-200 tracking-wide">{title}</h3>
+		{#if iconName}
+			<picture>
+				<source srcset="/icons/{iconName}.avif" type="image/avif" />
+				<img src="/icons/{iconName}.webp" alt="{title} icon" class="h-12 w-12 object-contain" />
+			</picture>
+		{/if}
 	</div>
 
 	<!-- Health Bar (Multi-Segment) -->
@@ -38,7 +44,9 @@
 	<div class="flex justify-between text-sm tracking-wider">
 		<div class="flex flex-col">
 			<span class="text-gray-500 tracking-wider uppercase mb-1 text-xs">Locked</span>
-			<span class="text-gray-400 text-base tracking-wide">₹{lockedData.toLocaleString('en-IN')}</span>
+			<span class="text-gray-400 text-base tracking-wide"
+				>₹{lockedData.toLocaleString('en-IN')}</span
+			>
 		</div>
 		<div class="flex flex-col text-center">
 			<span class="text-gray-500 tracking-wider uppercase mb-1 text-xs">Left</span>
@@ -46,7 +54,8 @@
 		</div>
 		<div class="flex flex-col text-right">
 			<span class="text-gray-500 tracking-wider uppercase mb-1 text-xs">Used</span>
-			<span class="text-[#ff6b6b] text-base tracking-wide">₹{usedData.toLocaleString('en-IN')}</span>
+			<span class="text-[#ff6b6b] text-base tracking-wide">₹{usedData.toLocaleString('en-IN')}</span
+			>
 		</div>
 	</div>
 </a>

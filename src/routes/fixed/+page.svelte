@@ -183,6 +183,7 @@
 						lockedData={Number(b.monthly_limit || 0)}
 						leftData={globalLiquidBalance + currentMonthCorpusUsed}
 						usedData={-currentMonthCorpusUsed}
+						iconName={b.icon_name}
 					/>
 				{/each}
 			</div>
@@ -258,11 +259,12 @@
 							? 'cursor-grab active:cursor-grabbing opacity-80 scale-[0.98] transition-transform'
 							: 'transition-transform duration-300'}
 					>
-						<div class="pointer-events-none">
+						<div class={isEditingOrder ? 'pointer-events-none' : ''}>
 							<FixedItem
 								title={b.category}
 								isChecked={transactionCategories.has(b.category)}
 								isLast={index === fixedBudgets.length - 1}
+								iconName={b.icon_name}
 							/>
 						</div>
 					</div>

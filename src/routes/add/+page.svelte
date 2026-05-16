@@ -26,11 +26,23 @@
 	// Dynamic categories fetched from DB
 	/** @type {any[]} */
 	let categories = $state([]);
+	let showError = $state(false);
+	let errorMessage = $state('');
 
 	$effect(() => {
 		async function fetchCategories() {
-			const { data } = await supabase.from('budgets').select('category');
-			if (data) categories = data.map((b) => b.category);
+			const { data } = await supabase.from('budgets').select('category, icon_name, budget_type, sort_order');
+			if (data) {
+				/** @type {Record<string, number>} */
+				const typeOrder = { variable: 1, corpus: 2, fixed: 3 };
+				data.sort((a, b) => {
+					const orderA = typeOrder[a.budget_type] || 99;
+					const orderB = typeOrder[b.budget_type] || 99;
+					if (orderA !== orderB) return orderA - orderB;
+					return (a.sort_order || 0) - (b.sort_order || 0);
+				});
+				categories = data;
+			}
 		}
 		fetchCategories();
 	});
@@ -71,15 +83,20 @@
 		loading = false;
 	}
 
-	$effect(() => {
-		if (slideValue == 100 && !loading && amount && details && category) {
-			handleSubmit();
-		} else if (slideValue == 100) {
-			// Form incomplete
-			slideValue = 0;
-			alert('Please fill Amount, Details, and Category fields');
+	function handleSlideInput() {
+		if (slideValue == 100) {
+			if (!amount || !details || !category) {
+				slideValue = 0;
+				errorMessage = 'Please fill Amount, Details, and Category fields';
+				showError = true;
+				setTimeout(() => {
+					showError = false;
+				}, 3000);
+			} else if (!loading) {
+				handleSubmit();
+			}
 		}
-	});
+	}
 
 	function handleSlideEnd() {
 		if (slideValue < 100) slideValue = 0;
@@ -89,11 +106,15 @@
 	function toggleCategoryDropdown() {
 		isCategoryDropdownOpen = !isCategoryDropdownOpen;
 	}
-	/** @param {string} cat */
+	/** @param {any} cat */
 	function selectCategory(cat) {
-		category = cat;
+		category = cat.category;
 		isCategoryDropdownOpen = false;
 	}
+
+	let selectedCategoryIcon = $derived(
+		categories.find((c) => c.category === category)?.icon_name
+	);
 
 	let isTypeDropdownOpen = $state(false);
 	function toggleTypeDropdown() {
@@ -107,6 +128,16 @@
 </script>
 
 <div class="px-6 pt-16 pb-32 relative min-h-full">
+	{#if showError}
+		<div
+			class="fixed top-6 left-6 right-6 z-[100] flex items-center justify-center animate-in slide-in-from-top-4 fade-in duration-300"
+		>
+			<div class="bg-[#1a1a1a] border-l-4 border-[#ff6b6b] text-[#ff6b6b] px-6 py-4 rounded-xl box-3d shadow-xl tracking-wide text-sm flex-1 text-center font-medium">
+				{errorMessage}
+			</div>
+		</div>
+	{/if}
+
 	{#if successMsg}
 		<div
 			class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/90 backdrop-blur-md rounded-3xl animate-in fade-in zoom-in duration-300"
@@ -184,19 +215,29 @@
 					for="category"
 					class="block text-xs uppercase tracking-wider text-gray-500 mb-1.5 pl-1">Category</label
 				>
-				<button
-					id="category"
-					class="w-full bg-[#111111] rounded-3xl pl-10 pr-4 py-5 text-sm tracking-wide {category
-						? 'text-gray-200'
-						: 'text-gray-500'} focus:outline-none box-3d flex items-center justify-between"
-					onclick={toggleCategoryDropdown}
-				>
-					<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+				<div class="relative">
+					<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
 						<Tags class="h-4 w-4 text-gray-600" />
 					</div>
-					<span class="truncate">{category || 'Select...'}</span>
-					<ChevronDown class="w-4 h-4 text-gray-500 shrink-0 ml-1" />
-				</button>
+					<button
+						id="category"
+						class="w-full bg-[#111111] rounded-3xl pl-11 pr-4 py-5 text-sm tracking-wide {category
+							? 'text-gray-200'
+							: 'text-gray-500'} focus:outline-none box-3d flex items-center justify-between"
+						onclick={toggleCategoryDropdown}
+					>
+						<div class="flex items-center gap-3 truncate">
+							{#if selectedCategoryIcon}
+								<picture>
+									<source srcset="/icons/{selectedCategoryIcon}.avif" type="image/avif" />
+									<img src="/icons/{selectedCategoryIcon}.webp" alt="" class="h-5 w-5 object-contain" />
+								</picture>
+							{/if}
+							<span class="truncate">{category || 'Select...'}</span>
+						</div>
+						<ChevronDown class="w-4 h-4 text-gray-500 shrink-0 ml-1" />
+					</button>
+				</div>
 
 				{#if isCategoryDropdownOpen}
 					<div
@@ -209,13 +250,19 @@
 					>
 						{#each categories as cat}
 							<button
-								class="text-left px-4 py-3 text-base tracking-wide rounded-lg transition-colors {category ===
-								cat
+								class="flex items-center gap-3 text-left px-4 py-3 text-base tracking-wide rounded-lg transition-colors {category ===
+								cat.category
 									? 'bg-white text-black box-3d'
 									: 'text-gray-200 hover:bg-[#2a2a2a]'}"
 								onclick={() => selectCategory(cat)}
 							>
-								{cat}
+								{#if cat.icon_name}
+									<picture>
+										<source srcset="/icons/{cat.icon_name}.avif" type="image/avif" />
+										<img src="/icons/{cat.icon_name}.webp" alt="" class="h-6 w-6 object-contain" />
+									</picture>
+								{/if}
+								<span>{cat.category}</span>
 							</button>
 						{/each}
 					</div>
@@ -227,20 +274,22 @@
 				<label for="type" class="block text-xs uppercase tracking-wider text-gray-500 mb-1.5 pl-1"
 					>Type</label
 				>
-				<button
-					id="type"
-					class="w-full bg-[#111111] rounded-3xl pl-10 pr-4 py-5 text-sm tracking-wide focus:outline-none box-3d flex items-center justify-between {type ===
-					'debit'
-						? 'text-[#ff6b6b]'
-						: 'text-[#69db7c]'}"
-					onclick={toggleTypeDropdown}
-				>
-					<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+				<div class="relative">
+					<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
 						<SortDesc class="h-4 w-4 text-gray-600" />
 					</div>
-					<span>{type === 'debit' ? 'Debit' : 'Credit'}</span>
-					<ChevronDown class="w-4 h-4 text-gray-500 shrink-0 ml-1" />
-				</button>
+					<button
+						id="type"
+						class="w-full bg-[#111111] rounded-3xl pl-11 pr-4 py-5 text-sm tracking-wide focus:outline-none box-3d flex items-center justify-between {type ===
+						'debit'
+							? 'text-[#ff6b6b]'
+							: 'text-[#69db7c]'}"
+						onclick={toggleTypeDropdown}
+					>
+						<span>{type === 'debit' ? 'Debit' : 'Credit'}</span>
+						<ChevronDown class="w-4 h-4 text-gray-500 shrink-0 ml-1" />
+					</button>
+				</div>
 
 				{#if isTypeDropdownOpen}
 					<div
@@ -299,6 +348,7 @@
 				min="0"
 				max="100"
 				bind:value={slideValue}
+				oninput={handleSlideInput}
 				ontouchend={handleSlideEnd}
 				onmouseup={handleSlideEnd}
 				class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20 custom-slider touch-none"
