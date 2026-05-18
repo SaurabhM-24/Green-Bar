@@ -1,21 +1,21 @@
 <script>
 	import { supabase } from '$lib/supabase';
 	import { appState } from '$lib/state.svelte.js';
+	import { appData } from '$lib/data.svelte.js';
 	import CorpusCard from '$lib/components/CorpusCard.svelte';
 	import FixedItem from '$lib/components/FixedItem.svelte';
 	import { dndzone } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
 	import { MoreVertical } from 'lucide-svelte';
 
-	let loading = $state(true);
-	/** @type {any[]} */
-	let corpusBudgets = $state([]);
+	let loading = $derived(appData.loading);
+	let corpusBudgets = $derived(appData.corpusBudgets);
 	/** @type {any[]} */
 	let fixedBudgets = $state([]);
-	let transactionCategories = $state(new Set());
+	let transactionCategories = $derived(appData.transactionCategories);
 
-	let globalLiquidBalance = $state(0);
-	let currentMonthCorpusUsed = $state(0);
+	let globalLiquidBalance = $derived(appData.globalLiquidBalance);
+	let currentMonthCorpusUsed = $derived(appData.currentMonthCorpusUsed);
 
 	let isEditingOrder = $state(false);
 	let isMenuOpen = $state(false);
@@ -23,100 +23,9 @@
 	const flipDurationMs = 200;
 
 	$effect(() => {
-		/**
-		 * @param {number} m
-		 * @param {number} y
-		 */
-		async function loadData(m, y) {
-			loading = true;
-			const startDate = `${y}-${String(m).padStart(2, '0')}-01`;
-			const lastDay = new Date(y, m, 0).getDate();
-			const endDate = `${y}-${String(m).padStart(2, '0')}-${lastDay}T23:59:59`;
-
-			// Previous month bounds for Salary
-			const pmList = new Date(y, m - 2, 1);
-			const prevM = pmList.getMonth() + 1;
-			const prevY = pmList.getFullYear();
-			const prevMonthStart = `${prevY}-${String(prevM).padStart(2, '0')}-01`;
-
-			// 1. Fetch Budgets
-			const { data: budgetData } = await supabase
-				.from('budgets')
-				.select('*')
-				.order('sort_order', { ascending: true });
-
-			let totalMonthlyLimits = 0;
-			if (budgetData) {
-				corpusBudgets = budgetData.filter((b) => b.budget_type === 'corpus');
-				fixedBudgets = budgetData
-					.filter((b) => b.budget_type === 'fixed')
-					.map((b) => ({ ...b, id: b.id || b.category }));
-				budgetData.forEach((b) => {
-					totalMonthlyLimits += Number(b.monthly_limit || 0);
-				});
-			}
-
-			// 2. Fetch Transactions for the checklist
-			// We fetch from previousMonthStart to cover 'Salary'
-			const { data: txData } = await supabase
-				.from('transactions')
-				.select('category, transaction_date')
-				.gte('transaction_date', prevMonthStart)
-				.lte('transaction_date', endDate);
-
-			const cats = new Set();
-			if (txData) {
-				txData.forEach((tx) => {
-					if (tx.category) {
-						if (tx.category === 'Salary') {
-							if (tx.transaction_date >= prevMonthStart && tx.transaction_date < startDate) {
-								cats.add(tx.category);
-							}
-						} else {
-							if (tx.transaction_date >= startDate) {
-								cats.add(tx.category);
-							}
-						}
-					}
-				});
-			}
-			transactionCategories = cats;
-
-			// 3. Global All Time Sum query for Personal Corpus
-			const { data: allHistory } = await supabase
-				.from('transactions')
-				.select('amount, transaction_type, transaction_date, category');
-
-			let liquidTillLastMonth = 0;
-			let monthCorpusSum = 0;
-			if (allHistory) {
-				allHistory.forEach((tx) => {
-					const val = Math.abs(Number(tx.amount));
-
-					if (tx.transaction_date < startDate) {
-						if (tx.transaction_type.toLowerCase() === 'credit') liquidTillLastMonth += val;
-						else liquidTillLastMonth -= val;
-					}
-
-					if (
-						tx.transaction_date >= startDate &&
-						tx.transaction_date <= endDate &&
-						tx.category &&
-						tx.category.toLowerCase() === 'personal corpus'
-					) {
-						if (tx.transaction_type.toLowerCase() === 'credit') monthCorpusSum += val;
-						else monthCorpusSum -= val;
-					}
-				});
-			}
-			globalLiquidBalance = liquidTillLastMonth - totalMonthlyLimits;
-			// Pass raw negative state downstream. UI will invert it to represent 'used' spent tally.
-			currentMonthCorpusUsed = monthCorpusSum;
-
-			loading = false;
+		if (!appData.loading) {
+			fixedBudgets = [...appData.fixedBudgets];
 		}
-
-		loadData(appState.month, appState.year);
 	});
 
 	/** @param {CustomEvent<any>} e */

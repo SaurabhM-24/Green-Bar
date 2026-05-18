@@ -1,205 +1,115 @@
 <script>
-	import { supabase } from '$lib/supabase';
-	import { appState } from '$lib/state.svelte.js';
-	import CategoryCard from '$lib/components/CategoryCard.svelte';
-	import { dndzone } from 'svelte-dnd-action';
-	import { flip } from 'svelte/animate';
-	import { MoreVertical } from 'lucide-svelte';
+	import { appData } from '$lib/data.svelte.js';
+	import { Check } from 'lucide-svelte';
+	import HealthRing from '$lib/components/HealthRing.svelte';
 
-	let loading = $state(true);
-	/** @type {any[]} */
-	let budgets = $state([]);
-	/** @type {Record<string, number>} */
-	let categoryTotals = $state({});
+	let loading = $derived(appData.loading);
+	let budgets = $derived(appData.budgets);
+	let fixedBudgets = $derived(appData.fixedBudgets);
+	let categoryTotals = $derived(appData.categoryTotals);
+	let transactionCategories = $derived(appData.transactionCategories);
+	let globalLiquidBalance = $derived(appData.globalLiquidBalance);
+	let currentMonthCorpusUsed = $derived(appData.currentMonthCorpusUsed);
+	let totalAccountBalance = $derived(appData.totalAccountBalance);
+	let corpusLimit = $derived(appData.corpusLimit);
 
-	let isEditingOrder = $state(false);
-	let isMenuOpen = $state(false);
-	let savingOrder = $state(false);
-	const flipDurationMs = 200;
+	// The balance as requested: [sum of transactions minus the corpus limit from the budgets table]
+	let accountBalance = $derived(totalAccountBalance - corpusLimit);
+	// Personal corpus remaining
+	let personalCorpus = $derived(globalLiquidBalance + currentMonthCorpusUsed);
 
-	$effect(() => {
-		/**
-		 * @param {number} m
-		 * @param {number} y
-		 */
-		async function loadData(m, y) {
-			loading = true;
-			const startDate = `${y}-${String(m).padStart(2, '0')}-01`;
-			const lastDay = new Date(y, m, 0).getDate();
-			const endDate = `${y}-${String(m).padStart(2, '0')}-${lastDay}T23:59:59`;
-
-			// 1. Fetch Budgets
-			const { data: budgetData } = await supabase
-				.from('budgets')
-				.select('*')
-				.eq('budget_type', 'variable')
-				.order('sort_order', { ascending: true });
-
-			if (budgetData) {
-				// Ensure items have a unique 'id' for svelte-dnd-action
-				budgets = budgetData.map((b) => ({ ...b, id: b.id || b.category }));
-			}
-
-			// 2. Fetch Transactions for the month
-			const { data: txData } = await supabase
-				.from('transactions')
-				.select('category, amount, transaction_type')
-				.gte('transaction_date', startDate)
-				.lte('transaction_date', endDate);
-
-			/** @type {Record<string, number>} */
-			const totals = {};
-			if (txData) {
-				txData.forEach((tx) => {
-					if (tx.category) {
-						totals[tx.category] = (totals[tx.category] || 0) - Number(tx.amount);
-					}
-				});
-			}
-			categoryTotals = totals;
-			loading = false;
-		}
-
-		loadData(appState.month, appState.year);
-	});
-
-	/** @param {CustomEvent<any>} e */
-	function handleDndConsider(e) {
-		budgets = e.detail.items;
-	}
-
-	/** @param {CustomEvent<any>} e */
-	function handleDndFinalize(e) {
-		budgets = e.detail.items;
-	}
-
-	async function saveOrder() {
-		savingOrder = true;
-		try {
-			// Update each budget's sort_order based on its index
-			const updates = budgets.map((b, index) => {
-				return supabase.from('budgets').update({ sort_order: index }).eq('category', b.category);
-			});
-			await Promise.all(updates);
-		} catch (error) {
-			console.error('Failed to save order:', error);
-		}
-		savingOrder = false;
-		isEditingOrder = false;
-	}
-
-	function toggleMenu() {
-		isMenuOpen = !isMenuOpen;
-	}
-
-	function startEditing() {
-		isEditingOrder = true;
-		isMenuOpen = false;
-	}
-
-	function cancelEditing() {
-		// Just turn off editing mode; we could also reload original order if we wanted to be strict
-		isEditingOrder = false;
-	}
+	let userName = $derived(appData.userName);
+	let insightLine = $derived(appData.insightLine);
 </script>
 
-<div
-	class="px-4 pt-16 pb-16"
-	role="presentation"
-	onclick={() => {
-		if (isMenuOpen) isMenuOpen = false;
-	}}
-	onkeydown={(e) => {
-		if (e.key === 'Escape' && isMenuOpen) isMenuOpen = false;
-	}}
->
-	<!-- Header area -->
-	<div class="flex items-center justify-between mb-8 px-4">
-		<h1 class="text-3xl tracking-wide text-white">Variable Expenses</h1>
-
-		{#if !isEditingOrder}
-			<div class="relative">
-				<button
-					class="p-2 text-gray-400 hover:text-white"
-					onclick={(e) => {
-						e.stopPropagation();
-						toggleMenu();
-					}}
-				>
-					<MoreVertical class="w-5 h-5" />
-				</button>
-				{#if isMenuOpen}
-					<div
-						class="absolute right-0 mt-2 w-40 bg-[#1a1a1a] rounded-xl box-3d z-50 overflow-hidden"
-					>
-						<button
-							class="w-full text-left px-4 py-3 text-base tracking-wide text-gray-200 hover:bg-[#2a2a2a] transition-colors"
-							onclick={startEditing}
-						>
-							Edit Order
-						</button>
-					</div>
-				{/if}
-			</div>
-		{:else}
-			<div class="flex items-center space-x-2">
-				<button
-					class="text-sm text-gray-400 tracking-wide px-3 py-1.5 rounded-lg border border-gray-800 hover:bg-[#1a1a1a]"
-					onclick={cancelEditing}
-					disabled={savingOrder}
-				>
-					Cancel
-				</button>
-				<button
-					class="text-sm text-black tracking-wide px-4 py-1.5 rounded-lg bg-white box-3d hover:bg-gray-200 disabled:opacity-50"
-					onclick={saveOrder}
-					disabled={savingOrder}
-				>
-					{savingOrder ? 'Saving...' : 'Done'}
-				</button>
-			</div>
-		{/if}
+<div class="px-4 pt-16 pb-16 min-h-full flex flex-col gap-6">
+	<!-- Greeting -->
+	<div class="px-2 pt-8 pb-8 mb-2">
+		<h1 class="text-4xl text-white tracking-wide mb-2">Hello<br />{userName}</h1>
+		<p class="text-gray-400 text-lg tracking-wide">{insightLine}</p>
 	</div>
 
 	{#if loading}
-		<div class="flex justify-center mt-12">
+		<div class="flex justify-center mt-12 flex-1">
 			<div
 				class="h-6 w-6 rounded-full border-2 border-[#1a1a1a] border-t-gray-400 animate-spin"
 			></div>
 		</div>
-	{:else if budgets.length === 0}
-		<div class="text-center mt-12 text-gray-500 tracking-wide text-base">
-			No variable budgets found.
-		</div>
 	{:else}
-		<div
-			class="space-y-6"
-			use:dndzone={{
-				items: budgets,
-				dragDisabled: !isEditingOrder,
-				dropTargetStyle: {},
-				dropTargetClasses: ['outline-none']
-			}}
-			onconsider={handleDndConsider}
-			onfinalize={handleDndFinalize}
+		<!-- Variable Expenses Card -->
+		<a
+			href="/variable"
+			class="block bg-[#0f0f0f] rounded-3xl p-6 box-3d active:scale-[0.98] transition-transform"
 		>
-			{#each budgets as b (b.id)}
-				<div
-					animate:flip={{ duration: flipDurationMs }}
-					class={isEditingOrder
-						? 'cursor-grab active:cursor-grabbing opacity-80 scale-[0.98] transition-transform'
-						: 'transition-transform duration-300'}
-				>
-					<div class={isEditingOrder ? 'pointer-events-none' : ''}>
-						<CategoryCard
-							title={b.category}
-							totalData={Number(b.monthly_limit || 0)}
-							usedData={categoryTotals[b.category] || 0}
-							iconName={b.icon_name}
-						/>
+			<h2 class="text-xl text-white tracking-wide mb-6">Variable Expenses</h2>
+			<div class="flex flex-wrap gap-x-2 gap-y-6 justify-start">
+				{#each budgets as b}
+					<HealthRing
+						category={b.category}
+						totalData={Number(b.monthly_limit || 0)}
+						usedData={categoryTotals[b.category] || 0}
+						iconName={b.icon_name}
+					/>
+				{/each}
+			</div>
+		</a>
+
+		<!-- Fixed Expenses Card -->
+		<a
+			href="/fixed"
+			class="block bg-[#0f0f0f] rounded-3xl p-6 box-3d active:scale-[0.98] transition-transform"
+		>
+			<h2 class="text-xl text-white tracking-wide mb-6">Fixed Expenses</h2>
+			<div class="flex flex-wrap gap-x-2 gap-y-6 justify-start">
+				{#each fixedBudgets as b}
+					<div class="flex flex-col items-center w-[4.5rem]">
+						<div
+							class="relative w-14 h-14 bg-[#1a1a1a] rounded-2xl flex items-center justify-center box-3d mb-2"
+						>
+							{#if b.icon_name}
+								<picture>
+									<source srcset="/icons/{b.icon_name}.avif" type="image/avif" />
+									<img
+										src="/icons/{b.icon_name}.webp"
+										alt="{b.category} icon"
+										class="h-7 w-7 object-contain"
+									/>
+								</picture>
+							{/if}
+
+							{#if transactionCategories.has(b.category)}
+								<div
+									class="absolute -bottom-2 -right-2 bg-green-500 rounded-full p-1 border-2 border-[#0f0f0f] z-10 box-3d"
+								>
+									<Check class="w-3 h-3 text-black" strokeWidth={4} />
+								</div>
+							{/if}
+						</div>
+						<span class="text-xs text-gray-400 tracking-wide truncate max-w-full text-center"
+							>{b.category}</span
+						>
 					</div>
-				</div>
-			{/each}
-		</div>
+				{/each}
+			</div>
+		</a>
+
+		<!-- Balance Card -->
+		<a
+			href="/fixed"
+			class="block bg-[#0f0f0f] rounded-3xl p-6 box-3d active:scale-[0.98] transition-transform mt-2"
+		>
+			<div class="flex justify-between items-center mb-3">
+				<h2 class="text-lg text-gray-400 tracking-wide">Account Balance:</h2>
+				<span class="text-xl text-white tracking-wide">
+					₹{accountBalance.toLocaleString('en-IN')}
+				</span>
+			</div>
+			<div class="flex justify-between items-center">
+				<h2 class="text-lg text-gray-400 tracking-wide">Personal Corpus:</h2>
+				<span class="text-xl text-white tracking-wide">
+					₹{personalCorpus.toLocaleString('en-IN')}
+				</span>
+			</div>
+		</a>
 	{/if}
 </div>
