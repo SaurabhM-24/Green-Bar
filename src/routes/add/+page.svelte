@@ -140,7 +140,7 @@
 
 	{#if successMsg}
 		<div
-			class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/90 backdrop-blur-md rounded-3xl animate-in fade-in zoom-in duration-300"
+			class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/90 backdrop-blur-md animate-in fade-in zoom-in duration-300"
 		>
 			<CheckCircle2 class="w-16 h-16 text-white mb-4" />
 			<h2 class="text-2xl font-light text-white tracking-widest uppercase">Success</h2>
