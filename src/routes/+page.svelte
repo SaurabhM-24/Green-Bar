@@ -25,7 +25,7 @@
 <div class="px-4 pt-16 pb-16 min-h-full flex flex-col gap-6">
 	<!-- Greeting -->
 	<div class="px-2 pt-8 pb-8 mb-2">
-		<h1 class="text-4xl text-white tracking-wide mb-2">Hello<br />{userName}</h1>
+		<h1 class="text-4xl text-white tracking-wide mb-2 font-display">Hello<br />{userName}</h1>
 		<p class="text-gray-400 text-lg tracking-wide">{insightLine}</p>
 	</div>
 
@@ -41,7 +41,7 @@
 			href="/variable"
 			class="block bg-[#0f0f0f] rounded-3xl p-6 box-3d active:scale-[0.98] transition-transform"
 		>
-			<h2 class="text-xl text-white tracking-wide mb-6">Variable Expenses</h2>
+			<h2 class="text-xl text-white tracking-wide mb-6 font-display">Variable Expenses</h2>
 			<div class="flex flex-wrap gap-x-2 gap-y-6 justify-start">
 				{#each budgets as b}
 					<HealthRing
@@ -59,12 +59,12 @@
 			href="/fixed"
 			class="block bg-[#0f0f0f] rounded-3xl p-6 box-3d active:scale-[0.98] transition-transform"
 		>
-			<h2 class="text-xl text-white tracking-wide mb-6">Fixed Expenses</h2>
+			<h2 class="text-xl text-white tracking-wide mb-6 font-display">Fixed Expenses</h2>
 			<div class="flex flex-wrap gap-x-2 gap-y-6 justify-start">
 				{#each fixedBudgets as b}
 					<div class="flex flex-col items-center w-[4.5rem]">
 						<div
-							class="relative w-14 h-14 bg-[#1a1a1a] rounded-2xl flex items-center justify-center box-3d mb-2"
+							class="relative w-14 h-14 bg-[#1a1a1a] rounded-2xl flex items-center justify-center mb-2"
 						>
 							{#if b.icon_name}
 								<picture>
@@ -79,7 +79,7 @@
 
 							{#if transactionCategories.has(b.category)}
 								<div
-									class="absolute -bottom-2 -right-2 bg-green-500 rounded-full p-1 border-2 border-[#0f0f0f] z-10 box-3d"
+									class="absolute -bottom-2 -right-2 bg-green-500 rounded-full p-1 border-2 border-[#0f0f0f] z-10"
 								>
 									<Check class="w-3 h-3 text-black" strokeWidth={4} />
 								</div>

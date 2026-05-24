@@ -15,6 +15,20 @@
 	// Read initial category from URL param if available, otherwise just "All"
 	let selectedCategory = $state($page.url.searchParams.get('category') || 'All');
 
+	let groupedTransactions = $derived.by(() => {
+		/** @type {{ date: string, items: any[] }[]} */
+		let groups = [];
+		let currentGroup = null;
+		for (const tx of transactions) {
+			if (!currentGroup || currentGroup.date !== tx.transaction_date) {
+				currentGroup = { date: tx.transaction_date, items: [] };
+				groups.push(currentGroup);
+			}
+			currentGroup.items.push(tx);
+		}
+		return groups;
+	});
+
 	$effect(() => {
 		/**
 		 * @param {number} m
@@ -87,9 +101,9 @@
 <div class="px-4 pt-16 pb-16">
 	<!-- Filter Header -->
 	<div class="mb-8 flex items-center justify-between px-4">
-		<h1 class="text-3xl tracking-wide text-white">History</h1>
+		<h1 class="text-3xl tracking-wide text-white font-display">History</h1>
 
-		<div class="relative z-50">
+		<div class="relative z-40">
 			<button
 				class="bg-[#111111] text-gray-300 text-sm tracking-wide py-3 pl-4 pr-4 rounded-xl focus:outline-none box-3d flex items-center gap-3"
 				onclick={toggleCategoryDropdown}
@@ -107,9 +121,9 @@
 			</button>
 			
 			{#if isCategoryDropdownOpen}
-				<div class="fixed inset-0 z-40" onclick={() => isCategoryDropdownOpen = false} role="presentation"></div>
+				<div class="fixed inset-0 z-30" onclick={() => isCategoryDropdownOpen = false} role="presentation"></div>
 				
-				<div class="absolute right-0 mt-2 w-48 max-h-64 overflow-y-auto bg-[#1a1a1a] rounded-xl box-3d z-50 p-2 flex flex-col gap-1">
+				<div class="absolute right-0 mt-2 w-48 max-h-64 overflow-y-auto bg-[#1a1a1a] rounded-xl box-3d z-40 p-2 flex flex-col gap-1">
 					{#each categories as cat}
 						<button 
 							class="flex items-center gap-3 text-left px-4 py-3 text-base tracking-wide rounded-lg transition-colors {selectedCategory === cat.category ? 'bg-white text-black box-3d' : 'text-gray-200 hover:bg-[#2a2a2a]'}"
@@ -147,15 +161,21 @@
 			</button>
 		</div>
 	{:else}
-		<div class="bg-[#0a0a0a] rounded-[1.5rem] overflow-hidden box-3d">
-			{#each transactions as tx}
-				<TransactionCard
-					details={tx.details}
-					date={tx.transaction_date}
-					amount={Number(tx.amount)}
-					type={tx.transaction_type}
-				/>
-			{/each}
-		</div>
+		{#each groupedTransactions as group}
+			<div class="mb-8">
+				<h2 class="text-xl text-gray-400 tracking-wide px-2 mb-4 font-display">{group.date}</h2>
+				<div class="bg-[#0a0a0a] rounded-[1.5rem] overflow-hidden box-3d">
+					{#each group.items as tx}
+						<TransactionCard
+							title={tx.title}
+							description={tx.description}
+							amount={Number(tx.amount)}
+							type={tx.transaction_type}
+							iconName={categories.find(c => c.category === tx.category)?.icon_name}
+						/>
+					{/each}
+				</div>
+			</div>
+		{/each}
 	{/if}
 </div>

@@ -21,7 +21,7 @@
 	class="fixed top-8 left-6 right-6 h-[90px] bg-[#0a0a0a]/90 backdrop-blur-2xl rounded-[2rem] flex items-center justify-between px-8 z-50 box-3d"
 >
 	<div class="flex items-center gap-3">
-		<h2 class="text-3xl tracking-wide text-white">
+		<h2 class="text-3xl tracking-wide text-white font-display">
 			{appState.monthName}, <span class="text-gray-400">{appState.year}</span>
 		</h2>
 	</div>

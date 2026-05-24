@@ -10,8 +10,9 @@
 	let strokeDashoffset = $derived(circumference - (progress / 100) * circumference);
 
 	let ringColor = $derived(
+		progress > 75 ? 'text-green-500' :
 		progress > 50 ? 'text-white' :
-		progress > 20 ? 'text-yellow-400' : 'text-red-500'
+		progress > 25 ? 'text-yellow-400' : 'text-red-500'
 	);
 </script>
 
@@ -43,12 +44,12 @@
 			/>
 		</svg>
 		{#if iconName}
-			<picture class="z-10 bg-[#0f0f0f] rounded-full p-2 box-3d flex items-center justify-center w-11 h-11">
+			<picture class="z-10 bg-[#0f0f0f] rounded-full p-2 flex items-center justify-center w-11 h-11">
 				<source srcset="/icons/{iconName}.avif" type="image/avif" />
 				<img src="/icons/{iconName}.webp" alt="{category} icon" class="h-6 w-6 object-contain" />
 			</picture>
 		{:else}
-			<div class="z-10 bg-[#0f0f0f] rounded-full p-2 box-3d w-11 h-11"></div>
+			<div class="z-10 bg-[#0f0f0f] rounded-full p-2 w-11 h-11"></div>
 		{/if}
 	</div>
 	<span class="text-xs text-gray-400 tracking-wide truncate max-w-full text-center px-1">

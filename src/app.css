@@ -6,7 +6,8 @@
 }
 
 @theme {
-  --font-sans: 'Bagel Fat One', sans-serif;
+  --font-sans: 'Sour Gummy', sans-serif;
+  --font-display: 'Bagel Fat One', sans-serif;
 }
 
 @layer utilities {

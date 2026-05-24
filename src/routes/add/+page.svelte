@@ -1,6 +1,8 @@
 <script>
 	import { supabase } from '$lib/supabase';
 	import { goto } from '$app/navigation';
+	import { appData } from '$lib/data.svelte.js';
+	import { appState } from '$lib/state.svelte.js';
 	import {
 		Calendar as CalendarIcon,
 		IndianRupee,
@@ -15,7 +17,8 @@
 	// Form bindings
 	let date = $state(new Date().toISOString().split('T')[0]);
 	let amount = $state('');
-	let details = $state('');
+	let title = $state('');
+	let description = $state('');
 	let category = $state('');
 	let type = $state('debit');
 
@@ -58,7 +61,8 @@
 			{
 				transaction_date: date,
 				amount: finalAmount,
-				details: details,
+				title: title,
+				description: description || null,
 				category: category,
 				transaction_type: type
 			}
@@ -68,9 +72,13 @@
 			successMsg = true;
 			// Reset fields
 			amount = '';
-			details = '';
+			title = '';
+			description = '';
 			category = '';
 			slideValue = 0;
+
+			// Reload data
+			appData.loadData(appState.month, appState.year);
 
 			setTimeout(() => {
 				successMsg = false;
@@ -85,9 +93,9 @@
 
 	function handleSlideInput() {
 		if (slideValue == 100) {
-			if (!amount || !details || !category) {
+			if (!amount || !title || !category) {
 				slideValue = 0;
-				errorMessage = 'Please fill Amount, Details, and Category fields';
+				errorMessage = 'Please fill Amount, Title, and Category fields';
 				showError = true;
 				setTimeout(() => {
 					showError = false;
@@ -189,20 +197,39 @@
 			</div>
 		</div>
 
-		<!-- Details -->
+		<!-- Title -->
 		<div>
-			<label for="details" class="block text-xs uppercase tracking-wider text-gray-500 mb-1.5 pl-1"
-				>Details</label
+			<label for="title" class="block text-xs uppercase tracking-wider text-gray-500 mb-1.5 pl-1"
+				>Title</label
 			>
 			<div class="relative">
 				<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
 					<FileText class="h-4 w-4 text-gray-600" />
 				</div>
 				<input
-					id="details"
+					id="title"
 					type="text"
-					bind:value={details}
+					bind:value={title}
 					placeholder="What was this for?"
+					class="w-full bg-[#111111] rounded-3xl pl-11 pr-4 py-5 text-base tracking-wide text-gray-200 placeholder-gray-700 focus:outline-none box-3d"
+				/>
+			</div>
+		</div>
+
+		<!-- Description -->
+		<div>
+			<label for="description" class="block text-xs uppercase tracking-wider text-gray-500 mb-1.5 pl-1"
+				>Description (Optional)</label
+			>
+			<div class="relative">
+				<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+					<FileText class="h-4 w-4 text-gray-600 opacity-50" />
+				</div>
+				<input
+					id="description"
+					type="text"
+					bind:value={description}
+					placeholder="Additional details..."
 					class="w-full bg-[#111111] rounded-3xl pl-11 pr-4 py-5 text-base tracking-wide text-gray-200 placeholder-gray-700 focus:outline-none box-3d"
 				/>
 			</div>

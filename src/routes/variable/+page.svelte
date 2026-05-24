@@ -75,7 +75,7 @@
 >
 	<!-- Header area -->
 	<div class="flex items-center justify-between mb-8 px-4">
-		<h1 class="text-3xl tracking-wide text-white">Variable Expenses</h1>
+		<h1 class="text-3xl tracking-wide text-white font-display">Variable Expenses</h1>
 
 		{#if !isEditingOrder}
 			<div class="relative">

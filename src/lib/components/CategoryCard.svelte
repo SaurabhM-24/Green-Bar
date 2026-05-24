@@ -6,6 +6,12 @@
 		totalData > 0 ? Math.max(((totalData - usedData) / totalData) * 100, 0) : 0
 	);
 	let amountLeft = $derived(totalData - usedData);
+
+	let barColor = $derived(
+		progress > 75 ? 'bg-green-500' :
+		progress > 50 ? 'bg-white' :
+		progress > 25 ? 'bg-yellow-400' : 'bg-red-500'
+	);
 </script>
 
 <a
@@ -13,7 +19,7 @@
 	class="block bg-[#0f0f0f] rounded-[2.5rem] p-8 px-9 mb-7 box-3d active:scale-[0.98] transition-transform"
 >
 	<div class="flex justify-between items-center mb-7">
-		<h3 class="text-2xl text-gray-200 tracking-wide">{title}</h3>
+		<h3 class="text-2xl text-gray-200 tracking-wide font-display">{title}</h3>
 		{#if iconName}
 			<picture>
 				<source srcset="/icons/{iconName}.avif" type="image/avif" />
@@ -24,7 +30,7 @@
 
 	<div class="h-8 w-full bg-[#1a1a1a] rounded-xl overflow-hidden mb-6 box-3d">
 		<div
-			class="h-full bg-white transition-all duration-700 ease-out"
+			class="h-full {barColor} transition-all duration-700 ease-out"
 			style="width: {progress}%"
 		></div>
 	</div>
