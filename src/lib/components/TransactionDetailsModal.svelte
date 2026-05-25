@@ -38,7 +38,7 @@
 	let isEditDebit = $derived(editData.transaction_type?.toLowerCase() === 'debit');
 </script>
 
-<div class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onclick={onclose} role="presentation">
+<div class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onclick={() => { if (!isEditing && !isDeleting) onclose(); }} role="presentation">
 	<!-- Modal Content -->
 	<div 
 		class="bg-[#151515] w-full max-w-md rounded-3xl p-6 md:p-8 box-3d flex flex-col gap-6 relative max-h-[90vh] overflow-y-auto"
@@ -48,32 +48,34 @@
 		<!-- Top Bar -->
 		<div class="flex justify-between items-start gap-4">
 			{#if isEditing}
-				<input type="text" bind:value={editData.title} class="bg-transparent font-display text-3xl text-white tracking-wide pr-8 leading-tight w-full focus:outline-none placeholder-gray-600 border-b border-transparent hover:border-gray-700 focus:border-white transition-colors" placeholder="Title" />
+				<input type="text" bind:value={editData.title} class="bg-transparent font-display text-3xl text-white tracking-wide pr-14 leading-tight w-full focus:outline-none placeholder-gray-600 border-b border-transparent hover:border-gray-700 focus:border-white transition-colors pb-1" placeholder="Title" />
 			{:else}
-				<h2 class="text-3xl font-display text-white tracking-wide pr-8 leading-tight w-full border-b border-transparent">{transaction.title}</h2>
+				<h2 class="text-3xl font-display text-white tracking-wide pr-14 leading-tight w-full border-b border-transparent pb-1">{transaction.title}</h2>
 			{/if}
-			<button class="absolute top-6 right-6 p-2 text-gray-400 hover:text-white transition-colors bg-[#222] rounded-xl box-3d shrink-0 z-50" onclick={onclose}>
-				<X class="w-5 h-5" />
-			</button>
+			{#if !isEditing && !isDeleting}
+				<button class="absolute top-6 right-6 p-2 text-gray-400 hover:text-white transition-colors bg-[#222] rounded-xl box-3d shrink-0 z-50" onclick={onclose}>
+					<X class="w-5 h-5" />
+				</button>
+			{/if}
 		</div>
 
 		<!-- Details -->
 		<div class="flex flex-col gap-5 mt-2">
 			<!-- Date & Type -->
 			<div class="flex gap-4">
-				<div class="flex-1 flex flex-col gap-1.5">
+				<div class="flex-1 flex flex-col gap-1.5 border-r border-gray-800/60 pr-4">
 					<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Date</span>
 					{#if isEditing}
-						<input type="date" bind:value={editData.transaction_date} class="bg-transparent text-gray-200 text-base focus:outline-none border-b border-transparent hover:border-gray-700 focus:border-white transition-colors cursor-pointer w-full" />
+						<input type="date" bind:value={editData.transaction_date} class="bg-transparent text-gray-200 text-base focus:outline-none border-b border-transparent hover:border-gray-700 focus:border-white transition-colors cursor-pointer w-full pb-1" />
 					{:else}
-						<span class="text-gray-200 text-base border-b border-transparent w-full inline-block">{transaction.transaction_date}</span>
+						<span class="text-gray-200 text-base border-b border-transparent w-full inline-block pb-1">{transaction.transaction_date}</span>
 					{/if}
 				</div>
-				<div class="flex-1 flex flex-col gap-1.5 relative">
+				<div class="flex-1 flex flex-col gap-1.5 relative pl-2">
 					<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Type</span>
 					{#if isEditing}
 						<button 
-							class="text-left bg-transparent text-gray-200 text-base focus:outline-none border-b border-transparent hover:border-gray-700 focus:border-white transition-colors w-full flex justify-between items-center pb-0.5"
+							class="text-left bg-transparent text-gray-200 text-base focus:outline-none border-b border-transparent hover:border-gray-700 focus:border-white transition-colors w-full flex justify-between items-center pb-1"
 							onclick={() => isTypeDropdownOpen = !isTypeDropdownOpen}
 						>
 							<span class="capitalize">{editData.transaction_type}</span>
@@ -93,15 +95,17 @@
 							</div>
 						{/if}
 					{:else}
-						<span class="text-gray-200 text-base border-b border-transparent w-full inline-block capitalize">{transaction.transaction_type}</span>
+						<span class="text-gray-200 text-base border-b border-transparent w-full inline-block capitalize pb-1">{transaction.transaction_type}</span>
 					{/if}
 				</div>
 			</div>
 
+			<hr class="border-gray-800/60" />
+
 			<!-- Amount and Category Side-by-Side -->
-			<div class="flex gap-4 items-end mt-2">
+			<div class="flex gap-4 items-end mt-1">
 				<!-- Amount -->
-				<div class="flex-1 flex flex-col gap-1.5 min-w-0">
+				<div class="flex-1 flex flex-col gap-1.5 min-w-0 border-r border-gray-800/60 pr-4">
 					<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Amount (₹)</span>
 					{#if isEditing}
 						<div class="flex flex-row flex-nowrap items-baseline text-4xl tracking-wide font-bold {isEditDebit ? 'text-[#ff6b6b]' : 'text-[#69db7c]'} border-b border-transparent hover:border-gray-700 focus-within:border-current transition-colors w-full pb-0.5">
@@ -116,11 +120,11 @@
 				</div>
 
 				<!-- Category -->
-				<div class="flex-1 flex flex-col gap-1.5 relative min-w-0">
+				<div class="flex-1 flex flex-col gap-1.5 relative min-w-0 pl-2">
 					<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Category</span>
 					{#if isEditing}
 						<button 
-							class="flex items-center justify-between gap-3 bg-[#222] w-full px-4 py-2 rounded-xl box-3d cursor-pointer focus-within:ring-1 focus-within:ring-white transition-shadow text-left"
+							class="flex items-center justify-between gap-3 bg-transparent w-full focus:outline-none border-b border-transparent hover:border-gray-700 focus:border-white transition-shadow text-left pb-1"
 							onclick={() => isCategoryDropdownOpen = !isCategoryDropdownOpen}
 						>
 							<div class="flex items-center gap-3 overflow-hidden">
@@ -130,7 +134,7 @@
 										<img src="/icons/{categories.find(c => c.category === editData.category)?.icon_name}.webp" alt="" class="h-5 w-5 object-contain shrink-0" />
 									</picture>
 								{/if}
-								<span class="text-gray-100 font-medium truncate">{editData.category}</span>
+								<span class="text-gray-100 font-medium truncate text-base">{editData.category}</span>
 							</div>
 							<ChevronDown class="w-4 h-4 text-gray-500 shrink-0" />
 						</button>
@@ -155,26 +159,28 @@
 							</div>
 						{/if}
 					{:else}
-						<div class="flex items-center gap-3 bg-[#222] w-full px-4 py-2 rounded-xl box-3d border border-transparent overflow-hidden">
+						<div class="flex items-center gap-3 bg-transparent w-full border-b border-transparent overflow-hidden pb-1">
 							{#if categories.find(c => c.category === transaction.category)?.icon_name}
 								<picture>
 									<source srcset="/icons/{categories.find(c => c.category === transaction.category)?.icon_name}.avif" type="image/avif" />
 									<img src="/icons/{categories.find(c => c.category === transaction.category)?.icon_name}.webp" alt="" class="h-5 w-5 object-contain shrink-0" />
 								</picture>
 							{/if}
-							<span class="text-gray-100 font-medium truncate">{transaction.category}</span>
+							<span class="text-gray-100 font-medium truncate text-base">{transaction.category}</span>
 						</div>
 					{/if}
 				</div>
 			</div>
 
+			<hr class="border-gray-800/60" />
+
 			<!-- Description -->
-			<div class="flex flex-col gap-1.5 mt-2">
+			<div class="flex flex-col gap-1.5 mt-1">
 				<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Description</span>
 				{#if isEditing}
-					<textarea bind:value={editData.description} class="bg-transparent text-gray-400 text-base leading-relaxed focus:outline-none w-full resize-none min-h-[80px] p-0 border-b border-transparent hover:border-gray-700 focus:border-white transition-colors" placeholder="Add a description..."></textarea>
+					<textarea bind:value={editData.description} class="bg-transparent text-gray-400 text-base leading-relaxed focus:outline-none w-full resize-none min-h-[48px] p-0 border-b border-transparent hover:border-gray-700 focus:border-white transition-colors" placeholder="Add a description..."></textarea>
 				{:else}
-					<span class="text-gray-400 text-base leading-relaxed {transaction.description ? '' : 'italic'} border-b border-transparent min-h-[80px] w-full inline-block">
+					<span class="text-gray-400 text-base leading-relaxed {transaction.description ? '' : 'italic'} border-b border-transparent min-h-[48px] w-full inline-block">
 						{transaction.description || 'No description provided'}
 					</span>
 				{/if}

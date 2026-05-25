@@ -1,22 +1,13 @@
 <script>
 	/**
 	 * @fileoverview Add Transaction form page.
-	 * Handles creating new transactions and validating input using a slide-to-confirm mechanism.
+	 * Handles creating new transactions using a layout consistent with the transaction details modal.
 	 */
 	import { supabase } from '$lib/supabase';
 	import { goto } from '$app/navigation';
 	import { appData } from '$lib/data.svelte.js';
 	import { appState } from '$lib/state.svelte.js';
-	import {
-		Calendar as CalendarIcon,
-		IndianRupee,
-		FileText,
-		Tags,
-		SortDesc,
-		CheckCircle2,
-		ChevronRight,
-		ChevronDown
-	} from 'lucide-svelte';
+	import { CheckCircle2, ChevronDown } from 'lucide-svelte';
 
 	// Form bindings
 	let date = $state(new Date().toISOString().split('T')[0]);
@@ -26,7 +17,6 @@
 	let category = $state('');
 	let type = $state('debit');
 
-	let slideValue = $state(0);
 	let loading = $state(false);
 	let successMsg = $state(false);
 
@@ -36,7 +26,7 @@
 	let errorMessage = $state('');
 
 	/**
-	 * @description Effect: Derives category dropdown list globally from appData to avoid redundant Supabase queries.
+	 * @description Effect: Derives category dropdown list globally from appData.
 	 */
 	$effect(() => {
 		if (!appData.loading) {
@@ -52,7 +42,16 @@
 	 * @description Handles the transaction submission process to Supabase.
 	 */
 	async function handleSubmit() {
-		if (slideValue < 100 || loading) return;
+		if (!amount || !title || !category) {
+			errorMessage = 'Please fill Amount, Title, and Category fields';
+			showError = true;
+			setTimeout(() => {
+				showError = false;
+			}, 3000);
+			return;
+		}
+
+		if (loading) return;
 
 		loading = true;
 		const parsedAmount = Math.abs(Number(amount));
@@ -76,7 +75,6 @@
 			title = '';
 			description = '';
 			category = '';
-			slideValue = 0;
 
 			// Reload global data across the app to reflect new transaction
 			appData.loadData(appState.month, appState.year);
@@ -87,56 +85,17 @@
 			}, 2000);
 		} else {
 			alert('Failed to save transaction: ' + error.message);
-			slideValue = 0;
 		}
 		loading = false;
 	}
 
-	function handleSlideInput() {
-		if (slideValue == 100) {
-			if (!amount || !title || !category) {
-				slideValue = 0;
-				errorMessage = 'Please fill Amount, Title, and Category fields';
-				showError = true;
-				setTimeout(() => {
-					showError = false;
-				}, 3000);
-			} else if (!loading) {
-				handleSubmit();
-			}
-		}
-	}
-
-	function handleSlideEnd() {
-		if (slideValue < 100) slideValue = 0;
-	}
-
 	let isCategoryDropdownOpen = $state(false);
-	function toggleCategoryDropdown() {
-		isCategoryDropdownOpen = !isCategoryDropdownOpen;
-	}
-	/** @param {any} cat */
-	function selectCategory(cat) {
-		category = cat.category;
-		isCategoryDropdownOpen = false;
-	}
-
-	let selectedCategoryIcon = $derived(
-		categories.find((c) => c.category === category)?.icon_name
-	);
-
 	let isTypeDropdownOpen = $state(false);
-	function toggleTypeDropdown() {
-		isTypeDropdownOpen = !isTypeDropdownOpen;
-	}
-	/** @param {string} t */
-	function selectType(t) {
-		type = t;
-		isTypeDropdownOpen = false;
-	}
+
+	let isDebit = $derived(type.toLowerCase() === 'debit');
 </script>
 
-<div class="px-6 pt-16 pb-32 relative min-h-full">
+<div class="px-4 pt-16 pb-32 relative min-h-full flex items-start justify-center">
 	{#if showError}
 		<div
 			class="fixed top-6 left-6 right-6 z-[100] flex items-center justify-center animate-in slide-in-from-top-4 fade-in duration-300"
@@ -157,266 +116,120 @@
 		</div>
 	{/if}
 
-	<h1 class="text-3xl tracking-wide text-white mb-10 px-2">New Transaction</h1>
-
-	<div class="space-y-7">
-		<!-- Date -->
-		<div>
-			<label for="date" class="block text-xs uppercase tracking-wider text-gray-500 mb-1.5 pl-1"
-				>Date</label
-			>
-			<div class="relative">
-				<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-					<CalendarIcon class="h-4 w-4 text-gray-600" />
-				</div>
-				<input
-					id="date"
-					type="date"
-					bind:value={date}
-					class="w-full bg-[#111111] rounded-3xl pl-11 pr-4 py-5 text-base tracking-wide text-gray-200 focus:outline-none focus:border-gray-600 box-3d"
-				/>
-			</div>
+	<!-- Card Container -->
+	<div class="bg-[#151515] w-full max-w-md rounded-3xl p-6 md:p-8 box-3d flex flex-col gap-6 relative mt-4">
+		<!-- Top Bar -->
+		<div class="flex flex-col gap-1">
+			<h1 class="text-xs font-semibold text-gray-500 uppercase tracking-wider pl-1">New Transaction</h1>
+			<input type="text" bind:value={title} class="bg-transparent font-display text-3xl text-white tracking-wide leading-tight w-full focus:outline-none placeholder-gray-600 border-b border-transparent hover:border-gray-700 focus:border-white transition-colors pb-1" placeholder="Title" />
 		</div>
 
-		<!-- Amount -->
-		<div>
-			<label for="amount" class="block text-xs uppercase tracking-wider text-gray-500 mb-1.5 pl-1"
-				>Amount</label
-			>
-			<div class="relative">
-				<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-					<IndianRupee class="h-4 w-4 text-gray-600" />
+		<!-- Details -->
+		<div class="flex flex-col gap-5 mt-2">
+			<!-- Date & Type -->
+			<div class="flex gap-4">
+				<div class="flex-1 flex flex-col gap-1.5 border-r border-gray-800/60 pr-4">
+					<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Date</span>
+					<input type="date" bind:value={date} class="bg-transparent text-gray-200 text-base focus:outline-none border-b border-transparent hover:border-gray-700 focus:border-white transition-colors cursor-pointer w-full pb-1" />
 				</div>
-				<input
-					id="amount"
-					type="number"
-					bind:value={amount}
-					placeholder="0.00"
-					step="0.01"
-					class="w-full bg-[#111111] rounded-3xl pl-11 pr-4 py-5 text-lg tracking-wide text-white placeholder-gray-700 focus:outline-none box-3d"
-				/>
-			</div>
-		</div>
-
-		<!-- Title -->
-		<div>
-			<label for="title" class="block text-xs uppercase tracking-wider text-gray-500 mb-1.5 pl-1"
-				>Title</label
-			>
-			<div class="relative">
-				<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-					<FileText class="h-4 w-4 text-gray-600" />
-				</div>
-				<input
-					id="title"
-					type="text"
-					bind:value={title}
-					placeholder="What was this for?"
-					class="w-full bg-[#111111] rounded-3xl pl-11 pr-4 py-5 text-base tracking-wide text-gray-200 placeholder-gray-700 focus:outline-none box-3d"
-				/>
-			</div>
-		</div>
-
-		<!-- Description -->
-		<div>
-			<label for="description" class="block text-xs uppercase tracking-wider text-gray-500 mb-1.5 pl-1"
-				>Description (Optional)</label
-			>
-			<div class="relative">
-				<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-					<FileText class="h-4 w-4 text-gray-600 opacity-50" />
-				</div>
-				<input
-					id="description"
-					type="text"
-					bind:value={description}
-					placeholder="Additional details..."
-					class="w-full bg-[#111111] rounded-3xl pl-11 pr-4 py-5 text-base tracking-wide text-gray-200 placeholder-gray-700 focus:outline-none box-3d"
-				/>
-			</div>
-		</div>
-
-		<div class="grid grid-cols-2 gap-4">
-			<!-- Category -->
-			<div class="relative z-50">
-				<label
-					for="category"
-					class="block text-xs uppercase tracking-wider text-gray-500 mb-1.5 pl-1">Category</label
-				>
-				<div class="relative">
-					<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-						<Tags class="h-4 w-4 text-gray-600" />
-					</div>
-					<button
-						id="category"
-						class="w-full bg-[#111111] rounded-3xl pl-11 pr-4 py-5 text-sm tracking-wide {category
-							? 'text-gray-200'
-							: 'text-gray-500'} focus:outline-none box-3d flex items-center justify-between"
-						onclick={toggleCategoryDropdown}
+				<div class="flex-1 flex flex-col gap-1.5 relative pl-2">
+					<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Type</span>
+					<button 
+						class="text-left bg-transparent text-gray-200 text-base focus:outline-none border-b border-transparent hover:border-gray-700 focus:border-white transition-colors w-full flex justify-between items-center pb-1"
+						onclick={() => isTypeDropdownOpen = !isTypeDropdownOpen}
 					>
-						<div class="flex items-center gap-3 truncate">
-							{#if selectedCategoryIcon}
+						<span class="capitalize">{type}</span>
+						<ChevronDown class="w-4 h-4 opacity-50 shrink-0" />
+					</button>
+					{#if isTypeDropdownOpen}
+						<div class="fixed inset-0 z-30" onclick={() => isTypeDropdownOpen = false} role="presentation"></div>
+						<div class="absolute left-0 top-full mt-2 w-full bg-[#1a1a1a] rounded-xl box-3d z-40 p-2 flex flex-col gap-1">
+							{#each ['debit', 'credit'] as tOpt}
+								<button 
+									class="text-left px-4 py-2 text-base tracking-wide rounded-lg transition-colors {type === tOpt ? 'bg-white text-black box-3d' : 'text-gray-200 hover:bg-[#2a2a2a]'} capitalize"
+									onclick={() => { type = tOpt; isTypeDropdownOpen = false; }}
+								>
+									{tOpt}
+								</button>
+							{/each}
+						</div>
+					{/if}
+				</div>
+			</div>
+
+			<hr class="border-gray-800/60" />
+
+			<!-- Amount and Category Side-by-Side -->
+			<div class="flex gap-4 items-end mt-1">
+				<!-- Amount -->
+				<div class="flex-1 flex flex-col gap-1.5 min-w-0 border-r border-gray-800/60 pr-4">
+					<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Amount (₹)</span>
+					<div class="flex flex-row flex-nowrap items-baseline text-4xl tracking-wide font-bold {isDebit ? 'text-[#ff6b6b]' : 'text-[#69db7c]'} border-b border-transparent hover:border-gray-700 focus-within:border-current transition-colors w-full pb-0.5">
+						<span class="mr-1 shrink-0">{isDebit ? '-' : '+'}₹</span>
+						<input type="number" bind:value={amount} class="bg-transparent focus:outline-none flex-1 min-w-0 p-0 m-0 [-moz-appearance:_textfield] [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none placeholder-gray-600" placeholder="0" />
+					</div>
+				</div>
+
+				<!-- Category -->
+				<div class="flex-1 flex flex-col gap-1.5 relative min-w-0 pl-2">
+					<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Category</span>
+					<button 
+						class="flex items-center justify-between gap-3 bg-transparent w-full focus:outline-none border-b border-transparent hover:border-gray-700 focus:border-white transition-shadow text-left pb-1"
+						onclick={() => isCategoryDropdownOpen = !isCategoryDropdownOpen}
+					>
+						<div class="flex items-center gap-3 overflow-hidden">
+							{#if category && categories.find(c => c.category === category)?.icon_name}
 								<picture>
-									<source srcset="/icons/{selectedCategoryIcon}.avif" type="image/avif" />
-									<img src="/icons/{selectedCategoryIcon}.webp" alt="" class="h-5 w-5 object-contain" />
+									<source srcset="/icons/{categories.find(c => c.category === category)?.icon_name}.avif" type="image/avif" />
+									<img src="/icons/{categories.find(c => c.category === category)?.icon_name}.webp" alt="" class="h-5 w-5 object-contain shrink-0" />
 								</picture>
 							{/if}
-							<span class="truncate">{category || 'Select...'}</span>
+							<span class="text-gray-100 font-medium truncate">{category || 'Select...'}</span>
 						</div>
-						<ChevronDown class="w-4 h-4 text-gray-500 shrink-0 ml-1" />
+						<ChevronDown class="w-4 h-4 text-gray-500 shrink-0" />
 					</button>
+					
+					{#if isCategoryDropdownOpen}
+						<div class="fixed inset-0 z-30" onclick={() => isCategoryDropdownOpen = false} role="presentation"></div>
+						<div class="absolute right-0 top-full mt-2 w-56 max-h-64 overflow-y-auto bg-[#1a1a1a] rounded-xl box-3d z-50 p-2 flex flex-col gap-1">
+							{#each categories as cat}
+								<button 
+									class="flex items-center gap-3 text-left px-4 py-3 text-base tracking-wide rounded-lg transition-colors {category === cat.category ? 'bg-white text-black box-3d' : 'text-gray-200 hover:bg-[#2a2a2a]'}"
+									onclick={() => { category = cat.category; isCategoryDropdownOpen = false; }}
+								>
+									{#if cat.icon_name}
+										<picture>
+											<source srcset="/icons/{cat.icon_name}.avif" type="image/avif" />
+											<img src="/icons/{cat.icon_name}.webp" alt="" class="h-5 w-5 object-contain" />
+										</picture>
+									{/if}
+									<span>{cat.category}</span>
+								</button>
+							{/each}
+						</div>
+					{/if}
 				</div>
-
-				{#if isCategoryDropdownOpen}
-					<div
-						class="fixed inset-0 z-40"
-						onclick={() => (isCategoryDropdownOpen = false)}
-						role="presentation"
-					></div>
-					<div
-						class="absolute left-0 right-0 mt-2 max-h-64 overflow-y-auto bg-[#1a1a1a] rounded-xl box-3d z-50 p-2 flex flex-col gap-1"
-					>
-						{#each categories as cat}
-							<button
-								class="flex items-center gap-3 text-left px-4 py-3 text-base tracking-wide rounded-lg transition-colors {category ===
-								cat.category
-									? 'bg-white text-black box-3d'
-									: 'text-gray-200 hover:bg-[#2a2a2a]'}"
-								onclick={() => selectCategory(cat)}
-							>
-								{#if cat.icon_name}
-									<picture>
-										<source srcset="/icons/{cat.icon_name}.avif" type="image/avif" />
-										<img src="/icons/{cat.icon_name}.webp" alt="" class="h-6 w-6 object-contain" />
-									</picture>
-								{/if}
-								<span>{cat.category}</span>
-							</button>
-						{/each}
-					</div>
-				{/if}
 			</div>
 
-			<!-- Type -->
-			<div class="relative z-40">
-				<label for="type" class="block text-xs uppercase tracking-wider text-gray-500 mb-1.5 pl-1"
-					>Type</label
-				>
-				<div class="relative">
-					<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-						<SortDesc class="h-4 w-4 text-gray-600" />
-					</div>
-					<button
-						id="type"
-						class="w-full bg-[#111111] rounded-3xl pl-11 pr-4 py-5 text-sm tracking-wide focus:outline-none box-3d flex items-center justify-between {type ===
-						'debit'
-							? 'text-[#ff6b6b]'
-							: 'text-[#69db7c]'}"
-						onclick={toggleTypeDropdown}
-					>
-						<span>{type === 'debit' ? 'Debit' : 'Credit'}</span>
-						<ChevronDown class="w-4 h-4 text-gray-500 shrink-0 ml-1" />
-					</button>
-				</div>
+			<hr class="border-gray-800/60" />
 
-				{#if isTypeDropdownOpen}
-					<div
-						class="fixed inset-0 z-40"
-						onclick={() => (isTypeDropdownOpen = false)}
-						role="presentation"
-					></div>
-					<div
-						class="absolute left-0 right-0 mt-2 bg-[#1a1a1a] rounded-xl box-3d z-50 p-2 flex flex-col gap-1"
-					>
-						{#each ['debit', 'credit'] as t}
-							<button
-								class="text-left px-4 py-3 text-base tracking-wide rounded-lg transition-colors {type ===
-								t
-									? 'bg-white text-black box-3d'
-									: 'text-gray-200 hover:bg-[#2a2a2a]'}"
-								onclick={() => selectType(t)}
-							>
-								{t === 'debit' ? 'Debit' : 'Credit'}
-							</button>
-						{/each}
-					</div>
-				{/if}
+			<!-- Description -->
+			<div class="flex flex-col gap-1.5 mt-1">
+				<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Description</span>
+				<textarea bind:value={description} class="bg-transparent text-gray-400 text-base leading-relaxed focus:outline-none w-full resize-none min-h-[48px] p-0 border-b border-transparent hover:border-gray-700 focus:border-white transition-colors" placeholder="Add a description (optional)..."></textarea>
 			</div>
 		</div>
-	</div>
 
-	<!-- Slider Friction -->
-	<div class="mt-14 flex flex-col items-center">
-		<p class="text-xs uppercase tracking-wider text-gray-600 mb-3">Slide to Confirm</p>
-		<div class="relative w-full h-16 flex items-center justify-center">
-			<div
-				class="absolute inset-x-0 h-14 bg-[#0a0a0a] rounded-full overflow-hidden flex items-center justify-center box-3d"
-			>
-				<!-- Background text -->
-				<span
-					class="absolute text-gray-600 font-medium tracking-widest uppercase text-sm pointer-events-none flex items-center gap-2 z-0"
-				>
-					{#if loading}
-						Processing...
-					{:else}
-						Slide >>>
-					{/if}
-				</span>
-
-				<!-- Fill progress -->
-				<div
-					class="absolute top-0 left-0 h-full bg-white/20 backdrop-blur-md pointer-events-none z-0"
-					style="width: calc(2rem + (100% - 4rem) * ({slideValue} / 100));"
-				></div>
-			</div>
-
-			<!-- The invisible slider -->
-			<input
-				type="range"
-				min="0"
-				max="100"
-				bind:value={slideValue}
-				oninput={handleSlideInput}
-				ontouchend={handleSlideEnd}
-				onmouseup={handleSlideEnd}
-				onmouseleave={handleSlideEnd}
-				class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20 custom-slider touch-none"
-				disabled={loading}
-			/>
-
-			<!-- Visual thumb that moves with the slider -->
-			<div
-				class="absolute w-16 h-16 bg-white rounded-full shadow-lg pointer-events-none transition-none flex items-center justify-center transform -translate-x-1/2 z-10"
-				style="left: calc(2rem + (100% - 4rem) * ({slideValue} / 100));"
-			>
-				<ChevronRight class="w-6 h-6 text-gray-800" />
-			</div>
+		<!-- Actions -->
+		<div class="mt-2 border-t border-gray-800/60 pt-6">
+			<button class="w-full py-4 rounded-xl bg-white hover:bg-gray-200 text-black font-bold text-lg box-3d tracking-wide transition-all active:translate-y-1 flex items-center justify-center gap-2 disabled:opacity-70 disabled:active:translate-y-0" onclick={handleSubmit} disabled={loading}>
+				{#if loading}
+					<div class="h-5 w-5 rounded-full border-2 border-black border-t-transparent animate-spin"></div>
+					<span>Saving...</span>
+				{:else}
+					<span>Add Transaction</span>
+				{/if}
+			</button>
 		</div>
 	</div>
 </div>
-
-<style>
-	/* Make the native thumb same size as visual thumb so their centers align perfectly */
-	.custom-slider {
-		-webkit-appearance: none;
-		appearance: none;
-		background: transparent;
-	}
-	.custom-slider::-webkit-slider-thumb {
-		-webkit-appearance: none;
-		appearance: none;
-		width: 4rem;
-		height: 4rem;
-		border-radius: 50%;
-		background: transparent;
-		cursor: pointer;
-	}
-	.custom-slider::-moz-range-thumb {
-		width: 4rem;
-		height: 4rem;
-		border-radius: 50%;
-		background: transparent;
-		cursor: pointer;
-		border: none;
-	}
-</style>
