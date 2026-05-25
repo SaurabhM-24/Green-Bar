@@ -9,6 +9,7 @@
 	import { appState } from '$lib/state.svelte.js';
 	import { appData } from '$lib/data.svelte.js';
 	import TransactionCard from '$lib/components/TransactionCard.svelte';
+	import TransactionDetailsModal from '$lib/components/TransactionDetailsModal.svelte';
 	import { ChevronDown } from 'lucide-svelte';
 
 	/** @type {boolean} Local loading state for transactions */
@@ -16,6 +17,9 @@
 	
 	/** @type {any[]} List of transactions for the selected month and filter */
 	let transactions = $state([]);
+	
+	let selectedTransaction = $state(null);
+	let isModalOpen = $state(false);
 	
 	/** @type {any[]} Filter options for dropdown derived from global app data */
 	let categories = $state([]);
@@ -55,40 +59,66 @@
 	});
 
 	/**
+	 * @param {number} m
+	 * @param {number} y
+	 * @param {string} [cat]
+	 */
+	async function loadData(m, y, cat) {
+		loading = true;
+		const startDate = `${y}-${String(m).padStart(2, '0')}-01`;
+		const lastDay = new Date(y, m, 0).getDate();
+		const endDate = `${y}-${String(m).padStart(2, '0')}-${lastDay}T23:59:59`;
+
+		let query = supabase
+			.from('transactions')
+			.select('*')
+			.gte('transaction_date', startDate)
+			.lte('transaction_date', endDate)
+			.order('transaction_date', { ascending: false })
+			.order('created_at', { ascending: false });
+
+		if (cat && cat !== 'All') {
+			query = query.eq('category', cat);
+		}
+
+		const { data: txData } = await query;
+		if (txData) transactions = txData;
+
+		loading = false;
+	}
+
+	/**
 	 * @description Effect: Fetches transaction list whenever month, year, or filter category changes.
 	 */
 	$effect(() => {
-		/**
-		 * @param {number} m
-		 * @param {number} y
-		 * @param {string} [cat]
-		 */
-		async function loadData(m, y, cat) {
-			loading = true;
-			const startDate = `${y}-${String(m).padStart(2, '0')}-01`;
-			const lastDay = new Date(y, m, 0).getDate();
-			const endDate = `${y}-${String(m).padStart(2, '0')}-${lastDay}T23:59:59`;
-
-			let query = supabase
-				.from('transactions')
-				.select('*')
-				.gte('transaction_date', startDate)
-				.lte('transaction_date', endDate)
-				.order('transaction_date', { ascending: false })
-				.order('created_at', { ascending: false });
-
-			if (cat && cat !== 'All') {
-				query = query.eq('category', cat);
-			}
-
-			const { data: txData } = await query;
-			if (txData) transactions = txData;
-
-			loading = false;
-		}
-
 		loadData(appState.month, appState.year, selectedCategory);
 	});
+
+	async function handleDelete(id) {
+		const { error } = await supabase.from('transactions').delete().eq('id', id);
+		if (!error) {
+			isModalOpen = false;
+			selectedTransaction = null;
+			loadData(appState.month, appState.year, selectedCategory);
+		}
+	}
+
+	async function handleSave(data) {
+		const updatePayload = {
+			title: data.title,
+			description: data.description,
+			amount: data.amount,
+			transaction_date: data.transaction_date,
+			category: data.category,
+			transaction_type: data.transaction_type
+		};
+		const { error } = await supabase.from('transactions').update(updatePayload).eq('id', data.id);
+		if (!error) {
+			isModalOpen = false;
+			selectedTransaction = null;
+			loadData(appState.month, appState.year, selectedCategory);
+		}
+	}
 
 	let isCategoryDropdownOpen = $state(false);
 	
@@ -181,10 +211,25 @@
 							amount={Number(tx.amount)}
 							type={tx.transaction_type}
 							iconName={categories.find(c => c.category === tx.category)?.icon_name}
+							onclick={() => {
+								selectedTransaction = tx;
+								isModalOpen = true;
+							}}
 						/>
 					{/each}
 				</div>
 			</div>
 		{/each}
+	{/if}
+
+	<!-- Transaction Details Modal -->
+	{#if isModalOpen && selectedTransaction}
+		<TransactionDetailsModal
+			transaction={selectedTransaction}
+			categories={categories}
+			onclose={() => isModalOpen = false}
+			ondelete={handleDelete}
+			onsave={handleSave}
+		/>
 	{/if}
 </div>

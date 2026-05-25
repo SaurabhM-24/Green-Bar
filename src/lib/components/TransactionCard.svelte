@@ -3,14 +3,15 @@
 	 * @fileoverview Transaction Card Component.
 	 * Renders a single transaction row, formatting amount correctly based on debit/credit type.
 	 */
-	let { title, description, amount, type, iconName } = $props();
+	let { title, description, amount, type, iconName, onclick } = $props();
 
 	/** @type {boolean} Flag indicating whether this is an outgoing debit transaction */
 	let isDebit = $derived(type.toLowerCase() === 'debit');
 </script>
 
-<div
-	class="relative bg-[#0f0f0f] py-6 px-8 flex justify-between items-center after:absolute after:bottom-0 after:left-8 after:right-8 after:h-px after:bg-gray-800/60 last:after:hidden"
+<button
+	class="w-full text-left relative bg-[#0f0f0f] py-6 px-8 flex justify-between items-center after:absolute after:bottom-0 after:left-8 after:right-8 after:h-px after:bg-gray-800/60 last:after:hidden hover:bg-[#151515] transition-colors focus:outline-none"
+	onclick={onclick}
 >
 	<div class="flex flex-col overflow-hidden mr-6">
 		<span class="text-gray-200 text-xl tracking-wide truncate {description ? 'mb-1.5' : ''}">{title}</span>
@@ -33,4 +34,4 @@
 			{/if}
 		</div>
 	</div>
-</div>
+</button>
