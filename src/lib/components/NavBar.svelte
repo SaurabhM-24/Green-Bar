@@ -1,9 +1,15 @@
 <script>
+	/**
+	 * @fileoverview Bottom Navigation Bar.
+	 * Provides persistent global navigation across core application routes.
+	 */
 	import { Home, LayoutDashboard, Wallet, List } from 'lucide-svelte';
 	import { page } from '$app/stores';
 
+	/** @type {string} Derived current active route to highlight the corresponding icon */
 	let activeRoute = $derived($page.url.pathname);
 
+	/** @type {{ href: string, icon: any, label: string }[]} Navigation link configuration */
 	const links = [
 		{ href: '/', icon: Home, label: 'Home' },
 		{ href: '/variable', icon: LayoutDashboard, label: 'Dash' },

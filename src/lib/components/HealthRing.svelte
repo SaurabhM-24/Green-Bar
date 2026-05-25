@@ -1,14 +1,22 @@
 <script>
+	/**
+	 * @fileoverview Health Ring Component.
+	 * Displays an SVG circular progress indicator based on category budget usage.
+	 */
 	let { category, usedData, totalData, iconName } = $props();
 
+	/** @type {number} Derived progress percentage. Prevents division by zero. */
 	let progress = $derived(
 		totalData > 0 ? Math.max(((totalData - usedData) / totalData) * 100, 0) : 0
 	);
 
 	let radius = 28;
 	let circumference = $derived(2 * Math.PI * radius);
+	
+	/** @type {number} SVG stroke-dashoffset for rendering the partial circle */
 	let strokeDashoffset = $derived(circumference - (progress / 100) * circumference);
 
+	/** @type {string} Dynamic Tailwind text color for the SVG stroke */
 	let ringColor = $derived(
 		progress > 75 ? 'text-green-500' :
 		progress > 50 ? 'text-white' :

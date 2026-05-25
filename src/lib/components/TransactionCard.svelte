@@ -1,6 +1,11 @@
 <script>
+	/**
+	 * @fileoverview Transaction Card Component.
+	 * Renders a single transaction row, formatting amount correctly based on debit/credit type.
+	 */
 	let { title, description, amount, type, iconName } = $props();
 
+	/** @type {boolean} Flag indicating whether this is an outgoing debit transaction */
 	let isDebit = $derived(type.toLowerCase() === 'debit');
 </script>
 

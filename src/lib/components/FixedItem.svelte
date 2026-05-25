@@ -1,5 +1,10 @@
 <script>
+	/**
+	 * @fileoverview Fixed Item Component.
+	 * Represents a fixed budget item and its completion status in the checklist.
+	 */
 	import { Check } from 'lucide-svelte';
+	
 	let { title, isChecked, isLast = false, iconName } = $props();
 </script>
 

@@ -1,14 +1,28 @@
 <script>
+	/**
+	 * @fileoverview Login Page.
+	 * Handles user authentication using Supabase email/password sign in.
+	 */
 	import { supabase } from '$lib/supabase';
 	import { goto } from '$app/navigation';
 	import { Mail, Lock } from 'lucide-svelte';
 
+	/** @type {string} User email input binding */
 	let email = $state('');
+	
+	/** @type {string} User password input binding */
 	let password = $state('');
+	
+	/** @type {string} Error message string to display to the user */
 	let errorMsg = $state('');
+	
+	/** @type {boolean} Form submission loading state */
 	let loading = $state(false);
 
-	/** @param {Event} e */
+	/**
+	 * @description Handles form submission and triggers Supabase authentication.
+	 * @param {Event} e - Form submission event
+	 */
 	async function handleLogin(e) {
 		e.preventDefault();
 		loading = true;

@@ -1,7 +1,12 @@
 <script>
+	/**
+	 * @fileoverview Header Component.
+	 * Displays the current global month/year and provides a dropdown to select a different month.
+	 */
 	import { Calendar, ChevronLeft, ChevronRight } from 'lucide-svelte';
 	import { appState } from '$lib/state.svelte.js';
 
+	/** @type {boolean} State to control the visibility of the month selection dropdown */
 	let isDropdownOpen = $state(false);
 
 	function toggleDropdown() {

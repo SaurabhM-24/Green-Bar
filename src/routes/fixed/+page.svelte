@@ -1,4 +1,8 @@
 <script>
+	/**
+	 * @fileoverview Fixed Responsibilities & Corpus Funds page.
+	 * Displays fixed and corpus budgets, and supports drag-and-drop reordering.
+	 */
 	import { supabase } from '$lib/supabase';
 	import { appState } from '$lib/state.svelte.js';
 	import { appData } from '$lib/data.svelte.js';
@@ -10,7 +14,8 @@
 
 	let loading = $derived(appData.loading);
 	let corpusBudgets = $derived(appData.corpusBudgets);
-	/** @type {any[]} */
+	
+	/** @type {any[]} List of fixed budgets for reordering */
 	let fixedBudgets = $state([]);
 	let transactionCategories = $derived(appData.transactionCategories);
 
@@ -38,11 +43,14 @@
 		fixedBudgets = e.detail.items;
 	}
 
+	/**
+	 * @description Saves the new sort order to Supabase based on the user's reordering.
+	 */
 	async function saveOrder() {
 		savingOrder = true;
 		try {
 			const updates = fixedBudgets.map((b, index) => {
-				return supabase.from('budgets').update({ sort_order: index }).eq('category', b.category);
+				return supabase.from('budgets').update({ sort_order: index }).eq('category_id', b.category_id);
 			});
 			await Promise.all(updates);
 		} catch (error) {

@@ -1,12 +1,19 @@
 <script>
+	/**
+	 * @fileoverview Category Card Component.
+	 * Displays a variable budget's status using a horizontal progress bar.
+	 */
 	let { title, totalData, usedData, iconName } = $props();
 
-	// Avoid division by zero, reverse logic so bar shrinks as it is used
+	/** @type {number} Derived progress percentage. Prevents division by zero. */
 	let progress = $derived(
 		totalData > 0 ? Math.max(((totalData - usedData) / totalData) * 100, 0) : 0
 	);
+	
+	/** @type {number} Exact monetary amount remaining for the category */
 	let amountLeft = $derived(totalData - usedData);
 
+	/** @type {string} Dynamic Tailwind color class based on budget consumption */
 	let barColor = $derived(
 		progress > 75 ? 'bg-green-500' :
 		progress > 50 ? 'bg-white' :

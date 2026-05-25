@@ -1,4 +1,8 @@
 <script>
+	/**
+	 * @fileoverview Variable Budgets page.
+	 * Displays variable budgets with progress rings and supports drag-and-drop reordering.
+	 */
 	import { supabase } from '$lib/supabase';
 	import { appState } from '$lib/state.svelte.js';
 	import { appData } from '$lib/data.svelte.js';
@@ -8,7 +12,7 @@
 	import { MoreVertical } from 'lucide-svelte';
 
 	let loading = $derived(appData.loading);
-	/** @type {any[]} */
+	/** @type {any[]} List of variable budgets for reordering */
 	let budgets = $state([]);
 	let categoryTotals = $derived(appData.categoryTotals);
 
@@ -33,12 +37,15 @@
 		budgets = e.detail.items;
 	}
 
+	/**
+	 * @description Saves the new sort order to Supabase based on the user's reordering.
+	 */
 	async function saveOrder() {
 		savingOrder = true;
 		try {
 			// Update each budget's sort_order based on its index
 			const updates = budgets.map((b, index) => {
-				return supabase.from('budgets').update({ sort_order: index }).eq('category', b.category);
+				return supabase.from('budgets').update({ sort_order: index }).eq('category_id', b.category_id);
 			});
 			await Promise.all(updates);
 		} catch (error) {
@@ -58,7 +65,6 @@
 	}
 
 	function cancelEditing() {
-		// Just turn off editing mode; we could also reload original order if we wanted to be strict
 		isEditingOrder = false;
 	}
 </script>

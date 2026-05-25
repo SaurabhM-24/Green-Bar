@@ -1,17 +1,24 @@
 <script>
+	/**
+	 * @fileoverview Corpus Card Component.
+	 * Displays corpus/savings status with a multi-segment progress bar (locked vs expendable).
+	 */
 	let { title, lockedData, leftData, usedData, iconName } = $props();
 
-	// Calculate the starting expendable capacity for the month.
-	// leftData is the current exact balance left. usedData is what we spent this month.
-	// Therefore, at the start of the month, we had (leftData + usedData) expendable cash.
+	/**
+	 * @description The initial expendable capacity for the month.
+	 * (Current exact balance left + what was spent this month).
+	 * @type {number}
+	 */
 	let maxExpendableThisMonth = $derived(leftData + usedData);
 
-	// Visual total scale = locked base + what we started the month with.
+	/** @type {number} Total scale representing locked base plus the starting expendable cash */
 	let visualTotal = $derived(lockedData + maxExpendableThisMonth);
 
+	/** @type {number} Percentage width for the locked segment of the bar */
 	let lockedProgress = $derived(visualTotal > 0 ? (lockedData / visualTotal) * 100 : 0);
 
-	// The leftProgress will shrink mathematically as usedData increases (which inherently drops leftData)
+	/** @type {number} Percentage width for the remaining expendable segment */
 	let leftProgress = $derived(visualTotal > 0 ? (leftData / visualTotal) * 100 : 0);
 </script>
 

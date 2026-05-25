@@ -1,20 +1,31 @@
 <script>
+	/**
+	 * @fileoverview Transaction list and history view.
+	 * Displays all transactions for a given month, grouped by date, and allows filtering by category.
+	 */
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { supabase } from '$lib/supabase';
 	import { appState } from '$lib/state.svelte.js';
+	import { appData } from '$lib/data.svelte.js';
 	import TransactionCard from '$lib/components/TransactionCard.svelte';
 	import { ChevronDown } from 'lucide-svelte';
 
+	/** @type {boolean} Local loading state for transactions */
 	let loading = $state(true);
-	/** @type {any[]} */
+	
+	/** @type {any[]} List of transactions for the selected month and filter */
 	let transactions = $state([]);
-	/** @type {any[]} */
+	
+	/** @type {any[]} Filter options for dropdown derived from global app data */
 	let categories = $state([]);
 
-	// Read initial category from URL param if available, otherwise just "All"
+	/** @type {string} Currently selected category for filtering */
 	let selectedCategory = $state($page.url.searchParams.get('category') || 'All');
 
+	/**
+	 * @description Derived array grouping transactions by their transaction_date.
+	 */
 	let groupedTransactions = $derived.by(() => {
 		/** @type {{ date: string, items: any[] }[]} */
 		let groups = [];
@@ -29,6 +40,23 @@
 		return groups;
 	});
 
+	/**
+	 * @description Effect: Derives category dropdown list globally from appData to avoid redundant Supabase queries.
+	 */
+	$effect(() => {
+		if (!appData.loading) {
+			categories = [
+				{ category: 'All' },
+				...appData.budgets,
+				...appData.corpusBudgets,
+				...appData.fixedBudgets
+			];
+		}
+	});
+
+	/**
+	 * @description Effect: Fetches transaction list whenever month, year, or filter category changes.
+	 */
 	$effect(() => {
 		/**
 		 * @param {number} m
@@ -56,37 +84,18 @@
 			const { data: txData } = await query;
 			if (txData) transactions = txData;
 
-			// If not fetching by specific category, extract all unique categories
-			if (appState.month && appState.year) {
-				const { data: budgetData } = await supabase.from('budgets').select('category, icon_name, budget_type, sort_order');
-				if (budgetData) {
-					/** @type {Record<string, number>} */
-					const typeOrder = { variable: 1, corpus: 2, fixed: 3 };
-					budgetData.sort((a, b) => {
-						const orderA = typeOrder[a.budget_type] || 99;
-						const orderB = typeOrder[b.budget_type] || 99;
-						if (orderA !== orderB) return orderA - orderB;
-						return (a.sort_order || 0) - (b.sort_order || 0);
-					});
-					categories = [{ category: 'All' }, ...budgetData];
-				}
-			}
-
 			loading = false;
 		}
 
 		loadData(appState.month, appState.year, selectedCategory);
 	});
 
-	/** @param {Event & { currentTarget: HTMLSelectElement }} e */
-	function handleCategoryChange(e) {
-		selectedCategory = e.currentTarget.value;
-	}
-
 	let isCategoryDropdownOpen = $state(false);
+	
 	function toggleCategoryDropdown() {
 		isCategoryDropdownOpen = !isCategoryDropdownOpen;
 	}
+	
 	/** @param {string} cat */
 	function selectCategory(cat) {
 		selectedCategory = cat;

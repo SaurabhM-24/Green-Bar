@@ -1,24 +1,49 @@
 <script>
+	/**
+	 * @fileoverview Main Dashboard page.
+	 * Displays high-level insights, variable expenses overview, fixed responsibilities, and overall balance.
+	 */
 	import { appData } from '$lib/data.svelte.js';
 	import { Check } from 'lucide-svelte';
 	import HealthRing from '$lib/components/HealthRing.svelte';
 
+	/** @type {boolean} Application loading state */
 	let loading = $derived(appData.loading);
+	
+	/** @type {any[]} List of active variable budgets */
 	let budgets = $derived(appData.budgets);
+	
+	/** @type {any[]} List of fixed budgets */
 	let fixedBudgets = $derived(appData.fixedBudgets);
+	
+	/** @type {Record<string, number>} Aggregated spending totals per category */
 	let categoryTotals = $derived(appData.categoryTotals);
+	
+	/** @type {Set<string>} Set of categories containing transactions this month */
 	let transactionCategories = $derived(appData.transactionCategories);
+	
+	/** @type {number} Global liquid balance calculated from all-time history */
 	let globalLiquidBalance = $derived(appData.globalLiquidBalance);
+	
+	/** @type {number} Corpus used in the current month */
 	let currentMonthCorpusUsed = $derived(appData.currentMonthCorpusUsed);
+	
+	/** @type {number} Total aggregate account balance */
 	let totalAccountBalance = $derived(appData.totalAccountBalance);
+	
+	/** @type {number} Reserved monthly corpus limit */
 	let corpusLimit = $derived(appData.corpusLimit);
 
-	// The balance as requested: [sum of transactions minus the corpus limit from the budgets table]
+	/** @type {number} The available operational balance (Total Balance - Corpus Limit) */
 	let accountBalance = $derived(totalAccountBalance - corpusLimit);
-	// Personal corpus remaining
+	
+	/** @type {number} The remaining personal corpus cache */
 	let personalCorpus = $derived(globalLiquidBalance + currentMonthCorpusUsed);
 
+	/** @type {string} Formatted user name for the greeting */
 	let userName = $derived(appData.userName);
+	
+	/** @type {string} Contextual dynamic insight string */
 	let insightLine = $derived(appData.insightLine);
 </script>
 

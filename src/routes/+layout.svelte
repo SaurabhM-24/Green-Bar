@@ -1,4 +1,8 @@
 <script>
+	/**
+	 * @fileoverview Root layout component
+	 * Handles global authentication state, layout structure, and automatic route protection.
+	 */
 	import favicon from '$lib/assets/favicon.svg';
 	import { supabase } from '$lib/supabase';
 	import { goto } from '$app/navigation';
@@ -12,11 +16,18 @@
 
 	let { children } = $props();
 
-	/** @type {import('@supabase/supabase-js').Session | null} */
+	/** @type {import('@supabase/supabase-js').Session | null} Active user session */
 	let session = $state(null);
+	
+	/** @type {boolean} Global loading state for authentication check */
 	let loading = $state(true);
+	
+	/** @type {HTMLElement | undefined} Reference to the main scrolling container */
 	let mainContainer = $state();
 
+	/**
+	 * @description Effect: Scroll to top of the main container when the route changes.
+	 */
 	$effect(() => {
 		const currentPath = $page.url.pathname;
 		if (mainContainer) {
@@ -24,6 +35,9 @@
 		}
 	});
 
+	/**
+	 * @description Effect: Manages Supabase authentication state and route protection.
+	 */
 	$effect(() => {
 		supabase.auth.getSession().then(({ data }) => {
 			session = data.session;
@@ -45,9 +59,16 @@
 			}
 		});
 
-		appData.loadData(appState.month, appState.year);
-
 		return () => subscription.unsubscribe();
+	});
+
+	/**
+	 * @description Effect: Fetches app data whenever the session or selected month/year changes.
+	 */
+	$effect(() => {
+		if (session) {
+			appData.loadData(appState.month, appState.year);
+		}
 	});
 </script>
 

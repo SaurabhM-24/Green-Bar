@@ -1,4 +1,8 @@
 <script>
+	/**
+	 * @fileoverview Add Transaction form page.
+	 * Handles creating new transactions and validating input using a slide-to-confirm mechanism.
+	 */
 	import { supabase } from '$lib/supabase';
 	import { goto } from '$app/navigation';
 	import { appData } from '$lib/data.svelte.js';
@@ -26,30 +30,27 @@
 	let loading = $state(false);
 	let successMsg = $state(false);
 
-	// Dynamic categories fetched from DB
-	/** @type {any[]} */
+	/** @type {any[]} Dynamic categories sourced from global app data */
 	let categories = $state([]);
 	let showError = $state(false);
 	let errorMessage = $state('');
 
+	/**
+	 * @description Effect: Derives category dropdown list globally from appData to avoid redundant Supabase queries.
+	 */
 	$effect(() => {
-		async function fetchCategories() {
-			const { data } = await supabase.from('budgets').select('category, icon_name, budget_type, sort_order');
-			if (data) {
-				/** @type {Record<string, number>} */
-				const typeOrder = { variable: 1, corpus: 2, fixed: 3 };
-				data.sort((a, b) => {
-					const orderA = typeOrder[a.budget_type] || 99;
-					const orderB = typeOrder[b.budget_type] || 99;
-					if (orderA !== orderB) return orderA - orderB;
-					return (a.sort_order || 0) - (b.sort_order || 0);
-				});
-				categories = data;
-			}
+		if (!appData.loading) {
+			categories = [
+				...appData.budgets,
+				...appData.corpusBudgets,
+				...appData.fixedBudgets
+			];
 		}
-		fetchCategories();
 	});
 
+	/**
+	 * @description Handles the transaction submission process to Supabase.
+	 */
 	async function handleSubmit() {
 		if (slideValue < 100 || loading) return;
 
@@ -77,7 +78,7 @@
 			category = '';
 			slideValue = 0;
 
-			// Reload data
+			// Reload global data across the app to reflect new transaction
 			appData.loadData(appState.month, appState.year);
 
 			setTimeout(() => {
@@ -378,6 +379,7 @@
 				oninput={handleSlideInput}
 				ontouchend={handleSlideEnd}
 				onmouseup={handleSlideEnd}
+				onmouseleave={handleSlideEnd}
 				class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20 custom-slider touch-none"
 				disabled={loading}
 			/>
