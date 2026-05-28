@@ -6,6 +6,7 @@
 	import { appData } from '$lib/data.svelte.js';
 	import { Check } from 'lucide-svelte';
 	import HealthRing from '$lib/components/HealthRing.svelte';
+	import { iconMap } from '$lib/icons.js';
 
 	/** @type {boolean} Application loading state */
 	let loading = $derived(appData.loading);
@@ -91,11 +92,13 @@
 						<div
 							class="relative w-14 h-14 bg-[#1a1a1a] rounded-2xl flex items-center justify-center mb-2"
 						>
-							{#if b.icon_name}
+							{#if b.icon_name && iconMap[b.icon_name]}
 								<picture>
-									<source srcset="/icons/{b.icon_name}.avif" type="image/avif" />
+									{#if iconMap[b.icon_name].avif}
+										<source srcset={iconMap[b.icon_name].avif} type="image/avif" />
+									{/if}
 									<img
-										src="/icons/{b.icon_name}.webp"
+										src={iconMap[b.icon_name].webp}
 										alt="{b.category} icon"
 										class="h-7 w-7 object-contain"
 									/>

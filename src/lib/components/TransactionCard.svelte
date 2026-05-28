@@ -3,6 +3,8 @@
 	 * @fileoverview Transaction Card Component.
 	 * Renders a single transaction row, formatting amount correctly based on debit/credit type.
 	 */
+	import { ArrowUpRight, ArrowDownLeft } from 'lucide-svelte';
+	import { iconMap } from '$lib/icons.js';
 	let { title, description, amount, type, iconName, onclick } = $props();
 
 	/** @type {boolean} Flag indicating whether this is an outgoing debit transaction */
@@ -24,10 +26,12 @@
 			{isDebit ? '-' : '+'}₹{Math.abs(amount).toLocaleString('en-IN')}
 		</span>
 		<div class="mt-1.5 flex justify-end">
-			{#if iconName}
+			{#if iconName && iconMap[iconName]}
 				<picture>
-					<source srcset="/icons/{iconName}.avif" type="image/avif" />
-					<img src="/icons/{iconName}.webp" alt="{type} icon" class="h-5 w-5 object-contain opacity-70" />
+					{#if iconMap[iconName].avif}
+						<source srcset={iconMap[iconName].avif} type="image/avif" />
+					{/if}
+					<img src={iconMap[iconName].webp} alt="{type} icon" class="h-5 w-5 object-contain opacity-70" />
 				</picture>
 			{:else}
 				<span class="text-sm uppercase tracking-wide text-[#555]">{type}</span>

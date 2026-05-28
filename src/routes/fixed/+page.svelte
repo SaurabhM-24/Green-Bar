@@ -8,6 +8,8 @@
 	import { appData } from '$lib/data.svelte.js';
 	import CorpusCard from '$lib/components/CorpusCard.svelte';
 	import FixedItem from '$lib/components/FixedItem.svelte';
+	import CorpusModal from '$lib/components/editCards/CorpusModal.svelte';
+	import FixedModal from '$lib/components/editCards/FixedModal.svelte';
 	import { dndzone } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
 	import { MoreVertical } from 'lucide-svelte';
@@ -26,6 +28,43 @@
 	let isMenuOpen = $state(false);
 	let savingOrder = $state(false);
 	const flipDurationMs = 200;
+
+	let isCorpusModalOpen = $state(false);
+	/** @type {any} */
+	let selectedCorpusBudget = $state(null);
+
+	let isFixedModalOpen = $state(false);
+	/** @type {any} */
+	let selectedFixedBudget = $state(null);
+
+	/** @param {string} id */
+	async function handleDelete(id) {
+		const { error } = await supabase.from('budgets').delete().eq('category_id', id);
+		if (!error) {
+			isCorpusModalOpen = false;
+			selectedCorpusBudget = null;
+			isFixedModalOpen = false;
+			selectedFixedBudget = null;
+			appData.loadData(appState.month, appState.year);
+		}
+	}
+
+	/** @param {any} data */
+	async function handleSave(data) {
+		const { error } = await supabase.from('budgets').update({
+			category: data.category,
+			monthly_limit: data.monthly_limit,
+			description: data.description,
+			icon_name: data.icon_name
+		}).eq('category_id', data.category_id);
+		if (!error) {
+			isCorpusModalOpen = false;
+			selectedCorpusBudget = null;
+			isFixedModalOpen = false;
+			selectedFixedBudget = null;
+			appData.loadData(appState.month, appState.year);
+		}
+	}
 
 	$effect(() => {
 		if (!appData.loading) {
@@ -101,6 +140,10 @@
 						leftData={globalLiquidBalance + currentMonthCorpusUsed}
 						usedData={-currentMonthCorpusUsed}
 						iconName={b.icon_name}
+						onclick={() => {
+							selectedCorpusBudget = b;
+							isCorpusModalOpen = true;
+						}}
 					/>
 				{/each}
 			</div>
@@ -182,11 +225,38 @@
 								isChecked={transactionCategories.has(b.category)}
 								isLast={index === fixedBudgets.length - 1}
 								iconName={b.icon_name}
+								onclick={() => {
+									if (!isEditingOrder) {
+										selectedFixedBudget = b;
+										isFixedModalOpen = true;
+									}
+								}}
 							/>
 						</div>
 					</div>
 				{/each}
 			</div>
 		</div>
+	{/if}
+
+	{#if isCorpusModalOpen && selectedCorpusBudget}
+		<CorpusModal
+			budget={selectedCorpusBudget}
+			amountUsed={-currentMonthCorpusUsed}
+			amountLeft={globalLiquidBalance + currentMonthCorpusUsed}
+			onclose={() => isCorpusModalOpen = false}
+			ondelete={handleDelete}
+			onsave={handleSave}
+		/>
+	{/if}
+
+	{#if isFixedModalOpen && selectedFixedBudget}
+		<FixedModal
+			budget={selectedFixedBudget}
+			isPaid={transactionCategories.has(selectedFixedBudget.category)}
+			onclose={() => isFixedModalOpen = false}
+			ondelete={handleDelete}
+			onsave={handleSave}
+		/>
 	{/if}
 </div>

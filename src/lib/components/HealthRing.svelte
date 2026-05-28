@@ -3,6 +3,7 @@
 	 * @fileoverview Health Ring Component.
 	 * Displays an SVG circular progress indicator based on category budget usage.
 	 */
+	import { iconMap } from '$lib/icons.js';
 	let { category, usedData, totalData, iconName } = $props();
 
 	/** @type {number} Derived progress percentage. Prevents division by zero. */
@@ -51,10 +52,12 @@
 				stroke-linecap="round"
 			/>
 		</svg>
-		{#if iconName}
+		{#if iconName && iconMap[iconName]}
 			<picture class="z-10 bg-[#0f0f0f] rounded-full p-2 flex items-center justify-center w-11 h-11">
-				<source srcset="/icons/{iconName}.avif" type="image/avif" />
-				<img src="/icons/{iconName}.webp" alt="{category} icon" class="h-6 w-6 object-contain" />
+				{#if iconMap[iconName].avif}
+					<source srcset={iconMap[iconName].avif} type="image/avif" />
+				{/if}
+				<img src={iconMap[iconName].webp} alt="{category} icon" class="h-6 w-6 object-contain" />
 			</picture>
 		{:else}
 			<div class="z-10 bg-[#0f0f0f] rounded-full p-2 w-11 h-11"></div>

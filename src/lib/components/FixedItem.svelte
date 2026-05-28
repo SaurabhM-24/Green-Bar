@@ -3,9 +3,10 @@
 	 * @fileoverview Fixed Item Component.
 	 * Represents a fixed budget item and its completion status in the checklist.
 	 */
+	import { iconMap } from '$lib/icons.js';
 	import { Check } from 'lucide-svelte';
-	
-	let { title, isChecked, isLast = false, iconName } = $props();
+
+	let { title, isChecked, isLast = false, iconName, onclick } = $props();
 </script>
 
 <div
@@ -23,16 +24,18 @@
 		{/if}
 	</div>
 
-	<a
-		href="/list?category={title}"
-		class="text-gray-300 text-lg font-medium tracking-wide flex-1 hover:text-white transition-colors flex justify-between items-center"
+	<button
+		{onclick}
+		class="text-gray-300 text-lg font-medium tracking-wide flex-1 hover:text-white transition-colors flex justify-between items-center bg-transparent border-none p-0 w-full text-left focus:outline-none"
 	>
 		<span>{title}</span>
-		{#if iconName}
+		{#if iconName && iconMap[iconName]}
 			<picture>
-				<source srcset="/icons/{iconName}.avif" type="image/avif" />
-				<img src="/icons/{iconName}.webp" alt="{title} icon" class="h-12 w-12 object-contain" />
+				{#if iconMap[iconName].avif}
+					<source srcset={iconMap[iconName].avif} type="image/avif" />
+				{/if}
+				<img src={iconMap[iconName].webp} alt="{title} icon" class="h-10 w-10 object-contain" />
 			</picture>
 		{/if}
-	</a>
+	</button>
 </div>

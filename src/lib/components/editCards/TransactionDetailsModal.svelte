@@ -1,5 +1,6 @@
 <script>
 	import { X, ChevronDown } from 'lucide-svelte';
+	import { iconMap } from '$lib/icons.js';
 	
 	/**
 	 * @typedef {Object} Props
@@ -16,6 +17,7 @@
 	let isEditing = $state(false);
 	let isDeleting = $state(false);
 
+	// svelte-ignore state_referenced_locally
 	let editData = $state({ ...transaction });
 
 	let isTypeDropdownOpen = $state(false);
@@ -43,14 +45,17 @@
 	<div 
 		class="bg-[#151515] w-full max-w-md rounded-3xl p-6 md:p-8 box-3d flex flex-col gap-6 relative max-h-[90vh] overflow-y-auto"
 		onclick={(e) => e.stopPropagation()}
+		onkeydown={(e) => e.stopPropagation()}
 		role="dialog"
+		aria-modal="true"
+		tabindex="-1"
 	>
 		<!-- Top Bar -->
 		<div class="flex justify-between items-start gap-4">
 			{#if isEditing}
-				<input type="text" bind:value={editData.title} class="bg-transparent font-display text-3xl text-white tracking-wide pr-14 leading-tight w-full focus:outline-none placeholder-gray-600 border-b border-transparent hover:border-gray-700 focus:border-white transition-colors pb-1" placeholder="Title" />
+				<textarea rows="2" style="field-sizing: content; min-width: 2ch;" bind:value={editData.title} class="bg-transparent font-display text-3xl text-white tracking-wide pr-14 leading-tight focus:outline-none placeholder-gray-600 border-b border-transparent hover:border-gray-700 focus:border-white transition-colors pb-1 resize-none" placeholder="Title"></textarea>
 			{:else}
-				<h2 class="text-3xl font-display text-white tracking-wide pr-14 leading-tight w-full border-b border-transparent pb-1">{transaction.title}</h2>
+				<h2 class="text-3xl font-display text-white tracking-wide pr-14 leading-tight border-b border-transparent pb-1">{transaction.title}</h2>
 			{/if}
 			{#if !isEditing && !isDeleting}
 				<button class="absolute top-6 right-6 p-2 text-gray-400 hover:text-white transition-colors bg-[#222] rounded-xl box-3d shrink-0 z-50" onclick={onclose}>
@@ -61,6 +66,20 @@
 
 		<!-- Details -->
 		<div class="flex flex-col gap-5 mt-2">
+			<!-- Description -->
+			<div class="flex flex-col gap-1.5 mt-1">
+				<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Description</span>
+				{#if isEditing}
+					<textarea bind:value={editData.description} class="bg-transparent text-gray-400 text-base leading-relaxed focus:outline-none w-full resize-none min-h-[48px] p-0 border-b border-transparent hover:border-gray-700 focus:border-white transition-colors" placeholder="Add a description..."></textarea>
+				{:else}
+					<span class="text-gray-400 text-base leading-relaxed {transaction.description ? '' : 'italic'} border-b border-transparent min-h-[48px] w-full inline-block">
+						{transaction.description || 'No description provided'}
+					</span>
+				{/if}
+			</div>
+
+			<hr class="border-gray-800/60" />
+
 			<!-- Date & Type -->
 			<div class="flex gap-4">
 				<div class="flex-1 flex flex-col gap-1.5 border-r border-gray-800/60 pr-4">
@@ -108,7 +127,7 @@
 				<div class="flex-1 flex flex-col gap-1.5 min-w-0 border-r border-gray-800/60 pr-4">
 					<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Amount (₹)</span>
 					{#if isEditing}
-						<div class="flex flex-row flex-nowrap items-baseline text-4xl tracking-wide font-bold {isEditDebit ? 'text-[#ff6b6b]' : 'text-[#69db7c]'} border-b border-transparent hover:border-gray-700 focus-within:border-current transition-colors w-full pb-0.5">
+						<div class="flex flex-row flex-nowrap items-center text-4xl tracking-wide font-bold {isEditDebit ? 'text-[#ff6b6b]' : 'text-[#69db7c]'} border-b border-transparent hover:border-gray-700 focus-within:border-current transition-colors w-full pb-0.5">
 							<span class="mr-1 shrink-0">{isEditDebit ? '-' : '+'}₹</span>
 							<input type="number" bind:value={editData.amount} class="bg-transparent focus:outline-none flex-1 min-w-0 p-0 m-0 [-moz-appearance:_textfield] [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none" />
 						</div>
@@ -128,10 +147,12 @@
 							onclick={() => isCategoryDropdownOpen = !isCategoryDropdownOpen}
 						>
 							<div class="flex items-center gap-3 overflow-hidden">
-								{#if categories.find(c => c.category === editData.category)?.icon_name}
+								{#if categories.find(c => c.category === editData.category)?.icon_name && iconMap[categories.find(c => c.category === editData.category)?.icon_name]}
 									<picture>
-										<source srcset="/icons/{categories.find(c => c.category === editData.category)?.icon_name}.avif" type="image/avif" />
-										<img src="/icons/{categories.find(c => c.category === editData.category)?.icon_name}.webp" alt="" class="h-5 w-5 object-contain shrink-0" />
+										{#if iconMap[categories.find(c => c.category === editData.category)?.icon_name].avif}
+											<source srcset={iconMap[categories.find(c => c.category === editData.category)?.icon_name].avif} type="image/avif" />
+										{/if}
+										<img src={iconMap[categories.find(c => c.category === editData.category)?.icon_name].webp} alt="" class="h-5 w-5 object-contain shrink-0" />
 									</picture>
 								{/if}
 								<span class="text-gray-100 font-medium truncate text-base">{editData.category}</span>
@@ -147,10 +168,12 @@
 										class="flex items-center gap-3 text-left px-4 py-3 text-base tracking-wide rounded-lg transition-colors {editData.category === cat.category ? 'bg-white text-black box-3d' : 'text-gray-200 hover:bg-[#2a2a2a]'}"
 										onclick={() => { editData.category = cat.category; isCategoryDropdownOpen = false; }}
 									>
-										{#if cat.icon_name}
+										{#if cat.icon_name && iconMap[cat.icon_name]}
 											<picture>
-												<source srcset="/icons/{cat.icon_name}.avif" type="image/avif" />
-												<img src="/icons/{cat.icon_name}.webp" alt="" class="h-5 w-5 object-contain" />
+												{#if iconMap[cat.icon_name].avif}
+													<source srcset={iconMap[cat.icon_name].avif} type="image/avif" />
+												{/if}
+												<img src={iconMap[cat.icon_name].webp} alt="" class="h-5 w-5 object-contain" />
 											</picture>
 										{/if}
 										<span>{cat.category}</span>
@@ -160,30 +183,18 @@
 						{/if}
 					{:else}
 						<div class="flex items-center gap-3 bg-transparent w-full border-b border-transparent overflow-hidden pb-1">
-							{#if categories.find(c => c.category === transaction.category)?.icon_name}
+							{#if categories.find(c => c.category === transaction.category)?.icon_name && iconMap[categories.find(c => c.category === transaction.category)?.icon_name]}
 								<picture>
-									<source srcset="/icons/{categories.find(c => c.category === transaction.category)?.icon_name}.avif" type="image/avif" />
-									<img src="/icons/{categories.find(c => c.category === transaction.category)?.icon_name}.webp" alt="" class="h-5 w-5 object-contain shrink-0" />
+									{#if iconMap[categories.find(c => c.category === transaction.category)?.icon_name].avif}
+										<source srcset={iconMap[categories.find(c => c.category === transaction.category)?.icon_name].avif} type="image/avif" />
+									{/if}
+									<img src={iconMap[categories.find(c => c.category === transaction.category)?.icon_name].webp} alt="" class="h-5 w-5 object-contain shrink-0" />
 								</picture>
 							{/if}
 							<span class="text-gray-100 font-medium truncate text-base">{transaction.category}</span>
 						</div>
 					{/if}
 				</div>
-			</div>
-
-			<hr class="border-gray-800/60" />
-
-			<!-- Description -->
-			<div class="flex flex-col gap-1.5 mt-1">
-				<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Description</span>
-				{#if isEditing}
-					<textarea bind:value={editData.description} class="bg-transparent text-gray-400 text-base leading-relaxed focus:outline-none w-full resize-none min-h-[48px] p-0 border-b border-transparent hover:border-gray-700 focus:border-white transition-colors" placeholder="Add a description..."></textarea>
-				{:else}
-					<span class="text-gray-400 text-base leading-relaxed {transaction.description ? '' : 'italic'} border-b border-transparent min-h-[48px] w-full inline-block">
-						{transaction.description || 'No description provided'}
-					</span>
-				{/if}
 			</div>
 		</div>
 

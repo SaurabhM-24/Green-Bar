@@ -8,6 +8,7 @@
 	import { appData } from '$lib/data.svelte.js';
 	import { appState } from '$lib/state.svelte.js';
 	import { CheckCircle2, ChevronDown } from 'lucide-svelte';
+	import { iconMap } from '$lib/icons.js';
 
 	// Form bindings
 	let date = $state(new Date().toISOString().split('T')[0]);
@@ -126,6 +127,14 @@
 
 		<!-- Details -->
 		<div class="flex flex-col gap-5 mt-2">
+			<!-- Description -->
+			<div class="flex flex-col gap-1.5 mt-1">
+				<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Description</span>
+				<textarea bind:value={description} class="bg-transparent text-gray-400 text-base leading-relaxed focus:outline-none w-full resize-none min-h-[48px] p-0 border-b border-transparent hover:border-gray-700 focus:border-white transition-colors" placeholder="Add a description (optional)..."></textarea>
+			</div>
+
+			<hr class="border-gray-800/60" />
+
 			<!-- Date & Type -->
 			<div class="flex gap-4">
 				<div class="flex-1 flex flex-col gap-1.5 border-r border-gray-800/60 pr-4">
@@ -178,10 +187,12 @@
 						onclick={() => isCategoryDropdownOpen = !isCategoryDropdownOpen}
 					>
 						<div class="flex items-center gap-3 overflow-hidden">
-							{#if category && categories.find(c => c.category === category)?.icon_name}
+							{#if category && categories.find(c => c.category === category)?.icon_name && iconMap[categories.find(c => c.category === category)?.icon_name]}
 								<picture>
-									<source srcset="/icons/{categories.find(c => c.category === category)?.icon_name}.avif" type="image/avif" />
-									<img src="/icons/{categories.find(c => c.category === category)?.icon_name}.webp" alt="" class="h-5 w-5 object-contain shrink-0" />
+									{#if iconMap[categories.find(c => c.category === category)?.icon_name].avif}
+										<source srcset={iconMap[categories.find(c => c.category === category)?.icon_name].avif} type="image/avif" />
+									{/if}
+									<img src={iconMap[categories.find(c => c.category === category)?.icon_name].webp} alt="" class="h-5 w-5 object-contain shrink-0" />
 								</picture>
 							{/if}
 							<span class="text-gray-100 font-medium truncate">{category || 'Select...'}</span>
@@ -197,10 +208,12 @@
 									class="flex items-center gap-3 text-left px-4 py-3 text-base tracking-wide rounded-lg transition-colors {category === cat.category ? 'bg-white text-black box-3d' : 'text-gray-200 hover:bg-[#2a2a2a]'}"
 									onclick={() => { category = cat.category; isCategoryDropdownOpen = false; }}
 								>
-									{#if cat.icon_name}
+									{#if cat.icon_name && iconMap[cat.icon_name]}
 										<picture>
-											<source srcset="/icons/{cat.icon_name}.avif" type="image/avif" />
-											<img src="/icons/{cat.icon_name}.webp" alt="" class="h-5 w-5 object-contain" />
+											{#if iconMap[cat.icon_name].avif}
+												<source srcset={iconMap[cat.icon_name].avif} type="image/avif" />
+											{/if}
+											<img src={iconMap[cat.icon_name].webp} alt="" class="h-5 w-5 object-contain" />
 										</picture>
 									{/if}
 									<span>{cat.category}</span>
@@ -209,14 +222,6 @@
 						</div>
 					{/if}
 				</div>
-			</div>
-
-			<hr class="border-gray-800/60" />
-
-			<!-- Description -->
-			<div class="flex flex-col gap-1.5 mt-1">
-				<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Description</span>
-				<textarea bind:value={description} class="bg-transparent text-gray-400 text-base leading-relaxed focus:outline-none w-full resize-none min-h-[48px] p-0 border-b border-transparent hover:border-gray-700 focus:border-white transition-colors" placeholder="Add a description (optional)..."></textarea>
 			</div>
 		</div>
 

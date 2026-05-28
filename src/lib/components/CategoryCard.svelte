@@ -3,34 +3,41 @@
 	 * @fileoverview Category Card Component.
 	 * Displays a variable budget's status using a horizontal progress bar.
 	 */
-	let { title, totalData, usedData, iconName } = $props();
+	import { iconMap } from '$lib/icons.js';
+	let { title, totalData, usedData, iconName, onclick } = $props();
 
 	/** @type {number} Derived progress percentage. Prevents division by zero. */
 	let progress = $derived(
 		totalData > 0 ? Math.max(((totalData - usedData) / totalData) * 100, 0) : 0
 	);
-	
+
 	/** @type {number} Exact monetary amount remaining for the category */
 	let amountLeft = $derived(totalData - usedData);
 
 	/** @type {string} Dynamic Tailwind color class based on budget consumption */
 	let barColor = $derived(
-		progress > 75 ? 'bg-green-500' :
-		progress > 50 ? 'bg-white' :
-		progress > 25 ? 'bg-yellow-400' : 'bg-red-500'
+		progress > 75
+			? 'bg-green-500'
+			: progress > 50
+				? 'bg-white'
+				: progress > 25
+					? 'bg-yellow-400'
+					: 'bg-red-500'
 	);
 </script>
 
-<a
-	href="/list?category={title}"
-	class="block bg-[#0f0f0f] rounded-[2.5rem] p-8 px-9 mb-7 box-3d active:scale-[0.98] transition-transform"
+<button
+	{onclick}
+	class="block w-full text-left bg-[#0f0f0f] rounded-[2.5rem] p-8 px-9 mb-7 box-3d active:scale-[0.98] transition-transform"
 >
 	<div class="flex justify-between items-center mb-7">
 		<h3 class="text-2xl text-gray-200 tracking-wide font-display">{title}</h3>
-		{#if iconName}
+		{#if iconName && iconMap[iconName]}
 			<picture>
-				<source srcset="/icons/{iconName}.avif" type="image/avif" />
-				<img src="/icons/{iconName}.webp" alt="{title} icon" class="h-12 w-12 object-contain" />
+				{#if iconMap[iconName].avif}
+					<source srcset={iconMap[iconName].avif} type="image/avif" />
+				{/if}
+				<img src={iconMap[iconName].webp} alt="{title} icon" class="h-10 w-10 object-contain" />
 			</picture>
 		{/if}
 	</div>
@@ -52,4 +59,4 @@
 			<span class="text-gray-300 text-lg tracking-wide">₹{usedData.toLocaleString('en-IN')}</span>
 		</div>
 	</div>
-</a>
+</button>

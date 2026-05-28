@@ -8,6 +8,7 @@
 	import { appData } from '$lib/data.svelte.js';
 	import CategoryCard from '$lib/components/CategoryCard.svelte';
 	import { dndzone } from 'svelte-dnd-action';
+	import VariableModal from '$lib/components/editCards/VariableModal.svelte';
 	import { flip } from 'svelte/animate';
 	import { MoreVertical } from 'lucide-svelte';
 
@@ -19,7 +20,35 @@
 	let isEditingOrder = $state(false);
 	let isMenuOpen = $state(false);
 	let savingOrder = $state(false);
+	let isModalOpen = $state(false);
+	/** @type {any} */
+	let selectedBudget = $state(null);
 	const flipDurationMs = 200;
+
+	/** @param {string} id */
+	async function handleDelete(id) {
+		const { error } = await supabase.from('budgets').delete().eq('category_id', id);
+		if (!error) {
+			isModalOpen = false;
+			selectedBudget = null;
+			appData.loadData(appState.month, appState.year);
+		}
+	}
+
+	/** @param {any} data */
+	async function handleSave(data) {
+		const { error } = await supabase.from('budgets').update({
+			category: data.category,
+			monthly_limit: data.monthly_limit,
+			description: data.description,
+			icon_name: data.icon_name
+		}).eq('category_id', data.category_id);
+		if (!error) {
+			isModalOpen = false;
+			selectedBudget = null;
+			appData.loadData(appState.month, appState.year);
+		}
+	}
 
 	$effect(() => {
 		if (!appData.loading) {
@@ -162,10 +191,27 @@
 							totalData={Number(b.monthly_limit || 0)}
 							usedData={categoryTotals[b.category] || 0}
 							iconName={b.icon_name}
+							onclick={() => {
+								if (!isEditingOrder) {
+									selectedBudget = b;
+									isModalOpen = true;
+								}
+							}}
 						/>
 					</div>
 				</div>
 			{/each}
 		</div>
+	{/if}
+
+	{#if isModalOpen && selectedBudget}
+		<VariableModal
+			budget={selectedBudget}
+			amountUsed={categoryTotals[selectedBudget.category] || 0}
+			amountLeft={Math.max(0, Number(selectedBudget.monthly_limit || 0) - (categoryTotals[selectedBudget.category] || 0))}
+			onclose={() => isModalOpen = false}
+			ondelete={handleDelete}
+			onsave={handleSave}
+		/>
 	{/if}
 </div>

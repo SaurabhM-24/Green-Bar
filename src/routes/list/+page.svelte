@@ -9,8 +9,9 @@
 	import { appState } from '$lib/state.svelte.js';
 	import { appData } from '$lib/data.svelte.js';
 	import TransactionCard from '$lib/components/TransactionCard.svelte';
-	import TransactionDetailsModal from '$lib/components/TransactionDetailsModal.svelte';
+	import TransactionDetailsModal from '$lib/components/editCards/TransactionDetailsModal.svelte';
 	import { ChevronDown } from 'lucide-svelte';
+	import { iconMap } from '$lib/icons.js';
 
 	/** @type {boolean} Local loading state for transactions */
 	let loading = $state(true);
@@ -33,6 +34,7 @@
 	let groupedTransactions = $derived.by(() => {
 		/** @type {{ date: string, items: any[] }[]} */
 		let groups = [];
+		/** @type {{ date: string, items: any[] } | null} */
 		let currentGroup = null;
 		for (const tx of transactions) {
 			if (!currentGroup || currentGroup.date !== tx.transaction_date) {
@@ -94,15 +96,18 @@
 		loadData(appState.month, appState.year, selectedCategory);
 	});
 
+	/** @param {any} id */
 	async function handleDelete(id) {
 		const { error } = await supabase.from('transactions').delete().eq('id', id);
 		if (!error) {
 			isModalOpen = false;
 			selectedTransaction = null;
 			loadData(appState.month, appState.year, selectedCategory);
+			appData.loadData(appState.month, appState.year);
 		}
 	}
 
+	/** @param {any} data */
 	async function handleSave(data) {
 		const updatePayload = {
 			title: data.title,
@@ -117,6 +122,7 @@
 			isModalOpen = false;
 			selectedTransaction = null;
 			loadData(appState.month, appState.year, selectedCategory);
+			appData.loadData(appState.month, appState.year);
 		}
 	}
 
@@ -148,10 +154,12 @@
 				onclick={toggleCategoryDropdown}
 			>
 				<div class="flex items-center gap-2">
-					{#if selectedCategoryIcon}
+					{#if selectedCategoryIcon && iconMap[selectedCategoryIcon]}
 						<picture>
-							<source srcset="/icons/{selectedCategoryIcon}.avif" type="image/avif" />
-							<img src="/icons/{selectedCategoryIcon}.webp" alt="" class="h-4 w-4 object-contain" />
+							{#if iconMap[selectedCategoryIcon].avif}
+								<source srcset={iconMap[selectedCategoryIcon].avif} type="image/avif" />
+							{/if}
+							<img src={iconMap[selectedCategoryIcon].webp} alt="" class="h-4 w-4 object-contain" />
 						</picture>
 					{/if}
 					{selectedCategory}
@@ -168,10 +176,12 @@
 							class="flex items-center gap-3 text-left px-4 py-3 text-base tracking-wide rounded-lg transition-colors {selectedCategory === cat.category ? 'bg-white text-black box-3d' : 'text-gray-200 hover:bg-[#2a2a2a]'}"
 							onclick={() => selectCategory(cat.category)}
 						>
-							{#if cat.icon_name}
+							{#if cat.icon_name && iconMap[cat.icon_name]}
 								<picture>
-									<source srcset="/icons/{cat.icon_name}.avif" type="image/avif" />
-									<img src="/icons/{cat.icon_name}.webp" alt="" class="h-5 w-5 object-contain" />
+									{#if iconMap[cat.icon_name].avif}
+										<source srcset={iconMap[cat.icon_name].avif} type="image/avif" />
+									{/if}
+									<img src={iconMap[cat.icon_name].webp} alt="" class="h-5 w-5 object-contain" />
 								</picture>
 							{/if}
 							<span>{cat.category}</span>

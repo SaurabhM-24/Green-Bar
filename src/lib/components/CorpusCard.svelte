@@ -3,7 +3,8 @@
 	 * @fileoverview Corpus Card Component.
 	 * Displays corpus/savings status with a multi-segment progress bar (locked vs expendable).
 	 */
-	let { title, lockedData, leftData, usedData, iconName } = $props();
+	import { iconMap } from '$lib/icons.js';
+	let { title, lockedData, leftData, usedData, iconName, onclick } = $props();
 
 	/**
 	 * @description The initial expendable capacity for the month.
@@ -22,16 +23,18 @@
 	let leftProgress = $derived(visualTotal > 0 ? (leftData / visualTotal) * 100 : 0);
 </script>
 
-<a
-	href="/list?category={title}"
-	class="block bg-[#0f0f0f] rounded-[2.5rem] p-8 px-9 mb-7 box-3d active:scale-[0.98] transition-transform"
+<button
+	{onclick}
+	class="block w-full text-left bg-[#0f0f0f] rounded-[2.5rem] p-8 px-9 mb-7 box-3d active:scale-[0.98] transition-transform"
 >
 	<div class="flex justify-between items-center mb-7">
 		<h3 class="text-2xl text-gray-200 tracking-wide">{title}</h3>
-		{#if iconName}
+		{#if iconName && iconMap[iconName]}
 			<picture>
-				<source srcset="/icons/{iconName}.avif" type="image/avif" />
-				<img src="/icons/{iconName}.webp" alt="{title} icon" class="h-12 w-12 object-contain" />
+				{#if iconMap[iconName].avif}
+					<source srcset={iconMap[iconName].avif} type="image/avif" />
+				{/if}
+				<img src={iconMap[iconName].webp} alt="{title} icon" class="h-10 w-10 object-contain" />
 			</picture>
 		{/if}
 	</div>
@@ -65,4 +68,4 @@
 			>
 		</div>
 	</div>
-</a>
+</button>
