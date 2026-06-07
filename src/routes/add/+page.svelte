@@ -58,13 +58,18 @@
 		const parsedAmount = Math.abs(Number(amount));
 		const finalAmount = type === 'debit' ? -parsedAmount : parsedAmount;
 
+		const targetCat = categories.find(c => c.category === category) ||
+						  appData.budgets.find(b => b.category === category) ||
+						  appData.corpusBudgets.find(b => b.category === category) ||
+						  appData.fixedBudgets.find(b => b.category === category);
+
 		const { error } = await supabase.from('transactions').insert([
 			{
 				transaction_date: date,
 				amount: finalAmount,
 				title: title,
 				description: description || null,
-				category: category,
+				category_id: targetCat ? targetCat.category_id : null,
 				transaction_type: type
 			}
 		]);
@@ -124,6 +129,8 @@
 			<h1 class="text-xs font-semibold text-gray-500 uppercase tracking-wider pl-1">New Transaction</h1>
 			<input type="text" bind:value={title} class="bg-transparent font-display text-3xl text-white tracking-wide leading-tight w-full focus:outline-none placeholder-gray-600 border-b border-transparent hover:border-gray-700 focus:border-white transition-colors pb-1" placeholder="Title" />
 		</div>
+
+		<hr class="border-gray-800/60" />
 
 		<!-- Details -->
 		<div class="flex flex-col gap-5 mt-2">

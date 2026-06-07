@@ -32,11 +32,14 @@
 	>
 		<!-- Top Bar -->
 		<div class="flex justify-between items-start gap-4">
-			{#if isEditing}
-				<textarea rows="2" style="field-sizing: content; min-width: 2ch;" bind:value={editData.category} class="bg-transparent font-display text-3xl text-white tracking-wide pr-14 leading-tight focus:outline-none placeholder-gray-600 border-b border-transparent hover:border-gray-700 focus:border-white transition-colors pb-1 resize-none" placeholder="Title"></textarea>
-			{:else}
-				<h2 class="text-3xl font-display text-white tracking-wide pr-14 leading-tight border-b border-transparent pb-1">{budget.category}</h2>
-			{/if}
+			<div class="flex flex-col gap-1 w-full">
+				<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold pl-1">Category Name</span>
+				{#if isEditing}
+					<textarea rows="2" style="field-sizing: content; min-width: 2ch;" bind:value={editData.category} class="bg-transparent font-display text-3xl text-white tracking-wide pr-14 leading-tight focus:outline-none placeholder-gray-600 border-b border-transparent hover:border-gray-700 focus:border-white transition-colors pb-1 resize-none" placeholder="Category Name"></textarea>
+				{:else}
+					<h2 class="text-3xl font-display text-white tracking-wide pr-14 leading-tight border-b border-transparent pb-1">{budget.category}</h2>
+				{/if}
+			</div>
 			{#if !isEditing && !isDeleting}
 				<button class="absolute top-6 right-6 p-2 text-gray-400 hover:text-white transition-colors bg-[#222] rounded-xl box-3d shrink-0 z-50" onclick={onclose}>
 					<X class="w-5 h-5" />

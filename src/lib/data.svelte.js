@@ -108,9 +108,9 @@ class DataStore {
 		// Execute all Supabase queries concurrently
 		const [budgetRes, txRes, allHistoryRes] = await Promise.all([
 			supabase.from('budgets').select('*').order('sort_order', { ascending: true }),
-			supabase.from('transactions').select('category, amount, transaction_type, transaction_date')
+			supabase.from('transactions').select('category_id, amount, transaction_type, transaction_date')
 				.gte('transaction_date', prevMonthStart).lte('transaction_date', endDate),
-			supabase.from('transactions').select('amount, transaction_type, transaction_date, category'),
+			supabase.from('transactions').select('amount, transaction_type, transaction_date, category_id'),
 			fetchProfile()
 		]);
 
@@ -118,37 +118,44 @@ class DataStore {
 		const budgetData = budgetRes.data;
 		let totalMonthlyLimits = 0;
 		let currentCorpusLimit = 0;
+		/** @type {Record<string, string>} */
+		const categoryIdMap = {};
 		
 		if (budgetData) {
 			this.budgets = budgetData
-				.filter(b => b.budget_type === 'variable')
+				.filter(b => b.budget_type === 'variable' && Number(b.monthly_limit) !== -1)
 				.map(b => ({ ...b, id: b.category_id || b.category, category_id: b.category_id || b.category }));
 				
 			this.corpusBudgets = budgetData
-				.filter(b => b.budget_type === 'corpus')
+				.filter(b => b.budget_type === 'corpus' && Number(b.monthly_limit) !== -1)
 				.map(b => ({ ...b, id: b.category_id || b.category, category_id: b.category_id || b.category }));
 				
 			this.fixedBudgets = budgetData
-				.filter(b => b.budget_type === 'fixed')
+				.filter(b => b.budget_type === 'fixed' && Number(b.monthly_limit) !== -1)
 				.map(b => ({ ...b, id: b.category_id || b.category, category_id: b.category_id || b.category }));
 
 			budgetData.forEach((b) => {
-				totalMonthlyLimits += Number(b.monthly_limit || 0);
-				if (b.budget_type === 'corpus') {
-					currentCorpusLimit += Number(b.monthly_limit || 0);
+				if (b.category_id) categoryIdMap[b.category_id] = b.category;
+				if (Number(b.monthly_limit) !== -1) {
+					totalMonthlyLimits += Number(b.monthly_limit || 0);
+					if (b.budget_type === 'corpus') {
+						currentCorpusLimit += Number(b.monthly_limit || 0);
+					}
 				}
 			});
 		}
 		this.corpusLimit = currentCorpusLimit;
 
 		// 2. Process Transactions (Current & Previous month for checklist and totals)
-		const txData = txRes.data;
+		/** @type {any[]} */
+		const txData = txRes.data || [];
 		const cats = new Set();
 		/** @type {Record<string, number>} */
 		const totals = {};
 
 		if (txData) {
 			txData.forEach((tx) => {
+				tx.category = categoryIdMap[tx.category_id] || tx.category || 'Unknown';
 				if (!tx.category) return;
 				
 				// Fixed checklist logic
@@ -173,14 +180,16 @@ class DataStore {
 		this.transactionCategories = cats;
 		this.categoryTotals = totals;
 
-		// 3. Process Global All-Time Sums
-		const allHistory = allHistoryRes.data;
+		// 3. Process Full History for Global Liquid Balance
+		/** @type {any[]} */
+		const allHistory = allHistoryRes.data || [];
 		let liquidTillLastMonth = 0;
 		let monthCorpusSum = 0;
 		let totalBalance = 0;
 
 		if (allHistory) {
 			allHistory.forEach((tx) => {
+				tx.category = categoryIdMap[tx.category_id] || tx.category || 'Unknown';
 				const val = Math.abs(Number(tx.amount));
 				const isCredit = tx.transaction_type.toLowerCase() === 'credit';
 

@@ -80,20 +80,36 @@
 			.order('created_at', { ascending: false });
 
 		if (cat && cat !== 'All') {
-			query = query.eq('category', cat);
+			const targetCat = appData.budgets.find(b => b.category === cat) || 
+							  appData.corpusBudgets.find(b => b.category === cat) || 
+							  appData.fixedBudgets.find(b => b.category === cat);
+			if (targetCat && targetCat.category_id) {
+				query = query.eq('category_id', targetCat.category_id);
+			} else {
+				query = query.eq('category', cat); // Fallback
+			}
 		}
 
 		const { data: txData } = await query;
-		if (txData) transactions = txData;
+		if (txData) {
+			transactions = txData.map(tx => {
+				const c = appData.budgets.find(b => b.category_id === tx.category_id) || 
+						  appData.corpusBudgets.find(b => b.category_id === tx.category_id) || 
+						  appData.fixedBudgets.find(b => b.category_id === tx.category_id);
+				return { ...tx, category: c ? c.category : tx.category || 'Unknown' };
+			});
+		}
 
 		loading = false;
 	}
 
 	/**
-	 * @description Effect: Fetches transaction list whenever month, year, or filter category changes.
+	 * @description Effect: Fetches transaction list whenever month, year, or filter category changes, waiting for appData.
 	 */
 	$effect(() => {
-		loadData(appState.month, appState.year, selectedCategory);
+		if (!appData.loading) {
+			loadData(appState.month, appState.year, selectedCategory);
+		}
 	});
 
 	/** @param {any} id */
@@ -109,12 +125,16 @@
 
 	/** @param {any} data */
 	async function handleSave(data) {
+		const targetCat = appData.budgets.find(b => b.category === data.category) ||
+						  appData.corpusBudgets.find(b => b.category === data.category) ||
+						  appData.fixedBudgets.find(b => b.category === data.category);
+
 		const updatePayload = {
 			title: data.title,
 			description: data.description,
 			amount: data.amount,
 			transaction_date: data.transaction_date,
-			category: data.category,
+			category_id: targetCat ? targetCat.category_id : null,
 			transaction_type: data.transaction_type
 		};
 		const { error } = await supabase.from('transactions').update(updatePayload).eq('id', data.id);

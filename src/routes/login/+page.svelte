@@ -47,7 +47,7 @@
 >
 	<div class="w-full max-w-sm">
 		<div class="mb-12 text-center">
-			<h1 class="text-3xl font-light text-white tracking-widest uppercase mb-3">Expenso</h1>
+			<h1 class="text-3xl font-light text-white tracking-widest uppercase mb-3">Green Bar</h1>
 			<p class="text-gray-500 text-sm">Sign in to track your expenses</p>
 		</div>
 
