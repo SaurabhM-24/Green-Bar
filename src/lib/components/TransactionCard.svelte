@@ -12,7 +12,7 @@
 </script>
 
 <button
-	class="w-full text-left relative bg-[#0f0f0f] py-6 px-8 flex justify-between items-center after:absolute after:bottom-0 after:left-8 after:right-8 after:h-px after:bg-gray-800/60 last:after:hidden hover:bg-[#151515] transition-colors focus:outline-none"
+	class="w-full text-left relative bg-[#0f0f0f] py-6 px-8 flex justify-between items-center after:absolute after:bottom-0 after:left-8 after:right-8 after:h-px after:bg-gray-800/60 last:after:hidden hover:bg-[#151515] transition-all active:scale-[0.98] focus:outline-none"
 	onclick={onclick}
 >
 	<div class="flex flex-col overflow-hidden mr-6">

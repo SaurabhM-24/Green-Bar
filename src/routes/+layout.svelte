@@ -88,7 +88,7 @@
 		<Header />
 
 		<!-- Main Content Area -->
-		<main bind:this={mainContainer} class="flex-1 overflow-y-auto mt-[88px] mb-[104px] scroll-smooth p-3">
+		<main bind:this={mainContainer} class="flex-1 grid overflow-x-hidden overflow-y-auto mt-[88px] mb-[104px] scroll-smooth p-3">
 			{@render children()}
 		</main>
 

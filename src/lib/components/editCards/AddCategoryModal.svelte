@@ -1,6 +1,8 @@
 <script>
 	import { X, ChevronDown } from 'lucide-svelte';
 	import { iconsList, iconMap } from '$lib/icons.js';
+	import { slide, fade, scale, fly } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 	
 	let { onclose, onsave } = $props();
 
@@ -23,10 +25,12 @@
 	}
 </script>
 
-<div class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onclick={() => { if (!loading) onclose(); }} role="presentation">
-	<!-- Modal Content -->
-	<div 
-		class="bg-[#151515] w-full max-w-md rounded-3xl p-6 md:p-8 box-3d flex flex-col gap-6 relative max-h-[90vh] overflow-y-auto"
+<div transition:fade={{ duration: 200 }} class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] overflow-y-auto" onclick={() => { if (!loading) onclose(); }} role="presentation">
+	<div class="min-h-full flex items-center justify-center p-4">
+		<!-- Modal Content -->
+		<div 
+			transition:scale={{ start: 0.95, duration: 250, easing: cubicOut }}
+			class="bg-[#151515] w-full max-w-md rounded-3xl p-6 md:p-8 box-3d flex flex-col gap-6 relative"
 		onclick={(e) => e.stopPropagation()}
 		onkeydown={(e) => e.stopPropagation()}
 		role="dialog"
@@ -85,7 +89,7 @@
 					
 					{#if isIconDropdownOpen}
 						<div class="fixed inset-0 z-30" onclick={() => isIconDropdownOpen = false} role="presentation"></div>
-						<div class="absolute right-0 top-full mt-2 w-56 max-h-64 overflow-y-auto bg-[#1a1a1a] rounded-xl box-3d z-50 p-2 flex flex-col gap-1">
+						<div class="absolute right-0 top-full mt-2 w-56 max-h-64 overflow-y-auto bg-[#1a1a1a] rounded-xl box-3d z-50 p-2 flex flex-col gap-1" transition:slide={{ duration: 250, easing: cubicOut }}>
 							{#each iconsList as icon}
 								<button 
 									class="flex items-center gap-3 text-left px-4 py-3 text-base tracking-wide rounded-lg transition-colors {addData.icon_name === icon.name ? 'bg-white text-black box-3d' : 'text-gray-200 hover:bg-[#2a2a2a]'}"
@@ -108,14 +112,15 @@
 
 		<!-- Actions -->
 		<div class="mt-2 border-t border-gray-800/60 pt-6 flex gap-4">
-			<button class="flex-1 py-3.5 rounded-xl bg-[#222] hover:bg-[#2a2a2a] text-white font-medium box-3d tracking-wide transition-all active:translate-y-1" onclick={onclose} disabled={loading}>Cancel</button>
-			<button class="flex-1 py-3.5 rounded-xl bg-white hover:bg-gray-200 text-black font-bold box-3d tracking-wide transition-all active:translate-y-1 flex items-center justify-center gap-2" onclick={handleSave} disabled={loading}>
+			<button class="flex-1 py-3.5 rounded-xl bg-[#222] hover:bg-[#2a2a2a] text-white font-medium box-3d tracking-wide transition-all active:scale-[0.98]" onclick={onclose} disabled={loading}>Cancel</button>
+			<button class="flex-1 py-3.5 rounded-xl bg-white hover:bg-gray-200 text-black font-bold box-3d tracking-wide transition-all active:scale-[0.98] flex items-center justify-center gap-2" onclick={handleSave} disabled={loading}>
 				{#if loading}
 					<div class="h-5 w-5 rounded-full border-2 border-black border-t-transparent animate-spin"></div>
 				{:else}
 					Create Category
 				{/if}
 			</button>
+		</div>
 		</div>
 	</div>
 </div>

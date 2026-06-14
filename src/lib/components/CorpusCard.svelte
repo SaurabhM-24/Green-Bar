@@ -28,7 +28,7 @@
 	class="block w-full text-left bg-[#0f0f0f] rounded-[2.5rem] p-8 px-9 mb-7 box-3d active:scale-[0.98] transition-transform"
 >
 	<div class="flex justify-between items-center mb-7">
-		<h3 class="text-2xl text-gray-200 tracking-wide">{title}</h3>
+		<h3 class="text-2xl text-gray-200 tracking-wide font-display">{title}</h3>
 		{#if iconName && iconMap[iconName]}
 			<picture>
 				{#if iconMap[iconName].avif}

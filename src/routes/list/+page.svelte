@@ -7,14 +7,39 @@
 	import { goto } from '$app/navigation';
 	import { supabase } from '$lib/supabase';
 	import { appState } from '$lib/state.svelte.js';
+	import { untrack } from 'svelte';
 	import { appData } from '$lib/data.svelte.js';
 	import TransactionCard from '$lib/components/TransactionCard.svelte';
 	import TransactionDetailsModal from '$lib/components/editCards/TransactionDetailsModal.svelte';
 	import { ChevronDown } from 'lucide-svelte';
 	import { iconMap } from '$lib/icons.js';
+	import { fade, slide, fly } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
+	import { flip } from 'svelte/animate';
 
-	/** @type {boolean} Local loading state for transactions */
 	let loading = $state(true);
+	let loadingMore = $state(false);
+	
+	let pageSize = 10;
+	let pageIndex = $state(0);
+	let hasMore = $state(true);
+
+	/**
+	 * @param {HTMLElement} node
+	 */
+	function intersect(node) {
+		const observer = new IntersectionObserver((entries) => {
+			if (entries[0].isIntersecting) {
+				node.dispatchEvent(new CustomEvent('intersect'));
+			}
+		});
+		observer.observe(node);
+		return {
+			destroy() {
+				observer.disconnect();
+			}
+		};
+	}
 	
 	/** @type {any[]} List of transactions for the selected month and filter */
 	let transactions = $state([]);
@@ -64,52 +89,60 @@
 	 * @param {number} m
 	 * @param {number} y
 	 * @param {string} [cat]
+	 * @param {boolean} [isAppend=false]
 	 */
-	async function loadData(m, y, cat) {
-		loading = true;
-		const startDate = `${y}-${String(m).padStart(2, '0')}-01`;
-		const lastDay = new Date(y, m, 0).getDate();
-		const endDate = `${y}-${String(m).padStart(2, '0')}-${lastDay}T23:59:59`;
+	async function loadData(m, y, cat, isAppend = false) {
+		if (!isAppend) {
+			loading = true;
+			pageIndex = 0;
+			hasMore = true;
+			transactions = [];
+		} else {
+			loadingMore = true;
+		}
 
-		let query = supabase
-			.from('transactions')
-			.select('*')
-			.gte('transaction_date', startDate)
-			.lte('transaction_date', endDate)
-			.order('transaction_date', { ascending: false })
-			.order('created_at', { ascending: false });
+		let allTxs = appData.currentMonthTransactions || [];
 
 		if (cat && cat !== 'All') {
-			const targetCat = appData.budgets.find(b => b.category === cat) || 
-							  appData.corpusBudgets.find(b => b.category === cat) || 
-							  appData.fixedBudgets.find(b => b.category === cat);
-			if (targetCat && targetCat.category_id) {
-				query = query.eq('category_id', targetCat.category_id);
-			} else {
-				query = query.eq('category', cat); // Fallback
-			}
+			allTxs = allTxs.filter(tx => tx.category === cat || tx.category_id === cat);
 		}
 
-		const { data: txData } = await query;
-		if (txData) {
-			transactions = txData.map(tx => {
-				const c = appData.budgets.find(b => b.category_id === tx.category_id) || 
-						  appData.corpusBudgets.find(b => b.category_id === tx.category_id) || 
-						  appData.fixedBudgets.find(b => b.category_id === tx.category_id);
-				return { ...tx, category: c ? c.category : tx.category || 'Unknown' };
-			});
+		const newTxs = allTxs.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize);
+
+		if (newTxs.length < pageSize || (pageIndex + 1) * pageSize >= allTxs.length) {
+			hasMore = false;
 		}
 
-		loading = false;
+		if (isAppend) {
+			transactions = [...transactions, ...newTxs];
+		} else {
+			transactions = newTxs;
+		}
+
+		if (!isAppend) loading = false;
+		else loadingMore = false;
+	}
+
+	function loadMore() {
+		if (loading || loadingMore || !hasMore) return;
+		pageIndex++;
+		loadData(appState.month, appState.year, selectedCategory, true);
 	}
 
 	/**
 	 * @description Effect: Fetches transaction list whenever month, year, or filter category changes, waiting for appData.
 	 */
 	$effect(() => {
-		if (!appData.loading) {
-			loadData(appState.month, appState.year, selectedCategory);
-		}
+		const m = appState.month;
+		const y = appState.year;
+		const cat = selectedCategory;
+		const isLoading = appData.loading;
+		
+		untrack(() => {
+			if (!isLoading) {
+				loadData(m, y, cat);
+			}
+		});
 	});
 
 	/** @param {any} id */
@@ -163,7 +196,7 @@
 	);
 </script>
 
-<div class="px-4 pt-16 pb-16">
+<div in:fly={{ y: 15, duration: 300, delay: 200, easing: cubicOut }} out:fade={{ duration: 200 }} class="col-start-1 row-start-1 min-w-0 w-full px-4 pt-16 pb-36">
 	<!-- Filter Header -->
 	<div class="mb-8 flex items-center justify-between px-4">
 		<h1 class="text-3xl tracking-wide text-white font-display">History</h1>
@@ -188,9 +221,9 @@
 			</button>
 			
 			{#if isCategoryDropdownOpen}
-				<div class="fixed inset-0 z-30" onclick={() => isCategoryDropdownOpen = false} role="presentation"></div>
+				<div class="fixed inset-0 z-30" onclick={() => isCategoryDropdownOpen = false} role="presentation" transition:fade={{ duration: 150 }}></div>
 				
-				<div class="absolute right-0 mt-2 w-48 max-h-64 overflow-y-auto bg-[#1a1a1a] rounded-xl box-3d z-40 p-2 flex flex-col gap-1">
+				<div class="absolute right-0 mt-2 w-48 max-h-64 overflow-y-auto bg-[#1a1a1a] rounded-xl box-3d z-40 p-2 flex flex-col gap-1" transition:slide={{ duration: 250, easing: cubicOut }}>
 					{#each categories as cat}
 						<button 
 							class="flex items-center gap-3 text-left px-4 py-3 text-base tracking-wide rounded-lg transition-colors {selectedCategory === cat.category ? 'bg-white text-black box-3d' : 'text-gray-200 hover:bg-[#2a2a2a]'}"
@@ -234,22 +267,31 @@
 			<div class="mb-8">
 				<h2 class="text-xl text-gray-400 tracking-wide px-2 mb-4 font-display">{group.date}</h2>
 				<div class="bg-[#0a0a0a] rounded-[1.5rem] overflow-hidden box-3d">
-					{#each group.items as tx}
-						<TransactionCard
-							title={tx.title}
-							description={tx.description}
-							amount={Number(tx.amount)}
-							type={tx.transaction_type}
-							iconName={categories.find(c => c.category === tx.category)?.icon_name}
-							onclick={() => {
-								selectedTransaction = tx;
-								isModalOpen = true;
-							}}
-						/>
+					{#each group.items as tx, i (tx.id)}
+						<div animate:flip={{ duration: 300 }} in:fly={{ y: 20, duration: 400, delay: i * 50, easing: cubicOut }} out:slide={{ duration: 250 }}>
+							<TransactionCard
+								title={tx.title}
+								description={tx.description}
+								amount={Number(tx.amount)}
+								type={tx.transaction_type}
+								iconName={categories.find(c => c.category === tx.category)?.icon_name}
+								onclick={() => {
+									selectedTransaction = tx;
+									isModalOpen = true;
+								}}
+							/>
+						</div>
 					{/each}
 				</div>
 			</div>
 		{/each}
+		{#if hasMore && !loading}
+			<div use:intersect onintersect={loadMore} class="h-10 flex items-center justify-center">
+				{#if loadingMore}
+					<div class="h-6 w-6 rounded-full border-2 border-transparent border-t-gray-500 animate-spin"></div>
+				{/if}
+			</div>
+		{/if}
 	{/if}
 
 	<!-- Transaction Details Modal -->
@@ -262,4 +304,6 @@
 			onsave={handleSave}
 		/>
 	{/if}
+
+	<div class="h-32 shrink-0"></div>
 </div>

@@ -7,6 +7,8 @@
 	let isDeleting = $state(false);
 	let isIconDropdownOpen = $state(false);
 	import { iconsList, iconMap } from '$lib/icons.js';
+	import { slide, fade, scale, fly } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 	// svelte-ignore state_referenced_locally
 	let editData = $state({ ...budget });
 
@@ -20,10 +22,12 @@
 	}
 </script>
 
-<div class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onclick={() => { if (!isEditing && !isDeleting) onclose(); }} role="presentation">
-	<!-- Modal Content -->
-	<div 
-		class="bg-[#151515] w-full max-w-md rounded-3xl p-6 md:p-8 box-3d flex flex-col gap-6 relative max-h-[90vh] overflow-y-auto"
+<div transition:fade={{ duration: 200 }} class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] overflow-y-auto" onclick={() => { if (!isEditing && !isDeleting) onclose(); }} role="presentation">
+	<div class="min-h-full flex items-center justify-center p-4">
+		<!-- Modal Content -->
+		<div 
+			transition:scale={{ start: 0.95, duration: 250, easing: cubicOut }}
+			class="bg-[#151515] w-full max-w-md rounded-3xl p-6 md:p-8 box-3d flex flex-col gap-6 relative"
 		onclick={(e) => e.stopPropagation()}
 		onkeydown={(e) => e.stopPropagation()}
 		role="dialog"
@@ -101,7 +105,7 @@
 						
 						{#if isIconDropdownOpen}
 							<div class="fixed inset-0 z-30" onclick={() => isIconDropdownOpen = false} role="presentation"></div>
-							<div class="absolute right-0 top-full mt-2 w-56 max-h-64 overflow-y-auto bg-[#1a1a1a] rounded-xl box-3d z-50 p-2 flex flex-col gap-1">
+							<div class="absolute right-0 top-full mt-2 w-56 max-h-64 overflow-y-auto bg-[#1a1a1a] rounded-xl box-3d z-50 p-2 flex flex-col gap-1" transition:slide={{ duration: 250, easing: cubicOut }}>
 								{#each iconsList as icon}
 									<button 
 										class="flex items-center gap-3 text-left px-4 py-3 text-base tracking-wide rounded-lg transition-colors {editData.icon_name === icon.name ? 'bg-white text-black box-3d' : 'text-gray-200 hover:bg-[#2a2a2a]'}"
@@ -152,29 +156,30 @@
 		</div>
 
 		<!-- Actions -->
-		<div class="mt-2 border-t border-gray-800/60 pt-6">
+		<div class="mt-2 border-t border-gray-800/60 pt-6 grid">
 			{#if isDeleting}
-				<div class="flex flex-col gap-5">
+				<div class="flex flex-col gap-5 col-start-1 row-start-1" in:fly={{ y: 10, duration: 200, delay: 150, easing: cubicOut }} out:fade={{ duration: 150 }}>
 					<p class="text-[#ff6b6b] text-center tracking-wide font-medium">Are you sure you want to delete this category?</p>
 					<div class="flex gap-4">
-						<button class="flex-1 py-3.5 rounded-xl bg-[#222] hover:bg-[#2a2a2a] text-white font-medium box-3d tracking-wide transition-all active:translate-y-1" onclick={() => isDeleting = false}>Cancel</button>
-						<button class="flex-1 py-3.5 rounded-xl bg-[#ff6b6b] hover:bg-[#ff8787] text-black font-bold box-3d tracking-wide transition-all active:translate-y-1" onclick={() => ondelete(budget.id)}>Confirm Delete</button>
+						<button class="flex-1 py-3.5 rounded-xl bg-[#222] hover:bg-[#2a2a2a] text-white font-medium box-3d tracking-wide transition-all active:scale-[0.98]" onclick={() => isDeleting = false}>Cancel</button>
+						<button class="flex-1 py-3.5 rounded-xl bg-[#ff6b6b] hover:bg-[#ff8787] text-black font-bold box-3d tracking-wide transition-all active:scale-[0.98]" onclick={() => ondelete(budget.id)}>Confirm Delete</button>
 					</div>
 				</div>
 			{:else if isEditing}
-				<div class="flex gap-4">
-					<button class="flex-1 py-3.5 rounded-xl bg-[#222] hover:bg-[#2a2a2a] text-white font-medium box-3d tracking-wide transition-all active:translate-y-1" onclick={() => { isEditing = false; editData = {...budget}; }}>Cancel</button>
-					<button class="flex-1 py-3.5 rounded-xl bg-white hover:bg-gray-200 text-black font-bold box-3d tracking-wide transition-all active:translate-y-1" onclick={handleSave}>Save</button>
+				<div class="flex gap-4 col-start-1 row-start-1" in:fly={{ y: 10, duration: 200, delay: 150, easing: cubicOut }} out:fade={{ duration: 150 }}>
+					<button class="flex-1 py-3.5 rounded-xl bg-[#222] hover:bg-[#2a2a2a] text-white font-medium box-3d tracking-wide transition-all active:scale-[0.98]" onclick={() => { isEditing = false; editData = {...budget}; }}>Cancel</button>
+					<button class="flex-1 py-3.5 rounded-xl bg-white hover:bg-gray-200 text-black font-bold box-3d tracking-wide transition-all active:scale-[0.98]" onclick={handleSave}>Save</button>
 				</div>
 			{:else}
-				<div class="flex flex-col gap-4">
-					<a href="/list?category={budget.category}" class="block w-full text-center py-3.5 rounded-xl bg-white hover:bg-gray-200 text-black font-bold box-3d tracking-wide transition-all active:translate-y-1">View Transactions</a>
+				<div class="flex flex-col gap-4 col-start-1 row-start-1" in:fly={{ y: 10, duration: 200, delay: 150, easing: cubicOut }} out:fade={{ duration: 150 }}>
+					<a href="/list?category={budget.category}" class="block w-full text-center py-3.5 rounded-xl bg-white hover:bg-gray-200 text-black font-bold box-3d tracking-wide transition-all active:scale-[0.98]">View Transactions</a>
 					<div class="flex gap-4">
-						<button class="flex-1 py-3.5 rounded-xl bg-[#222] hover:bg-[#2a2a2a] text-white font-medium box-3d tracking-wide transition-all active:translate-y-1" onclick={startEditing}>Edit</button>
-						<button class="flex-1 py-3.5 rounded-xl bg-[#ff6b6b] hover:bg-[#ff8787] text-black font-bold box-3d tracking-wide transition-all active:translate-y-1" onclick={() => isDeleting = true}>Delete</button>
+						<button class="flex-1 py-3.5 rounded-xl bg-[#222] hover:bg-[#2a2a2a] text-white font-medium box-3d tracking-wide transition-all active:scale-[0.98]" onclick={startEditing}>Edit</button>
+						<button class="flex-1 py-3.5 rounded-xl bg-[#ff6b6b] hover:bg-[#ff8787] text-black font-bold box-3d tracking-wide transition-all active:scale-[0.98]" onclick={() => isDeleting = true}>Delete</button>
 					</div>
 				</div>
 			{/if}
+		</div>
 		</div>
 	</div>
 </div>

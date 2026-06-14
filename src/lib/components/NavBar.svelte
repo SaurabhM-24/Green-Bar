@@ -26,14 +26,10 @@
 			href={link.href}
 			class="relative flex flex-col items-center justify-center w-24 h-20 rounded-[1.5rem] transition-all"
 		>
-			{#if activeRoute === link.href}
-				<div class="absolute -top-1 w-12 h-1.5 bg-white rounded-full"></div>
-			{/if}
-
 			<link.icon
-				class="w-8 h-8 transition-all {activeRoute === link.href
-					? 'text-white'
-					: 'text-gray-500 hover:text-gray-400'}"
+				class="w-8 h-8 transition-transform duration-300 {activeRoute === link.href
+					? 'text-white scale-125'
+					: 'text-gray-500 hover:text-gray-400 scale-90'}"
 				strokeWidth={activeRoute === link.href ? 2.5 : 2}
 			/>
 		</a>
