@@ -4,6 +4,8 @@
 	 * Displays an SVG circular progress indicator based on category budget usage.
 	 */
 	import { iconMap } from '$lib/icons.js';
+	import { tweened } from 'svelte/motion';
+	import { cubicOut } from 'svelte/easing';
 	let { category, usedData, totalData, iconName } = $props();
 
 	/** @type {number} Derived progress percentage. Prevents division by zero. */
@@ -14,8 +16,13 @@
 	let radius = 28;
 	let circumference = $derived(2 * Math.PI * radius);
 	
+	let tweenedProgress = tweened(100, { duration: 1000, easing: cubicOut });
+	$effect(() => {
+		tweenedProgress.set(progress);
+	});
+
 	/** @type {number} SVG stroke-dashoffset for rendering the partial circle */
-	let strokeDashoffset = $derived(circumference - (progress / 100) * circumference);
+	let strokeDashoffset = $derived(circumference - ($tweenedProgress / 100) * circumference);
 
 	/** @type {string} Dynamic Tailwind text color for the SVG stroke */
 	let ringColor = $derived(
@@ -34,7 +41,7 @@
 				cy="32"
 				r={radius}
 				stroke="currentColor"
-				stroke-width="4"
+				stroke-width="6"
 				fill="transparent"
 				class="text-[#1a1a1a]"
 			/>
@@ -44,11 +51,11 @@
 				cy="32"
 				r={radius}
 				stroke="currentColor"
-				stroke-width="4"
+				stroke-width="6"
 				fill="transparent"
 				stroke-dasharray={circumference}
 				stroke-dashoffset={strokeDashoffset}
-				class="transition-all duration-1000 ease-out {ringColor}"
+				class="transition-colors duration-500 {ringColor}"
 				stroke-linecap="round"
 			/>
 		</svg>

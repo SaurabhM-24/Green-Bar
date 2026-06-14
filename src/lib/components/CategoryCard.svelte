@@ -4,12 +4,19 @@
 	 * Displays a variable budget's status using a horizontal progress bar.
 	 */
 	import { iconMap } from '$lib/icons.js';
+	import { tweened } from 'svelte/motion';
+	import { cubicOut } from 'svelte/easing';
 	let { title, totalData, usedData, iconName, onclick } = $props();
 
 	/** @type {number} Derived progress percentage. Prevents division by zero. */
 	let progress = $derived(
 		totalData > 0 ? Math.max(((totalData - usedData) / totalData) * 100, 0) : 0
 	);
+
+	let tweenedProgress = tweened(100, { duration: 1000, easing: cubicOut });
+	$effect(() => {
+		tweenedProgress.set(progress);
+	});
 
 	/** @type {number} Exact monetary amount remaining for the category */
 	let amountLeft = $derived(totalData - usedData);
@@ -44,8 +51,8 @@
 
 	<div class="h-8 w-full bg-[#1a1a1a] rounded-xl overflow-hidden mb-6 box-3d">
 		<div
-			class="h-full {barColor} transition-all duration-700 ease-out"
-			style="width: {progress}%"
+			class="h-full {barColor} transition-colors duration-700"
+			style="width: {$tweenedProgress}%"
 		></div>
 	</div>
 

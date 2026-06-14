@@ -11,6 +11,8 @@
 	import VariableModal from '$lib/components/editCards/VariableModal.svelte';
 	import AddCategoryModal from '$lib/components/editCards/AddCategoryModal.svelte';
 	import { flip } from 'svelte/animate';
+	import { fly, slide, fade, scale } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 	import { MoreVertical } from 'lucide-svelte';
 
 	let loading = $derived(appData.loading);
@@ -55,7 +57,10 @@
 
 	async function confirmDeactivate() {
 		if (pendingDeleteId) {
-			const { error } = await supabase.from('budgets').update({ monthly_limit: -1 }).eq('category_id', pendingDeleteId);
+			const { error } = await supabase
+				.from('budgets')
+				.update({ monthly_limit: -1 })
+				.eq('category_id', pendingDeleteId);
 			if (!error) {
 				showDeactivateModal = false;
 				pendingDeleteId = null;
@@ -66,21 +71,26 @@
 
 	/** @param {any} data */
 	async function handleAddSave(data) {
-		const { data: { session } } = await supabase.auth.getSession();
+		const {
+			data: { session }
+		} = await supabase.auth.getSession();
 		const user_id = session?.user?.id;
-		
-		const maxSortOrder = budgets.length > 0 ? Math.max(...budgets.map(b => Number(b.sort_order || 0))) : -1;
-		
-		const { error } = await supabase.from('budgets').insert([{
-			category_id: crypto.randomUUID(),
-			category: data.category,
-			description: data.description || null,
-			monthly_limit: data.monthly_limit ? Number(data.monthly_limit) : 0,
-			icon_name: data.icon_name || null,
-			budget_type: 'variable',
-			user_id: user_id,
-			sort_order: maxSortOrder + 1
-		}]);
+
+		const maxSortOrder =
+			budgets.length > 0 ? Math.max(...budgets.map((b) => Number(b.sort_order || 0))) : -1;
+
+		const { error } = await supabase.from('budgets').insert([
+			{
+				category_id: crypto.randomUUID(),
+				category: data.category,
+				description: data.description || null,
+				monthly_limit: data.monthly_limit ? Number(data.monthly_limit) : 0,
+				icon_name: data.icon_name || null,
+				budget_type: 'variable',
+				user_id: user_id,
+				sort_order: maxSortOrder + 1
+			}
+		]);
 
 		if (!error) {
 			isAddModalOpen = false;
@@ -92,12 +102,15 @@
 
 	/** @param {any} data */
 	async function handleSave(data) {
-		const { error } = await supabase.from('budgets').update({
-			category: data.category,
-			monthly_limit: data.monthly_limit,
-			description: data.description,
-			icon_name: data.icon_name
-		}).eq('category_id', data.category_id);
+		const { error } = await supabase
+			.from('budgets')
+			.update({
+				category: data.category,
+				monthly_limit: data.monthly_limit,
+				description: data.description,
+				icon_name: data.icon_name
+			})
+			.eq('category_id', data.category_id);
 		if (!error) {
 			isModalOpen = false;
 			selectedBudget = null;
@@ -129,7 +142,10 @@
 		try {
 			// Update each budget's sort_order based on its index
 			const updates = budgets.map((b, index) => {
-				return supabase.from('budgets').update({ sort_order: index }).eq('category_id', b.category_id);
+				return supabase
+					.from('budgets')
+					.update({ sort_order: index })
+					.eq('category_id', b.category_id);
 			});
 			await Promise.all(updates);
 		} catch (error) {
@@ -154,7 +170,9 @@
 </script>
 
 <div
-	class="px-4 pt-16 pb-16"
+	in:fly={{ y: 15, duration: 300, delay: 200, easing: cubicOut }}
+	out:fade={{ duration: 200 }}
+	class="col-start-1 row-start-1 min-w-0 w-full px-4 pt-16 pb-16"
 	role="presentation"
 	onclick={() => {
 		if (isMenuOpen) isMenuOpen = false;
@@ -181,6 +199,7 @@
 				{#if isMenuOpen}
 					<div
 						class="absolute right-0 mt-2 w-48 bg-[#1a1a1a] rounded-xl box-3d z-50 overflow-hidden"
+						transition:slide={{ duration: 250, easing: cubicOut }}
 					>
 						<button
 							class="w-full text-left px-4 py-3 text-base tracking-wide text-gray-200 hover:bg-[#2a2a2a] transition-colors"
@@ -191,7 +210,10 @@
 						<hr class="border-gray-800 mx-3" />
 						<button
 							class="w-full text-left px-4 py-3 text-base tracking-wide text-gray-200 hover:bg-[#2a2a2a] transition-colors"
-							onclick={() => { isAddModalOpen = true; isMenuOpen = false; }}
+							onclick={() => {
+								isAddModalOpen = true;
+								isMenuOpen = false;
+							}}
 						>
 							Add Category
 						</button>
@@ -270,34 +292,55 @@
 		<VariableModal
 			budget={selectedBudget}
 			amountUsed={categoryTotals[selectedBudget.category] || 0}
-			amountLeft={Math.max(0, Number(selectedBudget.monthly_limit || 0) - (categoryTotals[selectedBudget.category] || 0))}
-			onclose={() => isModalOpen = false}
+			amountLeft={Math.max(
+				0,
+				Number(selectedBudget.monthly_limit || 0) - (categoryTotals[selectedBudget.category] || 0)
+			)}
+			onclose={() => (isModalOpen = false)}
 			ondelete={handleDelete}
 			onsave={handleSave}
 		/>
 	{/if}
 
 	{#if showDeactivateModal}
-		<div class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-			<div class="bg-[#151515] w-full max-w-md rounded-3xl p-6 md:p-8 box-3d flex flex-col gap-6">
-				<h2 class="text-2xl font-display text-white tracking-wide">Cannot Delete Category</h2>
-				<p class="text-gray-400 text-base leading-relaxed">
-					This category is currently associated with one or more past transactions. Deleting it completely would break your history.
-					<br><br>
-					Instead, you can <strong>deactivate</strong> this category. It will be hidden from the app and dropdowns, but past transactions will still be preserved.
-				</p>
-				<div class="flex gap-4 mt-2">
-					<button class="flex-1 py-3.5 rounded-xl bg-[#222] hover:bg-[#2a2a2a] text-white font-medium box-3d tracking-wide transition-all active:translate-y-1" onclick={() => { showDeactivateModal = false; pendingDeleteId = null; }}>Cancel</button>
-					<button class="flex-1 py-3.5 rounded-xl bg-[#ff6b6b] hover:bg-[#ff8787] text-black font-bold box-3d tracking-wide transition-all active:translate-y-1" onclick={confirmDeactivate}>Deactivate</button>
+		<div
+			transition:fade={{ duration: 200 }}
+			class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] overflow-y-auto"
+		>
+			<div class="min-h-full flex items-center justify-center p-4">
+				<div
+					transition:scale={{ start: 0.95, duration: 250, easing: cubicOut }}
+					class="bg-[#151515] w-full max-w-md rounded-3xl p-6 md:p-8 box-3d flex flex-col gap-6 relative"
+				>
+					<h2 class="text-2xl font-display text-white tracking-wide">Cannot Delete Category</h2>
+					<p class="text-gray-400 text-base leading-relaxed">
+						This category is currently associated with one or more past transactions. Deleting it
+						completely would break your history.
+						<br /><br />
+						Instead, you can <strong>deactivate</strong> this category. It will be hidden from the app
+						and dropdowns, but past transactions will still be preserved.
+					</p>
+					<div class="flex gap-4 mt-2">
+						<button
+							class="flex-1 py-3.5 rounded-xl bg-[#222] hover:bg-[#2a2a2a] text-white font-medium box-3d tracking-wide transition-all active:translate-y-1"
+							onclick={() => {
+								showDeactivateModal = false;
+								pendingDeleteId = null;
+							}}>Cancel</button
+						>
+						<button
+							class="flex-1 py-3.5 rounded-xl bg-[#ff6b6b] hover:bg-[#ff8787] text-black font-bold box-3d tracking-wide transition-all active:translate-y-1"
+							onclick={confirmDeactivate}>Deactivate</button
+						>
+					</div>
 				</div>
 			</div>
 		</div>
 	{/if}
 
 	{#if isAddModalOpen}
-		<AddCategoryModal
-			onclose={() => isAddModalOpen = false}
-			onsave={handleAddSave}
-		/>
+		<AddCategoryModal onclose={() => (isAddModalOpen = false)} onsave={handleAddSave} />
 	{/if}
+
+	<div class="h-6 shrink-0"></div>
 </div>

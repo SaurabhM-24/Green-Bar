@@ -9,6 +9,8 @@
 	import { appState } from '$lib/state.svelte.js';
 	import { CheckCircle2, ChevronDown } from 'lucide-svelte';
 	import { iconMap } from '$lib/icons.js';
+	import { slide, fade, fly } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 
 	// Form bindings
 	let date = $state(new Date().toISOString().split('T')[0]);
@@ -87,7 +89,7 @@
 
 			setTimeout(() => {
 				successMsg = false;
-				goto('/');
+				goto('/list');
 			}, 2000);
 		} else {
 			alert('Failed to save transaction: ' + error.message);
@@ -101,7 +103,7 @@
 	let isDebit = $derived(type.toLowerCase() === 'debit');
 </script>
 
-<div class="px-4 pt-16 pb-32 relative min-h-full flex items-start justify-center">
+<div in:fly={{ y: 15, duration: 300, delay: 200, easing: cubicOut }} out:fade={{ duration: 200 }} class="col-start-1 row-start-1 min-w-0 w-full px-4 pt-16 pb-32 relative min-h-full flex items-start justify-center">
 	{#if showError}
 		<div
 			class="fixed top-6 left-6 right-6 z-[100] flex items-center justify-center animate-in slide-in-from-top-4 fade-in duration-300"
@@ -159,7 +161,7 @@
 					</button>
 					{#if isTypeDropdownOpen}
 						<div class="fixed inset-0 z-30" onclick={() => isTypeDropdownOpen = false} role="presentation"></div>
-						<div class="absolute left-0 top-full mt-2 w-full bg-[#1a1a1a] rounded-xl box-3d z-40 p-2 flex flex-col gap-1">
+						<div class="absolute left-0 top-full mt-2 w-full bg-[#1a1a1a] rounded-xl box-3d z-40 p-2 flex flex-col gap-1" transition:slide={{ duration: 250 }}>
 							{#each ['debit', 'credit'] as tOpt}
 								<button 
 									class="text-left px-4 py-2 text-base tracking-wide rounded-lg transition-colors {type === tOpt ? 'bg-white text-black box-3d' : 'text-gray-200 hover:bg-[#2a2a2a]'} capitalize"
@@ -209,7 +211,7 @@
 					
 					{#if isCategoryDropdownOpen}
 						<div class="fixed inset-0 z-30" onclick={() => isCategoryDropdownOpen = false} role="presentation"></div>
-						<div class="absolute right-0 top-full mt-2 w-56 max-h-64 overflow-y-auto bg-[#1a1a1a] rounded-xl box-3d z-50 p-2 flex flex-col gap-1">
+						<div class="absolute right-0 top-full mt-2 w-56 max-h-64 overflow-y-auto bg-[#1a1a1a] rounded-xl box-3d z-50 p-2 flex flex-col gap-1" transition:slide={{ duration: 250 }}>
 							{#each categories as cat}
 								<button 
 									class="flex items-center gap-3 text-left px-4 py-3 text-base tracking-wide rounded-lg transition-colors {category === cat.category ? 'bg-white text-black box-3d' : 'text-gray-200 hover:bg-[#2a2a2a]'}"
@@ -234,7 +236,7 @@
 
 		<!-- Actions -->
 		<div class="mt-2 border-t border-gray-800/60 pt-6">
-			<button class="w-full py-4 rounded-xl bg-white hover:bg-gray-200 text-black font-bold text-lg box-3d tracking-wide transition-all active:translate-y-1 flex items-center justify-center gap-2 disabled:opacity-70 disabled:active:translate-y-0" onclick={handleSubmit} disabled={loading}>
+			<button class="w-full py-4 rounded-xl bg-white hover:bg-gray-200 text-black font-bold text-lg box-3d tracking-wide transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70 disabled:active:scale-100" onclick={handleSubmit} disabled={loading}>
 				{#if loading}
 					<div class="h-5 w-5 rounded-full border-2 border-black border-t-transparent animate-spin"></div>
 					<span>Saving...</span>
@@ -244,4 +246,6 @@
 			</button>
 		</div>
 	</div>
+
+	<div class="h-32 shrink-0"></div>
 </div>

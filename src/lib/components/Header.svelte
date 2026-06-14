@@ -5,6 +5,7 @@
 	 */
 	import { Calendar, ChevronLeft, ChevronRight } from 'lucide-svelte';
 	import { appState } from '$lib/state.svelte.js';
+	import { fade, slide } from 'svelte/transition';
 
 	/** @type {boolean} State to control the visibility of the month selection dropdown */
 	let isDropdownOpen = $state(false);
@@ -45,11 +46,13 @@
 		class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
 		onclick={toggleDropdown}
 		aria-hidden="true"
+		transition:fade={{ duration: 200 }}
 	></div>
 
 	<!-- Modal -->
 	<div
-		class="fixed top-36 right-6 w-72 bg-[#111111] rounded-3xl p-7 box-3d z-[70] transform transition-all"
+		class="fixed top-36 right-6 w-72 bg-[#111111] rounded-3xl p-7 box-3d z-[70] transform"
+		transition:slide={{ duration: 300 }}
 	>
 		<div class="flex items-center justify-between mb-4">
 			<button

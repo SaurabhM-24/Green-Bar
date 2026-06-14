@@ -23,6 +23,9 @@ class DataStore {
 	/** @type {Set<string>} Unique categories used in transactions this month */
 	transactionCategories = $state(new Set());
 	
+	/** @type {any[]} List of all transactions for the current month */
+	currentMonthTransactions = $state([]);
+	
 	/** @type {number} Total liquid balance (all time credits minus debits prior to this month) */
 	globalLiquidBalance = $state(0);
 	
@@ -108,8 +111,10 @@ class DataStore {
 		// Execute all Supabase queries concurrently
 		const [budgetRes, txRes, allHistoryRes] = await Promise.all([
 			supabase.from('budgets').select('*').order('sort_order', { ascending: true }),
-			supabase.from('transactions').select('category_id, amount, transaction_type, transaction_date')
-				.gte('transaction_date', prevMonthStart).lte('transaction_date', endDate),
+			supabase.from('transactions').select('*')
+				.gte('transaction_date', prevMonthStart).lte('transaction_date', endDate)
+				.order('transaction_date', { ascending: false })
+				.order('created_at', { ascending: false }),
 			supabase.from('transactions').select('amount, transaction_type, transaction_date, category_id'),
 			fetchProfile()
 		]);
@@ -152,6 +157,8 @@ class DataStore {
 		const cats = new Set();
 		/** @type {Record<string, number>} */
 		const totals = {};
+		/** @type {any[]} */
+		const currentMonthTxs = [];
 
 		if (txData) {
 			txData.forEach((tx) => {
@@ -174,11 +181,13 @@ class DataStore {
 					// tx.amount is stored correctly signed in the DB (negative for debit)
 					// So subtracting negative adds to the total used.
 					totals[tx.category] = (totals[tx.category] || 0) - Number(tx.amount);
+					currentMonthTxs.push(tx);
 				}
 			});
 		}
 		this.transactionCategories = cats;
 		this.categoryTotals = totals;
+		this.currentMonthTransactions = currentMonthTxs;
 
 		// 3. Process Full History for Global Liquid Balance
 		/** @type {any[]} */
