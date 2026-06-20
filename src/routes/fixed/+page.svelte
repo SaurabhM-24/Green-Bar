@@ -22,6 +22,7 @@
 
 	/** @type {any[]} List of fixed budgets for reordering */
 	let fixedBudgets = $state([]);
+	const isCorpusTab = false;
 	let transactionCategories = $derived(appData.transactionCategories);
 
 	let globalLiquidBalance = $derived(appData.globalLiquidBalance);
@@ -65,7 +66,7 @@
 				selectedCorpusBudget = null;
 				isFixedModalOpen = false;
 				selectedFixedBudget = null;
-				appData.loadData(appState.month, appState.year);
+				appData.loadData();
 			}
 		}
 	}
@@ -74,12 +75,12 @@
 		if (pendingDeleteId) {
 			const { error } = await supabase
 				.from('budgets')
-				.update({ monthly_limit: -1 })
+				.update({ limit_amount: -1 })
 				.eq('category_id', pendingDeleteId);
 			if (!error) {
 				showDeactivateModal = false;
 				pendingDeleteId = null;
-				appData.loadData(appState.month, appState.year);
+				appData.loadData();
 			}
 		}
 	}
@@ -91,19 +92,20 @@
 		} = await supabase.auth.getSession();
 		const user_id = session?.user?.id;
 
+		const targetBudgets = isCorpusTab ? corpusBudgets : fixedBudgets;
 		const maxSortOrder =
-			fixedBudgets.length > 0
-				? Math.max(...fixedBudgets.map((b) => Number(b.sort_order || 0)))
-				: -1;
+			targetBudgets.length > 0 ? Math.max(...targetBudgets.map((b) => Number(b.sort_order || 0))) : -1;
 
 		const { error } = await supabase.from('budgets').insert([
 			{
 				category_id: crypto.randomUUID(),
 				category: data.category,
 				description: data.description || null,
-				monthly_limit: data.monthly_limit ? Number(data.monthly_limit) : 0,
+				limit_amount: data.limit_amount ? Number(data.limit_amount) : 0,
 				icon_name: data.icon_name || null,
-				budget_type: 'fixed',
+				budget_type: isCorpusTab ? 'corpus' : 'fixed',
+				period_type: data.period_type || 'monthly',
+				reset_date: data.reset_date ? Number(data.reset_date) : 1,
 				user_id: user_id,
 				sort_order: maxSortOrder + 1
 			}
@@ -111,7 +113,7 @@
 
 		if (!error) {
 			isAddModalOpen = false;
-			appData.loadData(appState.month, appState.year);
+			appData.loadData();
 		} else {
 			alert('Failed to create category: ' + error.message);
 		}
@@ -123,17 +125,18 @@
 			.from('budgets')
 			.update({
 				category: data.category,
-				monthly_limit: data.monthly_limit,
+				limit_amount: data.limit_amount,
 				description: data.description,
-				icon_name: data.icon_name
+				icon_name: data.icon_name,
+				period_type: data.period_type,
+				reset_date: data.reset_date
 			})
 			.eq('category_id', data.category_id);
 		if (!error) {
-			isCorpusModalOpen = false;
 			selectedCorpusBudget = null;
 			isFixedModalOpen = false;
 			selectedFixedBudget = null;
-			appData.loadData(appState.month, appState.year);
+			appData.loadData();
 		}
 	}
 
@@ -185,6 +188,37 @@
 	function cancelEditing() {
 		isEditingOrder = false;
 	}
+
+	/**
+	 * @param {any} b
+	 * @returns {string}
+	 */
+	function getResetText(b) {
+		if (b.period_type === 'manual') return 'Manual Reset';
+		if (!b.current_period_start) return '';
+
+		const start = new Date(b.current_period_start);
+		const now = new Date();
+		let nextReset = new Date(start);
+
+		if (b.period_type === 'daily') {
+			nextReset.setDate(nextReset.getDate() + 1);
+		} else if (b.period_type === 'weekly') {
+			nextReset.setDate(nextReset.getDate() + 7);
+		} else if (b.period_type === 'monthly') {
+			nextReset.setMonth(nextReset.getMonth() + 1);
+		} else if (b.period_type === 'yearly') {
+			nextReset.setFullYear(nextReset.getFullYear() + 1);
+		}
+
+		const diffTime = nextReset.getTime() - now.getTime();
+		const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+		if (diffDays === 0) return 'Resets today';
+		if (diffDays === 1) return 'Resets tomorrow';
+		if (diffDays < 0) return 'Reset overdue'; // Should not happen with RPC
+		return `Resets in ${diffDays} days`;
+	}
 </script>
 
 <div
@@ -213,10 +247,11 @@
 					<div in:fly={{ y: 20, duration: 400, delay: index * 100 }}>
 						<CorpusCard
 							title={b.category}
-							lockedData={Number(b.monthly_limit || 0)}
+							lockedData={Number(b.limit_amount || 0)}
 							leftData={globalLiquidBalance + currentMonthCorpusUsed}
 							usedData={-currentMonthCorpusUsed}
 							iconName={b.icon_name}
+							periodText={getResetText(b)}
 							onclick={() => {
 								selectedCorpusBudget = b;
 								isCorpusModalOpen = true;
@@ -315,6 +350,7 @@
 								isChecked={transactionCategories.has(b.category)}
 								isLast={index === fixedBudgets.length - 1}
 								iconName={b.icon_name}
+								periodText={getResetText(b)}
 								onclick={() => {
 									if (!isEditingOrder) {
 										selectedFixedBudget = b;

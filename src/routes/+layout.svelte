@@ -12,6 +12,7 @@
 	import { Plus } from 'lucide-svelte';
 	import { appState } from '$lib/state.svelte.js';
 	import { appData } from '$lib/data.svelte.js';
+	import { onMount } from 'svelte';
 	import '../app.css';
 
 	let { children } = $props();
@@ -24,6 +25,18 @@
 	
 	/** @type {HTMLElement | undefined} Reference to the main scrolling container */
 	let mainContainer = $state();
+
+	onMount(() => {
+		const handleVisibilityChange = () => {
+			if (document.visibilityState === 'visible' && session) {
+				appData.loadData(true); // background refresh
+			}
+		};
+		document.addEventListener('visibilitychange', handleVisibilityChange);
+		return () => {
+			document.removeEventListener('visibilitychange', handleVisibilityChange);
+		};
+	});
 
 	/**
 	 * @description Effect: Scroll to top of the main container when the route changes.
@@ -67,7 +80,7 @@
 	 */
 	$effect(() => {
 		if (session) {
-			appData.loadData(appState.month, appState.year);
+			appData.loadData();
 		}
 	});
 </script>

@@ -6,12 +6,11 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { supabase } from '$lib/supabase';
-	import { appState } from '$lib/state.svelte.js';
 	import { untrack } from 'svelte';
 	import { appData } from '$lib/data.svelte.js';
 	import TransactionCard from '$lib/components/TransactionCard.svelte';
 	import TransactionDetailsModal from '$lib/components/editCards/TransactionDetailsModal.svelte';
-	import { ChevronDown } from 'lucide-svelte';
+	import { ChevronDown, Calendar, ChevronLeft, ChevronRight } from 'lucide-svelte';
 	import { iconMap } from '$lib/icons.js';
 	import { fade, slide, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -20,9 +19,14 @@
 	let loading = $state(true);
 	let loadingMore = $state(false);
 	
-	let pageSize = 10;
+	let pageSize = 20;
 	let pageIndex = $state(0);
 	let hasMore = $state(true);
+
+	// Local state for history filter
+	let listMonth = $state(new Date().getMonth() + 1);
+	let listYear = $state(new Date().getFullYear());
+	let isDateDropdownOpen = $state(false);
 
 	/**
 	 * @param {HTMLElement} node
@@ -62,8 +66,9 @@
 		/** @type {{ date: string, items: any[] } | null} */
 		let currentGroup = null;
 		for (const tx of transactions) {
-			if (!currentGroup || currentGroup.date !== tx.transaction_date) {
-				currentGroup = { date: tx.transaction_date, items: [] };
+			const txDate = tx.transaction_date.split('T')[0];
+			if (!currentGroup || currentGroup.date !== txDate) {
+				currentGroup = { date: txDate, items: [] };
 				groups.push(currentGroup);
 			}
 			currentGroup.items.push(tx);
@@ -71,9 +76,6 @@
 		return groups;
 	});
 
-	/**
-	 * @description Effect: Derives category dropdown list globally from appData to avoid redundant Supabase queries.
-	 */
 	$effect(() => {
 		if (!appData.loading) {
 			categories = [
@@ -86,12 +88,9 @@
 	});
 
 	/**
-	 * @param {number} m
-	 * @param {number} y
-	 * @param {string} [cat]
 	 * @param {boolean} [isAppend=false]
 	 */
-	async function loadData(m, y, cat, isAppend = false) {
+	async function loadData(isAppend = false) {
 		if (!isAppend) {
 			loading = true;
 			pageIndex = 0;
@@ -101,17 +100,41 @@
 			loadingMore = true;
 		}
 
-		let allTxs = appData.currentMonthTransactions || [];
+		const startDate = `${listYear}-${String(listMonth).padStart(2, '0')}-01`;
+		const lastDay = new Date(listYear, listMonth, 0).getDate();
+		const endDate = `${listYear}-${String(listMonth).padStart(2, '0')}-${lastDay}T23:59:59`;
 
-		if (cat && cat !== 'All') {
-			allTxs = allTxs.filter(tx => tx.category === cat || tx.category_id === cat);
+		let query = supabase
+			.from('transactions')
+			.select('*')
+			.gte('transaction_date', startDate)
+			.lte('transaction_date', endDate)
+			.order('transaction_date', { ascending: false })
+			.order('created_at', { ascending: false })
+			.range(pageIndex * pageSize, (pageIndex + 1) * pageSize - 1);
+
+		if (selectedCategory && selectedCategory !== 'All') {
+			// Find category ID
+			const catObj = categories.find(c => c.category === selectedCategory);
+			if (catObj && catObj.category_id) {
+				query = query.eq('category_id', catObj.category_id);
+			}
 		}
 
-		const newTxs = allTxs.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize);
+		const { data, error } = await query;
+		const newTxs = data || [];
 
-		if (newTxs.length < pageSize || (pageIndex + 1) * pageSize >= allTxs.length) {
+		if (newTxs.length < pageSize) {
 			hasMore = false;
 		}
+
+		// Ensure categories are mapped
+		newTxs.forEach(tx => {
+			if (!tx.category) {
+				const c = categories.find(c => c.category_id === tx.category_id);
+				if (c) tx.category = c.category;
+			}
+		});
 
 		if (isAppend) {
 			transactions = [...transactions, ...newTxs];
@@ -126,22 +149,16 @@
 	function loadMore() {
 		if (loading || loadingMore || !hasMore) return;
 		pageIndex++;
-		loadData(appState.month, appState.year, selectedCategory, true);
+		loadData(true);
 	}
 
-	/**
-	 * @description Effect: Fetches transaction list whenever month, year, or filter category changes, waiting for appData.
-	 */
 	$effect(() => {
-		const m = appState.month;
-		const y = appState.year;
+		const m = listMonth;
+		const y = listYear;
 		const cat = selectedCategory;
-		const isLoading = appData.loading;
 		
 		untrack(() => {
-			if (!isLoading) {
-				loadData(m, y, cat);
-			}
+			loadData();
 		});
 	});
 
@@ -151,8 +168,8 @@
 		if (!error) {
 			isModalOpen = false;
 			selectedTransaction = null;
-			loadData(appState.month, appState.year, selectedCategory);
-			appData.loadData(appState.month, appState.year);
+			loadData();
+			appData.loadData();
 		}
 	}
 
@@ -174,8 +191,8 @@
 		if (!error) {
 			isModalOpen = false;
 			selectedTransaction = null;
-			loadData(appState.month, appState.year, selectedCategory);
-			appData.loadData(appState.month, appState.year);
+			loadData();
+			appData.loadData();
 		}
 	}
 
@@ -201,11 +218,45 @@
 	<div class="mb-8 flex items-center justify-between px-4">
 		<h1 class="text-3xl tracking-wide text-white font-display">History</h1>
 
-		<div class="relative z-40">
-			<button
-				class="bg-[#111111] text-gray-300 text-sm tracking-wide py-3 pl-4 pr-4 rounded-xl focus:outline-none box-3d flex items-center gap-3"
-				onclick={toggleCategoryDropdown}
-			>
+		<div class="flex items-center gap-2">
+			<!-- Date Picker -->
+			<div class="relative z-40">
+				<button
+					class="bg-[#111111] text-gray-300 text-sm tracking-wide py-3 px-4 rounded-xl focus:outline-none box-3d flex items-center gap-2"
+					onclick={() => isDateDropdownOpen = !isDateDropdownOpen}
+				>
+					<Calendar class="w-4 h-4 text-gray-500" />
+					{new Date(listYear, listMonth - 1).toLocaleString('default', { month: 'short' })} {listYear}
+				</button>
+				
+				{#if isDateDropdownOpen}
+					<div class="fixed inset-0 z-30" onclick={() => isDateDropdownOpen = false} role="presentation" transition:fade={{ duration: 150 }}></div>
+					<div class="absolute right-0 mt-2 w-56 bg-[#1a1a1a] rounded-xl box-3d z-40 p-3" transition:slide={{ duration: 250, easing: cubicOut }}>
+						<div class="flex items-center justify-between mb-3">
+							<button onclick={() => listYear--} class="p-1 hover:bg-[#2a2a2a] rounded-lg"><ChevronLeft class="w-5 h-5 text-gray-400" /></button>
+							<span class="text-white tracking-wide">{listYear}</span>
+							<button onclick={() => listYear++} class="p-1 hover:bg-[#2a2a2a] rounded-lg"><ChevronRight class="w-5 h-5 text-gray-400" /></button>
+						</div>
+						<div class="grid grid-cols-3 gap-1">
+							{#each [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as m}
+								<button 
+									class="py-1.5 text-sm rounded-lg {listMonth === m ? 'bg-white text-black' : 'text-gray-400 hover:bg-[#2a2a2a]'}"
+									onclick={() => { listMonth = m; isDateDropdownOpen = false; }}
+								>
+									{new Date(2000, m - 1).toLocaleString('default', { month: 'short' })}
+								</button>
+							{/each}
+						</div>
+					</div>
+				{/if}
+			</div>
+
+			<!-- Category Filter -->
+			<div class="relative z-40">
+				<button
+					class="bg-[#111111] text-gray-300 text-sm tracking-wide py-3 pl-4 pr-4 rounded-xl focus:outline-none box-3d flex items-center gap-3"
+					onclick={toggleCategoryDropdown}
+				>
 				<div class="flex items-center gap-2">
 					{#if selectedCategoryIcon && iconMap[selectedCategoryIcon]}
 						<picture>
@@ -242,6 +293,7 @@
 					{/each}
 				</div>
 			{/if}
+		</div>
 		</div>
 	</div>
 

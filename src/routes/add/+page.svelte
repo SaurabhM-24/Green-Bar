@@ -85,7 +85,7 @@
 			category = '';
 
 			// Reload global data across the app to reflect new transaction
-			appData.loadData(appState.month, appState.year);
+			appData.loadData();
 
 			setTimeout(() => {
 				successMsg = false;

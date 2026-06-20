@@ -4,7 +4,6 @@
 	 * Displays the current global month/year and provides a dropdown menu.
 	 */
 	import { Settings, Calendar, User, LogOut, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-svelte';
-	import { appState } from '$lib/state.svelte.js';
 	import { fade, slide, fly } from 'svelte/transition';
 	import { clickOutside } from '$lib/actions/clickOutside.js';
 	import UpdateProfileModal from '$lib/components/editCards/UpdateProfileModal.svelte';
@@ -12,7 +11,6 @@
 
 	/** @type {boolean} State to control the visibility of the dropdown menu */
 	let isDropdownOpen = $state(false);
-	let activeMenu = $state('main'); // 'main' | 'date'
 	let isUpdateProfileModalOpen = $state(false);
 	let showLogoutConfirm = $state(false);
 	/** @type {HTMLElement | null} */
@@ -20,17 +18,6 @@
 
 	function toggleDropdown() {
 		isDropdownOpen = !isDropdownOpen;
-		if (isDropdownOpen) {
-			activeMenu = 'main';
-		}
-	}
-
-	function prevMonth() {
-		appState.prevMonth();
-	}
-
-	function nextMonth() {
-		appState.nextMonth();
 	}
 
 	async function confirmLogout() {
@@ -49,7 +36,7 @@
 >
 	<div class="flex items-center gap-3">
 		<h2 class="text-3xl tracking-wide text-white font-display">
-			{appState.monthName}, <span class="text-gray-400">{appState.year}</span>
+			Green <span class="text-gray-400">Bar</span>
 		</h2>
 	</div>
 
@@ -69,84 +56,31 @@
 		class="fixed top-36 left-6 right-6 w-[calc(100%-3rem)] bg-[#111111] rounded-3xl p-3 box-3d z-[70] transform overflow-hidden"
 		transition:slide={{ duration: 300 }}
 	>
-		{#if activeMenu === 'main'}
-			<div class="flex flex-col gap-1" in:fly={{ x: -20, duration: 200, delay: 200 }} out:fly={{ x: -20, duration: 200 }}>
-				<button 
-					class="w-full flex items-center gap-3 text-left px-4 py-3 text-base tracking-wide text-gray-200 hover:bg-[#2a2a2a] rounded-xl transition-colors"
-					onclick={(e) => { e.stopPropagation(); activeMenu = 'date'; }}
-				>
-					<Calendar class="w-5 h-5 text-gray-400" />
-					Change Date
-				</button>
-				<button 
-					class="w-full flex items-center gap-3 text-left px-4 py-3 text-base tracking-wide text-gray-200 hover:bg-[#2a2a2a] rounded-xl transition-colors"
-					onclick={(e) => {
-						e.stopPropagation();
-						isUpdateProfileModalOpen = true;
-						isDropdownOpen = false;
-					}}
-				>
-					<User class="w-5 h-5 text-gray-400" />
-					Update Profile
-				</button>
-				<hr class="border-gray-800 mx-3 my-1" />
-				<button 
-					class="w-full flex items-center gap-3 text-left px-4 py-3 text-base tracking-wide text-red-400 hover:bg-red-500/10 rounded-xl transition-colors"
-					onclick={(e) => {
-						e.stopPropagation();
-						showLogoutConfirm = true;
-						isDropdownOpen = false;
-					}}
-				>
-					<LogOut class="w-5 h-5" />
-					Logout
-				</button>
-			</div>
-		{:else if activeMenu === 'date'}
-			<div class="p-4" in:fly={{ x: 20, duration: 200, delay: 200 }} out:fly={{ x: 20, duration: 200 }}>
-				<div class="flex items-center justify-between mb-4">
-					<button
-						onclick={(e) => { e.stopPropagation(); activeMenu = 'main'; }}
-						class="p-2 hover:bg-[#1a1a1a] rounded-full text-gray-400 hover:text-white transition-colors"
-						aria-label="Back to main menu"
-					>
-						<ArrowLeft class="w-5 h-5" />
-					</button>
-					<div class="flex items-center gap-2">
-						<button
-							onclick={(e) => { e.stopPropagation(); appState.year--; }}
-							class="p-1.5 hover:bg-[#1a1a1a] rounded-full text-gray-400 hover:text-white transition-colors"
-						>
-							<ChevronLeft class="w-5 h-5" />
-						</button>
-						<span class="tracking-widest text-lg text-white w-12 text-center">{appState.year}</span>
-						<button
-							onclick={(e) => { e.stopPropagation(); appState.year++; }}
-							class="p-1.5 hover:bg-[#1a1a1a] rounded-full text-gray-400 hover:text-white transition-colors"
-						>
-							<ChevronRight class="w-5 h-5" />
-						</button>
-					</div>
-				</div>
-
-				<div class="grid grid-cols-3 gap-2">
-					{#each [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as m}
-						<button
-							class="py-2 text-base tracking-wide rounded-xl transition-all {appState.month === m
-								? 'bg-white text-black'
-								: 'text-gray-400 hover:bg-[#1a1a1a] hover:text-white'}"
-							onclick={(e) => {
-								e.stopPropagation();
-								appState.month = m;
-								isDropdownOpen = false;
-							}}
-						>
-							{new Date(2000, m - 1).toLocaleString('default', { month: 'short' })}
-						</button>
-					{/each}
-				</div>
-			</div>
-		{/if}
+		<div class="flex flex-col gap-1" in:fly={{ x: -20, duration: 200, delay: 200 }} out:fly={{ x: -20, duration: 200 }}>
+			<button 
+				class="w-full flex items-center gap-3 text-left px-4 py-3 text-base tracking-wide text-gray-200 hover:bg-[#2a2a2a] rounded-xl transition-colors"
+				onclick={(e) => {
+					e.stopPropagation();
+					isUpdateProfileModalOpen = true;
+					isDropdownOpen = false;
+				}}
+			>
+				<User class="w-5 h-5 text-gray-400" />
+				Update Profile
+			</button>
+			<hr class="border-gray-800 mx-3 my-1" />
+			<button 
+				class="w-full flex items-center gap-3 text-left px-4 py-3 text-base tracking-wide text-red-400 hover:bg-red-500/10 rounded-xl transition-colors"
+				onclick={(e) => {
+					e.stopPropagation();
+					showLogoutConfirm = true;
+					isDropdownOpen = false;
+				}}
+			>
+				<LogOut class="w-5 h-5" />
+				Logout
+			</button>
+		</div>
 	</div>
 {/if}
 

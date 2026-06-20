@@ -4,7 +4,7 @@
 	 * Displays corpus/savings status with a multi-segment progress bar (locked vs expendable).
 	 */
 	import { iconMap } from '$lib/icons.js';
-	let { title, lockedData, leftData, usedData, iconName, onclick } = $props();
+	let { title, lockedData, leftData, usedData, iconName, periodText, onclick } = $props();
 
 	/**
 	 * @description The initial expendable capacity for the month.
@@ -28,7 +28,12 @@
 	class="block w-full text-left bg-[#0f0f0f] rounded-[2.5rem] p-8 px-9 mb-7 box-3d active:scale-[0.98] transition-transform"
 >
 	<div class="flex justify-between items-center mb-7">
-		<h3 class="text-2xl text-gray-200 tracking-wide font-display">{title}</h3>
+		<div class="flex items-baseline gap-3">
+			<h3 class="text-2xl text-gray-200 tracking-wide font-display">{title}</h3>
+			{#if periodText}
+				<span class="text-xs text-gray-500 tracking-wide">{periodText}</span>
+			{/if}
+		</div>
 		{#if iconName && iconMap[iconName]}
 			<picture>
 				{#if iconMap[iconName].avif}

@@ -100,16 +100,18 @@
 				category_id: crypto.randomUUID(),
 				category: data.category,
 				description: data.description || null,
-				monthly_limit: data.monthly_limit ? Number(data.monthly_limit) : 0,
+				limit_amount: data.limit_amount ? Number(data.limit_amount) : 0,
 				icon_name: data.icon_name || null,
 				budget_type: 'variable',
+				period_type: data.period_type || 'monthly',
+				reset_date: data.reset_date ? Number(data.reset_date) : 1,
 				user_id: user_id,
 				sort_order: maxSortOrder + 1
 			}
 		]);
 		if (!error) {
 			isAddVariableModalOpen = false;
-			appData.loadData(appState.month, appState.year);
+			appData.loadData();
 		} else alert('Failed to create category: ' + error.message);
 	}
 
@@ -123,16 +125,18 @@
 				category_id: crypto.randomUUID(),
 				category: data.category,
 				description: data.description || null,
-				monthly_limit: data.monthly_limit ? Number(data.monthly_limit) : 0,
+				limit_amount: data.limit_amount ? Number(data.limit_amount) : 0,
 				icon_name: data.icon_name || null,
 				budget_type: 'fixed',
+				period_type: data.period_type || 'monthly',
+				reset_date: data.reset_date ? Number(data.reset_date) : 1,
 				user_id: user_id,
 				sort_order: maxSortOrder + 1
 			}
 		]);
 		if (!error) {
 			isAddFixedModalOpen = false;
-			appData.loadData(appState.month, appState.year);
+			appData.loadData();
 		} else alert('Failed to create category: ' + error.message);
 	}
 
@@ -250,7 +254,7 @@
 							<div class="flex-1 flex flex-col gap-2 min-w-0">
 								<span class="text-sm text-white tracking-wide truncate">{b.category}</span>
 								<div class="h-[6px] w-full bg-[#1a1a1a] rounded-full overflow-hidden">
-									<div class="h-full rounded-full transition-all duration-1000 {getProgressColor(Number(b.monthly_limit || 0), categoryTotals[b.category] || 0)}" style="width: {getProgressWidth(Number(b.monthly_limit || 0), categoryTotals[b.category] || 0)}"></div>
+									<div class="h-full rounded-full transition-all duration-1000 {getProgressColor(Number(b.limit_amount || 0), categoryTotals[b.category] || 0)}" style="width: {getProgressWidth(Number(b.limit_amount || 0), categoryTotals[b.category] || 0)}"></div>
 								</div>
 							</div>
 						</div>
@@ -262,7 +266,7 @@
 						<div class="w-full min-w-0 flex justify-center" in:fly={{ y: 20, duration: 400, delay: index * 100 + 100 }}>
 							<HealthRing
 								category={b.category}
-								totalData={Number(b.monthly_limit || 0)}
+								totalData={Number(b.limit_amount || 0)}
 								usedData={categoryTotals[b.category] || 0}
 								iconName={b.icon_name}
 							/>
