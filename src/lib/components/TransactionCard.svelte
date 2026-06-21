@@ -5,14 +5,15 @@
 	 */
 	import { ArrowUpRight, ArrowDownLeft } from 'lucide-svelte';
 	import { iconMap } from '$lib/icons.js';
-	let { title, description, amount, type, iconName, onclick } = $props();
+	let { title, description, amount, type, iconName, isOutOfCycle = false, onclick } = $props();
 
 	/** @type {boolean} Flag indicating whether this is an outgoing debit transaction */
 	let isDebit = $derived(type.toLowerCase() === 'debit');
 </script>
 
 <button
-	class="w-full text-left relative bg-[#0f0f0f] py-6 px-8 flex justify-between items-center after:absolute after:bottom-0 after:left-8 after:right-8 after:h-px after:bg-gray-800/60 last:after:hidden hover:bg-[#151515] transition-all active:scale-[0.98] focus:outline-none"
+	class="w-full text-left relative py-6 px-8 flex justify-between items-center after:absolute after:bottom-0 after:left-8 after:right-8 after:h-px after:bg-gray-800/60 last:after:hidden transition-all active:scale-[0.98] focus:outline-none {isOutOfCycle ? 'bg-[#0f0f0f]' : 'bg-[#0f0f0f] hover:bg-[#151515]'}"
+	style={isOutOfCycle ? "background: repeating-linear-gradient(-45deg, transparent, transparent 10px, #151515 10px, #151515 20px) #0f0f0f;" : ""}
 	onclick={onclick}
 >
 	<div class="flex flex-col overflow-hidden mr-6">

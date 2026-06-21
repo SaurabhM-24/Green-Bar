@@ -28,7 +28,7 @@
 		{onclick}
 		class="text-gray-300 text-lg font-medium tracking-wide flex-1 hover:text-white transition-colors flex justify-between items-center bg-transparent border-none p-0 w-full text-left focus:outline-none"
 	>
-		<div class="flex items-baseline gap-3">
+		<div class="flex flex-col gap-1">
 			<span>{title}</span>
 			{#if periodText}
 				<span class="text-xs text-gray-500 font-normal tracking-wide">{periodText}</span>

@@ -26,7 +26,7 @@
 	let transactionCategories = $derived(appData.transactionCategories);
 
 	let globalLiquidBalance = $derived(appData.globalLiquidBalance);
-	let currentMonthCorpusUsed = $derived(appData.currentMonthCorpusUsed);
+	let currentPeriodCorpusUsed = $derived(appData.currentPeriodCorpusUsed);
 
 	let isEditingOrder = $state(false);
 	let isMenuOpen = $state(false);
@@ -248,8 +248,8 @@
 						<CorpusCard
 							title={b.category}
 							lockedData={Number(b.limit_amount || 0)}
-							leftData={globalLiquidBalance + currentMonthCorpusUsed}
-							usedData={-currentMonthCorpusUsed}
+							leftData={globalLiquidBalance + currentPeriodCorpusUsed}
+							usedData={-currentPeriodCorpusUsed}
 							iconName={b.icon_name}
 							periodText={getResetText(b)}
 							onclick={() => {
@@ -368,8 +368,8 @@
 	{#if isCorpusModalOpen && selectedCorpusBudget}
 		<CorpusModal
 			budget={selectedCorpusBudget}
-			amountUsed={-currentMonthCorpusUsed}
-			amountLeft={globalLiquidBalance + currentMonthCorpusUsed}
+			amountUsed={-currentPeriodCorpusUsed}
+			amountLeft={globalLiquidBalance + currentPeriodCorpusUsed}
 			onclose={() => (isCorpusModalOpen = false)}
 			ondelete={handleDelete}
 			onsave={handleSave}

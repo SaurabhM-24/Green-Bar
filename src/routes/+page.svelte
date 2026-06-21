@@ -31,8 +31,8 @@
 	/** @type {number} Global liquid balance calculated from all-time history */
 	let globalLiquidBalance = $derived(appData.globalLiquidBalance);
 
-	/** @type {number} Corpus used in the current month */
-	let currentMonthCorpusUsed = $derived(appData.currentMonthCorpusUsed);
+	/** @type {number} Corpus used in the current period */
+	let currentPeriodCorpusUsed = $derived(appData.currentPeriodCorpusUsed);
 
 	/** @type {number} Total aggregate account balance */
 	let totalAccountBalance = $derived(appData.totalAccountBalance);
@@ -44,7 +44,7 @@
 	let accountBalance = $derived(totalAccountBalance - corpusLimit);
 
 	/** @type {number} The remaining personal corpus cache */
-	let personalCorpus = $derived(globalLiquidBalance + currentMonthCorpusUsed);
+	let personalCorpus = $derived(globalLiquidBalance + currentPeriodCorpusUsed);
 
 	/** @type {string} Formatted user name for the greeting */
 	let userName = $derived(appData.userName);

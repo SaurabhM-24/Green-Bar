@@ -11,7 +11,7 @@ class DataStore {
 	/** @type {any[]} List of variable budgets */
 	budgets = $state([]);
 
-	/** @type {Record<string, number>} Total spent per category in the current month */
+	/** @type {Record<string, number>} Total spent per category in the current period */
 	categoryTotals = $state({});
 
 	/** @type {any[]} List of corpus (savings) budgets */
@@ -20,22 +20,22 @@ class DataStore {
 	/** @type {any[]} List of fixed budgets */
 	fixedBudgets = $state([]);
 
-	/** @type {Set<string>} Unique categories used in transactions this month */
+	/** @type {Set<string>} Unique categories used in transactions this period */
 	transactionCategories = $state(new Set());
 
-	/** @type {any[]} List of all transactions for the current month */
-	currentMonthTransactions = $state([]);
+	/** @type {any[]} List of all transactions for the current period */
+	currentPeriodTransactions = $state([]);
 
 	/** @type {number} Total liquid balance (all time credits minus debits prior to this month) */
 	globalLiquidBalance = $state(0);
 
-	/** @type {number} Amount added/removed from personal corpus this month */
-	currentMonthCorpusUsed = $state(0);
+	/** @type {number} Amount added/removed from personal corpus this period */
+	currentPeriodCorpusUsed = $state(0);
 
 	/** @type {number} Net total account balance all time */
 	totalAccountBalance = $state(0);
 
-	/** @type {number} Total monthly limit for corpus budgets */
+	/** @type {number} Total limit for corpus budgets */
 	corpusLimit = $state(0);
 
 	/** @type {string} Authenticated user's display name */
@@ -45,7 +45,7 @@ class DataStore {
 	userId = $state(null);
 
 	/**
-	 * @description Derived total variable expenses used in the current month.
+	 * @description Derived total variable expenses used in the current period.
 	 * Calculated by summing the categoryTotals for all variable budgets.
 	 */
 	totalVariableUsed = $derived(
@@ -69,7 +69,7 @@ class DataStore {
 			if (usedPercentage > 90) return "You're spending too fast!";
 			if (usedPercentage > 75) return 'Watch out, budget is getting tight.';
 			if (usedPercentage > 50) return 'Halfway through your budget.';
-			return 'Looking good this month!';
+			return 'Looking good this period!';
 		}
 		return 'Welcome to your financial hub.';
 	});
@@ -110,14 +110,14 @@ class DataStore {
 
 		// Execute all Supabase queries concurrently
 		const [budgetRes, rpcRes, allHistoryRes] = await Promise.all([
-			supabase.from('budgets').select('*').order('sort_order', { ascending: true }),
+			userId ? supabase.from('budgets').select('*').eq('user_id', userId).order('sort_order', { ascending: true }) : { data: [] },
 			userId ? supabase.rpc('get_budget_usage', { p_user_id: userId }) : { data: [] },
-			supabase.from('transactions').select('amount, transaction_type, transaction_date, category_id')
+			userId ? supabase.from('transactions').select('amount, transaction_type, transaction_date, category_id').eq('user_id', userId) : { data: [] }
 		]);
 
 		// 1. Process Budgets
 		const budgetData = budgetRes.data || [];
-		let totalMonthlyLimits = 0;
+		let totalLimits = 0;
 		let currentCorpusLimit = 0;
 		/** @type {Record<string, string>} */
 		const categoryIdMap = {};
@@ -126,7 +126,7 @@ class DataStore {
 			if (b.category_id) categoryIdMap[b.category_id] = b.category;
 			const limit = Number(b.limit_amount || 0);
 			if (limit !== -1) {
-				totalMonthlyLimits += limit;
+				totalLimits += limit;
 				if (b.budget_type === 'corpus') {
 					currentCorpusLimit += limit;
 				}
@@ -170,13 +170,13 @@ class DataStore {
 
 		this.transactionCategories = cats;
 		this.categoryTotals = totals;
-		this.currentMonthTransactions = []; // No longer tracking a specific 'month' of txs here
+		this.currentPeriodTransactions = []; // No longer tracking a specific period of txs here
 
 		// 3. Process Full History for Balances
 		/** @type {any[]} */
 		const allHistory = allHistoryRes.data || [];
 		let totalBalance = 0;
-		let monthCorpusSum = 0;
+		let periodCorpusSum = 0;
 		let corpusSum = 0;
 
 		if (allHistory) {
@@ -208,13 +208,13 @@ class DataStore {
 				}
 
 				if (tx.category && tx.category.toLowerCase() === 'personal corpus' && !isPast) {
-					monthCorpusSum += amount;
+					periodCorpusSum += amount;
 				}
 			});
 		}
 
-		this.globalLiquidBalance = corpusSum - totalMonthlyLimits;
-		this.currentMonthCorpusUsed = monthCorpusSum;
+		this.globalLiquidBalance = corpusSum - totalLimits;
+		this.currentPeriodCorpusUsed = periodCorpusSum;
 		this.totalAccountBalance = totalBalance;
 
 		this.loading = false;
