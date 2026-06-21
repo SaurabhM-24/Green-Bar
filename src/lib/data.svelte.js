@@ -7,53 +7,56 @@ import { supabase } from '$lib/supabase';
  */
 class DataStore {
 	loading = $state(true);
-	
+
 	/** @type {any[]} List of variable budgets */
 	budgets = $state([]);
-	
-	/** @type {Record<string, number>} Total spent per category in the current month */
+
+	/** @type {Record<string, number>} Total spent per category in the current period */
 	categoryTotals = $state({});
-	
+
 	/** @type {any[]} List of corpus (savings) budgets */
 	corpusBudgets = $state([]);
-	
+
 	/** @type {any[]} List of fixed budgets */
 	fixedBudgets = $state([]);
-	
-	/** @type {Set<string>} Unique categories used in transactions this month */
+
+	/** @type {Set<string>} Unique categories used in transactions this period */
 	transactionCategories = $state(new Set());
-	
-	/** @type {any[]} List of all transactions for the current month */
-	currentMonthTransactions = $state([]);
-	
+
+	/** @type {any[]} List of all transactions for the current period */
+	currentPeriodTransactions = $state([]);
+
 	/** @type {number} Total liquid balance (all time credits minus debits prior to this month) */
 	globalLiquidBalance = $state(0);
-	
-	/** @type {number} Amount added/removed from personal corpus this month */
-	currentMonthCorpusUsed = $state(0);
-	
+
+	/** @type {number} Amount added/removed from personal corpus this period */
+	currentPeriodCorpusUsed = $state(0);
+
 	/** @type {number} Net total account balance all time */
 	totalAccountBalance = $state(0);
-	
-	/** @type {number} Total monthly limit for corpus budgets */
+
+	/** @type {number} Total limit for corpus budgets */
 	corpusLimit = $state(0);
-	
+
 	/** @type {string} Authenticated user's display name */
 	userName = $state('User');
 
+	/** @type {string | null} Authenticated user's ID */
+	userId = $state(null);
+
 	/**
-	 * @description Derived total variable expenses used in the current month.
+	 * @description Derived total variable expenses used in the current period.
 	 * Calculated by summing the categoryTotals for all variable budgets.
 	 */
 	totalVariableUsed = $derived(
 		this.budgets.reduce((sum, b) => sum + (this.categoryTotals[b.category] || 0), 0)
 	);
-	
+
 	/**
 	 * @description Derived total limit for all variable expenses combined.
 	 */
 	totalVariableLimit = $derived(
-		this.budgets.reduce((sum, b) => sum + Number(b.monthly_limit || 0), 0)
+		this.budgets.reduce((sum, b) => sum + Number(b.limit_amount || 0), 0)
 	);
 
 	/**
@@ -66,38 +69,31 @@ class DataStore {
 			if (usedPercentage > 90) return "You're spending too fast!";
 			if (usedPercentage > 75) return 'Watch out, budget is getting tight.';
 			if (usedPercentage > 50) return 'Halfway through your budget.';
-			return 'Looking good this month!';
+			return 'Looking good this period!';
 		}
 		return 'Welcome to your financial hub.';
 	});
 
 	/**
 	 * @description Fetches all required dashboard data asynchronously in parallel.
-	 * @param {number} m - Month (1-12)
-	 * @param {number} y - Year (e.g., 2026)
+	 * @param {boolean} background If true, skips setting loading state to prevent UI flashes.
 	 */
-	async loadData(m, y) {
-		this.loading = true;
-		const startDate = `${y}-${String(m).padStart(2, '0')}-01`;
-		const lastDay = new Date(y, m, 0).getDate();
-		const endDate = `${y}-${String(m).padStart(2, '0')}-${lastDay}T23:59:59`;
-
-		const pmList = new Date(y, m - 2, 1);
-		const prevM = pmList.getMonth() + 1;
-		const prevY = pmList.getFullYear();
-		const prevMonthStart = `${prevY}-${String(prevM).padStart(2, '0')}-01`;
+	async loadData(background = false) {
+		if (!background) this.loading = true;
 
 		// Fetch user profile securely
 		const fetchProfile = async () => {
-			if (this.userName !== 'User') return;
+			if (this.userId) return this.userId;
 			const { data: sessionData } = await supabase.auth.getSession();
 			if (sessionData?.session?.user) {
+				const id = sessionData.session.user.id;
+				this.userId = id;
 				const { data: profile } = await supabase
 					.from('profiles')
 					.select('first_name')
-					.eq('id', sessionData.session.user.id)
+					.eq('id', id)
 					.single();
-					
+
 				if (profile?.first_name) {
 					this.userName = profile.first_name;
 				} else if (sessionData.session.user.user_metadata?.first_name) {
@@ -105,125 +101,120 @@ class DataStore {
 				} else if (sessionData.session.user.email) {
 					this.userName = sessionData.session.user.email.split('@')[0];
 				}
+				return id;
 			}
+			return null;
 		};
 
+		const userId = await fetchProfile();
+
 		// Execute all Supabase queries concurrently
-		const [budgetRes, txRes, allHistoryRes] = await Promise.all([
-			supabase.from('budgets').select('*').order('sort_order', { ascending: true }),
-			supabase.from('transactions').select('*')
-				.gte('transaction_date', prevMonthStart).lte('transaction_date', endDate)
-				.order('transaction_date', { ascending: false })
-				.order('created_at', { ascending: false }),
-			supabase.from('transactions').select('amount, transaction_type, transaction_date, category_id'),
-			fetchProfile()
+		const [budgetRes, rpcRes, allHistoryRes] = await Promise.all([
+			userId ? supabase.from('budgets').select('*').eq('user_id', userId).order('sort_order', { ascending: true }) : { data: [] },
+			userId ? supabase.rpc('get_budget_usage', { p_user_id: userId }) : { data: [] },
+			userId ? supabase.from('transactions').select('amount, transaction_type, transaction_date, category_id').eq('user_id', userId) : { data: [] }
 		]);
 
 		// 1. Process Budgets
-		const budgetData = budgetRes.data;
-		let totalMonthlyLimits = 0;
+		const budgetData = budgetRes.data || [];
+		let totalLimits = 0;
 		let currentCorpusLimit = 0;
 		/** @type {Record<string, string>} */
 		const categoryIdMap = {};
-		
-		if (budgetData) {
-			this.budgets = budgetData
-				.filter(b => b.budget_type === 'variable' && Number(b.monthly_limit) !== -1)
-				.map(b => ({ ...b, id: b.category_id || b.category, category_id: b.category_id || b.category }));
-				
-			this.corpusBudgets = budgetData
-				.filter(b => b.budget_type === 'corpus' && Number(b.monthly_limit) !== -1)
-				.map(b => ({ ...b, id: b.category_id || b.category, category_id: b.category_id || b.category }));
-				
-			this.fixedBudgets = budgetData
-				.filter(b => b.budget_type === 'fixed' && Number(b.monthly_limit) !== -1)
-				.map(b => ({ ...b, id: b.category_id || b.category, category_id: b.category_id || b.category }));
 
-			budgetData.forEach((b) => {
-				if (b.category_id) categoryIdMap[b.category_id] = b.category;
-				if (Number(b.monthly_limit) !== -1) {
-					totalMonthlyLimits += Number(b.monthly_limit || 0);
-					if (b.budget_type === 'corpus') {
-						currentCorpusLimit += Number(b.monthly_limit || 0);
-					}
+		budgetData.forEach((b) => {
+			if (b.category_id) categoryIdMap[b.category_id] = b.category;
+			const limit = Number(b.limit_amount || 0);
+			if (limit !== -1) {
+				totalLimits += limit;
+				if (b.budget_type === 'corpus') {
+					currentCorpusLimit += limit;
 				}
-			});
-		}
+			}
+		});
 		this.corpusLimit = currentCorpusLimit;
 
-		// 2. Process Transactions (Current & Previous month for checklist and totals)
-		/** @type {any[]} */
-		const txData = txRes.data || [];
-		const cats = new Set();
+		// 2. Process RPC Usage Data first so we can attach period_start to budgetData
 		/** @type {Record<string, number>} */
 		const totals = {};
-		/** @type {any[]} */
-		const currentMonthTxs = [];
+		const cats = new Set();
+		const rpcData = rpcRes?.data || [];
 
-		if (txData) {
-			txData.forEach((tx) => {
-				tx.category = categoryIdMap[tx.category_id] || tx.category || 'Unknown';
-				if (!tx.category) return;
-				
-				// Fixed checklist logic
-				if (tx.category === 'Salary') {
-					if (tx.transaction_date >= prevMonthStart && tx.transaction_date < startDate) {
-						cats.add(tx.category);
-					}
-				} else {
-					if (tx.transaction_date >= startDate) {
-						cats.add(tx.category);
-					}
+		// Map RPC response to totals and attach to budgetData
+		rpcData.forEach((/** @type {any} */ row) => {
+			const catName = categoryIdMap[row.category_id];
+			if (catName) {
+				totals[catName] = row.used_amount;
+				if (row.used_amount > 0) {
+					cats.add(catName); // For checklist
 				}
+			}
+			// Save period start to budget object
+			const bIdx = budgetData.findIndex(b => b.category_id === row.category_id);
+			if (bIdx > -1) {
+				budgetData[bIdx].current_period_start = row.period_start;
+			}
+		});
 
-				// Variable totals logic (Current month only)
-				if (tx.transaction_date >= startDate && tx.transaction_date <= endDate) {
-					// tx.amount is stored correctly signed in the DB (negative for debit)
-					// So subtracting negative adds to the total used.
-					totals[tx.category] = (totals[tx.category] || 0) - Number(tx.amount);
-					currentMonthTxs.push(tx);
-				}
-			});
-		}
+		this.budgets = budgetData
+			.filter(b => b.budget_type === 'variable' && Number(b.limit_amount || 0) !== -1)
+			.map(b => ({ ...b, id: b.category_id || b.category, category_id: b.category_id || b.category }));
+
+		this.corpusBudgets = budgetData
+			.filter(b => b.budget_type === 'corpus' && Number(b.limit_amount || 0) !== -1)
+			.map(b => ({ ...b, id: b.category_id || b.category, category_id: b.category_id || b.category }));
+
+		this.fixedBudgets = budgetData
+			.filter(b => b.budget_type === 'fixed' && Number(b.limit_amount || 0) !== -1)
+			.map(b => ({ ...b, id: b.category_id || b.category, category_id: b.category_id || b.category }));
+
 		this.transactionCategories = cats;
 		this.categoryTotals = totals;
-		this.currentMonthTransactions = currentMonthTxs;
+		this.currentPeriodTransactions = []; // No longer tracking a specific period of txs here
 
-		// 3. Process Full History for Global Liquid Balance
+		// 3. Process Full History for Balances
 		/** @type {any[]} */
 		const allHistory = allHistoryRes.data || [];
-		let liquidTillLastMonth = 0;
-		let monthCorpusSum = 0;
 		let totalBalance = 0;
+		let periodCorpusSum = 0;
+		let corpusSum = 0;
 
 		if (allHistory) {
 			allHistory.forEach((tx) => {
 				tx.category = categoryIdMap[tx.category_id] || tx.category || 'Unknown';
-				const val = Math.abs(Number(tx.amount));
-				const isCredit = tx.transaction_type.toLowerCase() === 'credit';
+				const amount = Number(tx.amount);
 
-				if (isCredit) totalBalance += val;
-				else totalBalance -= val;
+				totalBalance += amount;
 
-				if (tx.transaction_date < startDate) {
-					if (isCredit) liquidTillLastMonth += val;
-					else liquidTillLastMonth -= val;
+				// Corpus calculation: Past transactions only
+				let isPast = false;
+				const b = budgetData.find(b => b.category_id === tx.category_id);
+				if (b && Number(b.limit_amount || 0) !== -1) {
+					// Budgeted category
+					if (b.current_period_start) {
+						if (new Date(tx.transaction_date) < new Date(b.current_period_start)) {
+							isPast = true;
+						}
+					} else {
+						isPast = true;
+					}
+				} else {
+					// Unbudgeted category (limit is -1 or no budget). Always past/unallocated.
+					isPast = true;
 				}
 
-				if (
-					tx.transaction_date >= startDate &&
-					tx.transaction_date <= endDate &&
-					tx.category &&
-					tx.category.toLowerCase() === 'personal corpus'
-				) {
-					if (isCredit) monthCorpusSum += val;
-					else monthCorpusSum -= val;
+				if (isPast) {
+					corpusSum += amount;
+				}
+
+				if (tx.category && tx.category.toLowerCase() === 'personal corpus' && !isPast) {
+					periodCorpusSum += amount;
 				}
 			});
 		}
-		
-		this.globalLiquidBalance = liquidTillLastMonth - totalMonthlyLimits;
-		this.currentMonthCorpusUsed = monthCorpusSum;
+
+		this.globalLiquidBalance = corpusSum - totalLimits;
+		this.currentPeriodCorpusUsed = periodCorpusSum;
 		this.totalAccountBalance = totalBalance;
 
 		this.loading = false;

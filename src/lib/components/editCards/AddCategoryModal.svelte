@@ -10,8 +10,10 @@
 	let addData = $state({
 		category: '',
 		description: '',
-		monthly_limit: '',
-		icon_name: ''
+		limit_amount: '',
+		icon_name: '',
+		period_type: 'monthly',
+		reset_date: 1
 	});
 	let loading = $state(false);
 
@@ -58,14 +60,45 @@
 
 			<hr class="border-gray-800/60" />
 
-			<!-- Limit & Icon -->
+			<!-- Limit & Period -->
 			<div class="flex gap-4 items-end mt-1">
 				<div class="flex-1 flex flex-col gap-1.5 border-r border-gray-800/60 pr-4">
-					<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Monthly Limit</span>
+					<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Limit Amount</span>
 					<div class="flex items-center text-4xl tracking-wide font-bold text-white border-b border-transparent hover:border-gray-700 focus-within:border-current transition-colors w-full pb-0.5">
 						<span class="mr-1">₹</span>
-						<input type="number" bind:value={addData.monthly_limit} placeholder="0" class="bg-transparent w-full focus:outline-none [-moz-appearance:_textfield] [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none" />
+						<input type="number" bind:value={addData.limit_amount} placeholder="0" class="bg-transparent w-full focus:outline-none [-moz-appearance:_textfield] [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none" />
 					</div>
+				</div>
+				<div class="flex-1 flex flex-col gap-1.5 relative pl-2">
+					<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Period</span>
+					<select bind:value={addData.period_type} class="bg-[#151515] text-gray-100 text-base leading-relaxed focus:outline-none w-full border-b border-transparent hover:border-gray-700 focus:border-white transition-colors pb-1">
+						<option value="daily">Daily</option>
+						<option value="weekly">Weekly</option>
+						<option value="monthly">Monthly</option>
+						<option value="yearly">Yearly</option>
+						<option value="manual">Manual</option>
+					</select>
+				</div>
+			</div>
+
+			<hr class="border-gray-800/60" />
+
+			<!-- Reset Date & Icon -->
+			<div class="flex gap-4 items-end mt-1">
+				<div class="flex-1 flex flex-col gap-1.5 border-r border-gray-800/60 pr-4">
+					{#if addData.period_type !== 'daily' && addData.period_type !== 'manual'}
+						<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">
+							{#if addData.period_type === 'weekly'} Reset Day (0=Sun, 6=Sat)
+							{:else if addData.period_type === 'monthly'} Reset Date (1-31)
+							{:else if addData.period_type === 'yearly'} Reset Day of Year (1-365)
+							{/if}
+						</span>
+						<div class="flex items-center text-2xl tracking-wide font-medium text-white border-b border-transparent hover:border-gray-700 focus-within:border-current transition-colors w-full pb-0.5">
+							<input type="number" bind:value={addData.reset_date} class="bg-transparent w-full focus:outline-none [-moz-appearance:_textfield] [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none" />
+						</div>
+					{:else}
+						<div class="h-[46px]"></div> <!-- Spacer -->
+					{/if}
 				</div>
 				<div class="flex-1 flex flex-col gap-1.5 relative pl-2">
 					<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Icon</span>

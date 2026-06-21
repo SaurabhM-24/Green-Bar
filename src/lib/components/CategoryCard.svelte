@@ -6,7 +6,7 @@
 	import { iconMap } from '$lib/icons.js';
 	import { tweened } from 'svelte/motion';
 	import { cubicOut } from 'svelte/easing';
-	let { title, totalData, usedData, iconName, onclick } = $props();
+	let { title, totalData, usedData, iconName, periodText, onclick } = $props();
 
 	/** @type {number} Derived progress percentage. Prevents division by zero. */
 	let progress = $derived(
@@ -38,7 +38,12 @@
 	class="block w-full text-left bg-[#0f0f0f] rounded-[2.5rem] p-8 px-9 mb-7 box-3d active:scale-[0.98] transition-transform"
 >
 	<div class="flex justify-between items-center mb-7">
-		<h3 class="text-2xl text-gray-200 tracking-wide font-display">{title}</h3>
+		<div class="flex flex-col gap-1">
+			<h3 class="text-2xl text-gray-200 tracking-wide font-display">{title}</h3>
+			{#if periodText}
+				<span class="text-xs text-gray-500 tracking-wide">{periodText}</span>
+			{/if}
+		</div>
 		{#if iconName && iconMap[iconName]}
 			<picture>
 				{#if iconMap[iconName].avif}

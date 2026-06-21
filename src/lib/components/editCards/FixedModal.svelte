@@ -20,6 +20,26 @@
 	function handleSave() {
 		onsave({ ...editData });
 	}
+
+	import { supabase } from '$lib/supabase';
+	import { appData } from '$lib/data.svelte.js';
+	let isResetting = $state(false);
+
+	async function handleManualReset() {
+		isResetting = true;
+		const { error } = await supabase
+			.from('budgets')
+			.update({ last_manual_reset: new Date().toISOString() })
+			.eq('category_id', budget.category_id);
+			
+		if (!error) {
+			await appData.loadData();
+			onclose();
+		} else {
+			alert("Failed to reset budget");
+		}
+		isResetting = false;
+	}
 </script>
 
 <div transition:fade={{ duration: 200 }} class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] overflow-y-auto" onclick={() => { if (!isEditing && !isDeleting) onclose(); }} role="presentation">
@@ -74,11 +94,11 @@
 					{#if isEditing}
 						<div class="flex items-center text-4xl tracking-wide font-bold text-white border-b border-transparent hover:border-gray-700 focus-within:border-current transition-colors w-full pb-0.5">
 							<span class="mr-1">₹</span>
-							<input type="number" bind:value={editData.monthly_limit} class="bg-transparent w-full focus:outline-none [-moz-appearance:_textfield] [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none" />
+							<input type="number" bind:value={editData.limit_amount} class="bg-transparent w-full focus:outline-none [-moz-appearance:_textfield] [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none" />
 						</div>
 					{:else}
 						<span class="text-4xl tracking-wide font-bold text-white border-b border-transparent w-full inline-block truncate pb-0.5">
-							₹{Number(budget.monthly_limit || 0).toLocaleString('en-IN')}
+							₹{Number(budget.limit_amount || 0).toLocaleString('en-IN')}
 						</span>
 					{/if}
 				</div>
@@ -138,6 +158,43 @@
 				</div>
 			</div>
 
+			<hr class="border-gray-800/60" />
+
+			<!-- Period & Reset Date -->
+			<div class="flex gap-4 items-end mt-1">
+				<div class="flex-1 flex flex-col gap-1.5 border-r border-gray-800/60 pr-4">
+					<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Period</span>
+					{#if isEditing}
+						<select bind:value={editData.period_type} class="bg-[#151515] text-gray-100 text-base leading-relaxed focus:outline-none w-full border-b border-transparent hover:border-gray-700 focus:border-white transition-colors pb-1">
+							<option value="daily">Daily</option>
+							<option value="weekly">Weekly</option>
+							<option value="monthly">Monthly</option>
+							<option value="yearly">Yearly</option>
+							<option value="manual">Manual</option>
+						</select>
+					{:else}
+						<span class="text-gray-100 text-base border-b border-transparent pb-1 capitalize">{budget.period_type || 'monthly'}</span>
+					{/if}
+				</div>
+				<div class="flex-1 flex flex-col gap-1.5 relative pl-2">
+					{#if (!isEditing && budget.period_type !== 'daily' && budget.period_type !== 'manual') || (isEditing && editData.period_type !== 'daily' && editData.period_type !== 'manual')}
+						<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">
+							{#if (isEditing ? editData.period_type : budget.period_type) === 'weekly'} Reset Day (0-6)
+							{:else if (isEditing ? editData.period_type : budget.period_type) === 'monthly'} Reset Date (1-31)
+							{:else if (isEditing ? editData.period_type : budget.period_type) === 'yearly'} Reset Day (1-365)
+							{/if}
+						</span>
+						{#if isEditing}
+							<input type="number" bind:value={editData.reset_date} class="bg-transparent text-gray-100 text-base border-b border-transparent hover:border-gray-700 focus:border-white transition-colors w-full pb-1 focus:outline-none [-moz-appearance:_textfield] [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none" />
+						{:else}
+							<span class="text-gray-100 text-base border-b border-transparent pb-1">{budget.reset_date || 1}</span>
+						{/if}
+					{:else}
+						<div class="h-[28px]"></div> <!-- Spacer -->
+					{/if}
+				</div>
+			</div>
+
 			{#if !isEditing}
 				<hr class="border-gray-800/60" />
 
@@ -169,6 +226,19 @@
 			{:else}
 				<div class="flex flex-col gap-4 col-start-1 row-start-1" in:fly={{ y: 10, duration: 200, delay: 150, easing: cubicOut }} out:fade={{ duration: 150 }}>
 					<a href="/list?category={budget.category}" class="block w-full text-center py-3.5 rounded-xl bg-white hover:bg-gray-200 text-black font-bold box-3d tracking-wide transition-all active:scale-[0.98]">View Transactions</a>
+					{#if budget.period_type === 'manual'}
+						<button 
+							class="w-full py-3.5 rounded-xl bg-[#333] hover:bg-[#444] text-white font-bold box-3d tracking-wide transition-all active:scale-[0.98] flex items-center justify-center gap-2" 
+							onclick={handleManualReset}
+							disabled={isResetting}
+						>
+							{#if isResetting}
+								<div class="h-5 w-5 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
+							{:else}
+								Reset Budget Period Now
+							{/if}
+						</button>
+					{/if}
 					<div class="flex gap-4">
 						<button class="flex-1 py-3.5 rounded-xl bg-[#222] hover:bg-[#2a2a2a] text-white font-medium box-3d tracking-wide transition-all active:scale-[0.98]" onclick={startEditing}>Edit</button>
 						<button class="flex-1 py-3.5 rounded-xl bg-[#ff6b6b] hover:bg-[#ff8787] text-black font-bold box-3d tracking-wide transition-all active:scale-[0.98]" onclick={() => isDeleting = true}>Delete</button>
