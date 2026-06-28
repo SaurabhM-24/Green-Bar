@@ -32,7 +32,7 @@ Green Bar breaks down your finances into three simple, manageable pillars:
 All your liquid money starts here. When payday hits, your Corpus fills up. Distribute funds to your expenses, or "Lock" a portion out of sight for emergencies. 
 
 ### 2.  Variable Expenses *(Play the Game)*
-Set strict limits for day-to-day spending (e.g., groceries, fuel, Swiggy orders). Every time you log an expense, your health bar fills up. Your only goal? **Keep the bar green.**
+Set strict limits for day-to-day spending (e.g., groceries, fuel, Swiggy orders). Every time you log an expense, your health drops. Your only goal? **Keep the bar from turning red.**
 
 ### 3.  Fixed Expenses *(Set It & Forget It)*
 Rent, EMIs, and subscriptions are isolated into a simple checklist. Secure the exact amount needed and mark them as Paid. No progress bars here—just absolute peace of mind.
