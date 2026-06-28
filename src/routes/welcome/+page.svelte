@@ -49,7 +49,7 @@
 
 		if (!error && data) {
 			corpusBudget = data.find(
-				(b) => b.budget_type === 'corpus' && b.category === 'Personal Corpus'
+				(b) => b.budget_type === 'corpus' && b.category.toLowerCase() === 'personal corpus'
 			);
 			variableBudgets = data.filter((b) => b.budget_type === 'variable');
 			fixedBudgets = data.filter((b) => b.budget_type === 'fixed');
@@ -69,11 +69,11 @@
 			{
 				id: crypto.randomUUID(),
 				amount: Number(initialBalance),
-				transaction_type: 'credited',
+				transaction_type: 'credit',
 				title: 'Initial account status',
 				category_id: corpusBudget.category_id,
 				user_id: user.id,
-				date: new Date().toISOString()
+				transaction_date: new Date().toISOString()
 			}
 		]);
 
@@ -440,7 +440,7 @@
 							<div class="border-t border-gray-800 pt-4 mt-2">
 								<p class="text-gray-400 text-sm mb-1">Available Balance</p>
 								<p class="text-3xl font-bold text-[#69db7c] tracking-wide">
-									₹{appData.globalLiquidBalance}
+									₹{appData.globalLiquidBalance + appData.currentPeriodCorpusUsed}
 								</p>
 							</div>
 						</div>

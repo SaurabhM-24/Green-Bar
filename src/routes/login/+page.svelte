@@ -5,6 +5,7 @@
 	 */
 	import { supabase } from '$lib/supabase';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 	import { Mail, Lock } from 'lucide-svelte';
 
 	/** @type {string} User email input binding */
@@ -16,6 +17,12 @@
 	/** @type {boolean} Toggle for sign up mode */
 	let isSignUp = $state(false);
 
+	$effect(() => {
+		if ($page.url.searchParams.get('mode') === 'signup') {
+			isSignUp = true;
+		}
+	});
+
 	/** @type {string} First name input binding */
 	let firstName = $state('');
 
@@ -24,6 +31,9 @@
 
 	/** @type {string} Error message string to display to the user */
 	let errorMsg = $state('');
+
+	/** @type {string} Success message string to display to the user */
+	let successMsg = $state('');
 
 	/** @type {boolean} Form submission loading state */
 	let loading = $state(false);
@@ -36,6 +46,7 @@
 		e.preventDefault();
 		loading = true;
 		errorMsg = '';
+		successMsg = '';
 
 		if (isSignUp) {
 			const { error } = await supabase.auth.signUp({
@@ -52,7 +63,7 @@
 			if (error) {
 				errorMsg = error.message;
 			} else {
-				goto('/welcome');
+				successMsg = 'Please check your email to verify your account before logging in.';
 			}
 		} else {
 			const { error } = await supabase.auth.signInWithPassword({
@@ -87,6 +98,14 @@
 					class="p-4 bg-[#1a0f0f] border border-[#331818] rounded-3xl text-[#ff8080] text-sm text-center font-medium"
 				>
 					{errorMsg}
+				</div>
+			{/if}
+
+			{#if successMsg}
+				<div
+					class="p-4 bg-[#0f1a0f] border border-[#183318] rounded-3xl text-[#80ff80] text-sm text-center font-medium"
+				>
+					{successMsg}
 				</div>
 			{/if}
 
