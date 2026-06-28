@@ -240,7 +240,7 @@
 					Are you a developer?
 				</p>
 				<a
-					href="https://github.com/SaurabhMishra/Expense-Tracker-Frontend"
+					href="https://github.com/SaurabhM-24/Green-Bar"
 					target="_blank"
 					rel="noopener noreferrer"
 					class="flex items-center gap-3 hover:text-white transition-colors bg-[#111] px-6 py-3.5 rounded-full border border-gray-800 hover:border-gray-700 box-3d text-gray-400"
