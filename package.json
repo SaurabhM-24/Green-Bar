@@ -1,6 +1,12 @@
 {
-	"name": "frontend",
-	"private": true,
+	"name": "green-bar",
+	"description": "A gamified zero-based budget tracker.",
+	"author": "Saurabh Mishra",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/SaurabhMishra/Expense-Tracker-Frontend.git"
+	},
 	"version": "0.0.1",
 	"type": "module",
 	"scripts": {

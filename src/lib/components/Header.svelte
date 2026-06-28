@@ -10,16 +10,19 @@
 		LogOut,
 		ChevronLeft,
 		ChevronRight,
-		ArrowLeft
+		ArrowLeft,
+		Info
 	} from 'lucide-svelte';
 	import { fade, slide, fly } from 'svelte/transition';
 	import { clickOutside } from '$lib/actions/clickOutside.js';
 	import UpdateProfileModal from '$lib/components/editCards/UpdateProfileModal.svelte';
+	import AboutModal from '$lib/components/AboutModal.svelte';
 	import { supabase } from '$lib/supabase';
 
 	/** @type {boolean} State to control the visibility of the dropdown menu */
 	let isDropdownOpen = $state(false);
 	let isUpdateProfileModalOpen = $state(false);
+	let isAboutModalOpen = $state(false);
 	let showLogoutConfirm = $state(false);
 	/** @type {HTMLElement | null} */
 	let headerBtn = $state(null);
@@ -58,7 +61,7 @@
 	<!-- Modal -->
 	<div
 		use:clickOutside={{
-			enabled: !isUpdateProfileModalOpen && !showLogoutConfirm,
+			enabled: !isUpdateProfileModalOpen && !isAboutModalOpen && !showLogoutConfirm,
 			ignore: headerBtn,
 			handler: () => {
 				isDropdownOpen = false;
@@ -83,6 +86,17 @@
 				<User class="w-5 h-5 text-gray-400" />
 				Update Profile
 			</button>
+			<button
+				class="w-full flex items-center gap-3 text-left px-4 py-3 text-base tracking-wide text-gray-200 hover:bg-[#2a2a2a] rounded-xl transition-colors"
+				onclick={(e) => {
+					e.stopPropagation();
+					isAboutModalOpen = true;
+					isDropdownOpen = false;
+				}}
+			>
+				<Info class="w-5 h-5 text-gray-400" />
+				About
+			</button>
 			<hr class="border-gray-800 mx-3 my-1" />
 			<button
 				class="w-full flex items-center gap-3 text-left px-4 py-3 text-base tracking-wide text-red-400 hover:bg-red-500/10 rounded-xl transition-colors"
@@ -101,6 +115,10 @@
 
 {#if isUpdateProfileModalOpen}
 	<UpdateProfileModal onclose={() => (isUpdateProfileModalOpen = false)} />
+{/if}
+
+{#if isAboutModalOpen}
+	<AboutModal onclose={() => (isAboutModalOpen = false)} />
 {/if}
 
 {#if showLogoutConfirm}
