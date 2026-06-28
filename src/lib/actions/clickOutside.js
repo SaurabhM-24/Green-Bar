@@ -1,6 +1,6 @@
 /**
  * Svelte action that triggers a callback when a click happens outside the node.
- * 
+ *
  * @param {HTMLElement} node
  * @param {{ enabled?: boolean, ignore?: HTMLElement | null, handler: () => void }} params
  */
@@ -9,10 +9,10 @@ export function clickOutside(node, { enabled = true, ignore = null, handler }) {
 	const handleClick = (event) => {
 		const target = /** @type {Node} */ (event.target);
 		if (
-			enabled && 
-			node && 
-			!node.contains(target) && 
-			(!ignore || !ignore.contains(target)) && 
+			enabled &&
+			node &&
+			!node.contains(target) &&
+			(!ignore || !ignore.contains(target)) &&
 			!event.defaultPrevented
 		) {
 			handler();

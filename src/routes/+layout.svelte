@@ -3,7 +3,6 @@
 	 * @fileoverview Root layout component
 	 * Handles global authentication state, layout structure, and automatic route protection.
 	 */
-	import favicon from '$lib/assets/favicon.svg';
 	import { supabase } from '$lib/supabase';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
@@ -12,6 +11,7 @@
 	import { Plus } from 'lucide-svelte';
 	import { appState } from '$lib/state.svelte.js';
 	import { appData } from '$lib/data.svelte.js';
+	import TutorialOverlay from '$lib/components/TutorialOverlay.svelte';
 	import { onMount } from 'svelte';
 	import '../app.css';
 
@@ -19,10 +19,12 @@
 
 	/** @type {import('@supabase/supabase-js').Session | null} Active user session */
 	let session = $state(null);
-	
+
 	/** @type {boolean} Global loading state for authentication check */
 	let loading = $state(true);
-	
+
+	let showTutorial = $state(false);
+
 	/** @type {HTMLElement | undefined} Reference to the main scrolling container */
 	let mainContainer = $state();
 
@@ -52,24 +54,47 @@
 	 * @description Effect: Manages Supabase authentication state and route protection.
 	 */
 	$effect(() => {
+		const publicRoutes = ['/login', '/landing'];
+
+		/**
+		 * @param {import('@supabase/supabase-js').Session | null} _session
+		 */
+		async function handleAuthRouting(_session) {
+			if (!_session) {
+				if (!publicRoutes.includes($page.url.pathname)) {
+					goto('/landing');
+				}
+				loading = false;
+				return;
+			}
+
+			const { data, error } = await supabase
+				.from('profiles')
+				.select('onboarding_completed')
+				.eq('id', _session.user.id)
+				.single();
+
+			const isCompleted = !error && data?.onboarding_completed;
+
+			if (!isCompleted && $page.url.pathname !== '/welcome') {
+				goto('/welcome');
+			} else if (isCompleted && (publicRoutes.includes($page.url.pathname) || $page.url.pathname === '/welcome')) {
+				goto('/');
+			}
+
+			loading = false;
+		}
+
 		supabase.auth.getSession().then(({ data }) => {
 			session = data.session;
-			loading = false;
-			if (!session && $page.url.pathname !== '/login') {
-				goto('/login');
-			}
+			handleAuthRouting(session);
 		});
 
 		const {
 			data: { subscription }
 		} = supabase.auth.onAuthStateChange((_event, _session) => {
 			session = _session;
-			loading = false;
-			if (!session && $page.url.pathname !== '/login') {
-				goto('/login');
-			} else if (session && $page.url.pathname === '/login') {
-				goto('/');
-			}
+			handleAuthRouting(session);
 		});
 
 		return () => subscription.unsubscribe();
@@ -83,10 +108,36 @@
 			appData.loadData();
 		}
 	});
+
+	$effect(() => {
+		const path = $page.url.pathname;
+		
+		async function checkTutorial() {
+			if (typeof localStorage !== 'undefined') {
+				if (localStorage.getItem('tutorial_shown') === 'true') return;
+			}
+			if (!session) return;
+
+			const { data, error } = await supabase
+				.from('profiles')
+				.select('onboarding_completed')
+				.eq('id', session.user.id)
+				.single();
+
+			if (!error && data?.onboarding_completed) {
+				showTutorial = true;
+			}
+		}
+
+		if (session && path === '/') {
+			checkTutorial();
+		}
+	});
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
+	<title>Green Bar</title>
+	<link rel="icon" href="/icon-192x192.png" />
 </svelte:head>
 
 {#if loading}
@@ -101,7 +152,10 @@
 		<Header />
 
 		<!-- Main Content Area -->
-		<main bind:this={mainContainer} class="flex-1 grid overflow-x-hidden overflow-y-auto mt-[88px] mb-[104px] scroll-smooth p-3">
+		<main
+			bind:this={mainContainer}
+			class="flex-1 grid overflow-x-hidden overflow-y-auto mt-[88px] mb-[104px] scroll-smooth p-3"
+		>
 			{@render children()}
 		</main>
 
@@ -116,6 +170,17 @@
 			>
 				<Plus class="w-8 h-8 text-black" strokeWidth={2.5} />
 			</a>
+		{/if}
+
+		{#if showTutorial}
+			<TutorialOverlay
+				onComplete={() => {
+					showTutorial = false;
+					if (typeof localStorage !== 'undefined') {
+						localStorage.setItem('tutorial_shown', 'true');
+					}
+				}}
+			/>
 		{/if}
 	</div>
 {:else}

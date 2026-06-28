@@ -110,9 +110,20 @@ class DataStore {
 
 		// Execute all Supabase queries concurrently
 		const [budgetRes, rpcRes, allHistoryRes] = await Promise.all([
-			userId ? supabase.from('budgets').select('*').eq('user_id', userId).order('sort_order', { ascending: true }) : { data: [] },
+			userId
+				? supabase
+						.from('budgets')
+						.select('*')
+						.eq('user_id', userId)
+						.order('sort_order', { ascending: true })
+				: { data: [] },
 			userId ? supabase.rpc('get_budget_usage', { p_user_id: userId }) : { data: [] },
-			userId ? supabase.from('transactions').select('amount, transaction_type, transaction_date, category_id').eq('user_id', userId) : { data: [] }
+			userId
+				? supabase
+						.from('transactions')
+						.select('amount, transaction_type, transaction_date, category_id')
+						.eq('user_id', userId)
+				: { data: [] }
 		]);
 
 		// 1. Process Budgets
@@ -150,23 +161,35 @@ class DataStore {
 				}
 			}
 			// Save period start to budget object
-			const bIdx = budgetData.findIndex(b => b.category_id === row.category_id);
+			const bIdx = budgetData.findIndex((b) => b.category_id === row.category_id);
 			if (bIdx > -1) {
 				budgetData[bIdx].current_period_start = row.period_start;
 			}
 		});
 
 		this.budgets = budgetData
-			.filter(b => b.budget_type === 'variable' && Number(b.limit_amount || 0) !== -1)
-			.map(b => ({ ...b, id: b.category_id || b.category, category_id: b.category_id || b.category }));
+			.filter((b) => b.budget_type === 'variable' && Number(b.limit_amount || 0) !== -1)
+			.map((b) => ({
+				...b,
+				id: b.category_id || b.category,
+				category_id: b.category_id || b.category
+			}));
 
 		this.corpusBudgets = budgetData
-			.filter(b => b.budget_type === 'corpus' && Number(b.limit_amount || 0) !== -1)
-			.map(b => ({ ...b, id: b.category_id || b.category, category_id: b.category_id || b.category }));
+			.filter((b) => b.budget_type === 'corpus' && Number(b.limit_amount || 0) !== -1)
+			.map((b) => ({
+				...b,
+				id: b.category_id || b.category,
+				category_id: b.category_id || b.category
+			}));
 
 		this.fixedBudgets = budgetData
-			.filter(b => b.budget_type === 'fixed' && Number(b.limit_amount || 0) !== -1)
-			.map(b => ({ ...b, id: b.category_id || b.category, category_id: b.category_id || b.category }));
+			.filter((b) => b.budget_type === 'fixed' && Number(b.limit_amount || 0) !== -1)
+			.map((b) => ({
+				...b,
+				id: b.category_id || b.category,
+				category_id: b.category_id || b.category
+			}));
 
 		this.transactionCategories = cats;
 		this.categoryTotals = totals;
@@ -188,7 +211,7 @@ class DataStore {
 
 				// Corpus calculation: Past transactions only
 				let isPast = false;
-				const b = budgetData.find(b => b.category_id === tx.category_id);
+				const b = budgetData.find((b) => b.category_id === tx.category_id);
 				if (b && Number(b.limit_amount || 0) !== -1) {
 					// Budgeted category
 					if (b.current_period_start) {
