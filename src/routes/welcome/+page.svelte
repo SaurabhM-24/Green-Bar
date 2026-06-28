@@ -134,29 +134,32 @@
 	}
 </script>
 
-<div class="min-h-screen bg-black text-gray-300 font-sans p-6 flex flex-col max-w-lg mx-auto pb-12">
+<div class="bg-black text-gray-300 font-sans p-6 flex flex-col max-w-lg mx-auto pb-12">
 	
 	<!-- Progress Bar -->
-	<div class="w-full bg-gray-900 h-2 rounded-full mt-6 mb-8 overflow-hidden shrink-0">
+	<div class="w-full bg-gray-900 h-2 rounded-full mt-2 mb-8 overflow-hidden shrink-0">
 		<div 
 			class="bg-white h-full transition-all duration-500 ease-out" 
 			style="width: {(currentStep / 6) * 100}%"
 		></div>
 	</div>
 
-	<div class="flex-1 relative flex flex-col">
+	<div class="relative flex flex-col gap-4">
 		{#if currentStep === 1}
-			<div in:fly={{y: 20, duration: 400, delay: 100}} class="flex flex-col flex-1">
-				<div class="flex-1">
+			<div in:fly={{y: 20, duration: 400, delay: 100}} class="flex flex-col gap-8">
+				<div>
 					<h1 class="text-4xl font-display text-white mb-6 tracking-wide leading-tight">Welcome to Green Bar</h1>
-					<p class="text-gray-400 text-lg leading-relaxed mb-8">
-						Green Bar is a highly opinionated, mobile-first expense tracker. It uses a zero-based budgeting approach to give you complete control over your money.
-						<br><br>
-						<strong>Pro Tip:</strong> For the best experience, add this app to your Home Screen to use it like a native app.
-					</p>
+					<div class="text-gray-400 text-lg leading-relaxed space-y-4">
+						<p>Green Bar is a highly opinionated, mobile-first expense tracker designed to help you master your finances. It uses a <strong>zero-based budgeting approach</strong>, meaning every rupee you own is assigned a specific job.</p>
+						<p>Instead of just tracking what you spent, you'll proactively allocate your money into different categories (Variable, Fixed, and Corpus). This gives you complete control and visibility over your money, ensuring you never overspend.</p>
+						<div class="bg-gray-900 border border-gray-800 p-4 rounded-2xl mt-4">
+							<strong class="text-white block mb-1">💡 Pro Tip: Install the App</strong>
+							<span class="text-sm">For the best native-like experience, tap the Share button in your browser and select <strong>"Add to Home Screen"</strong>.</span>
+						</div>
+					</div>
 				</div>
 				<button 
-					class="w-full bg-white text-black font-bold py-5 text-xl rounded-3xl box-3d transition-all active:scale-[0.98] shrink-0 flex items-center justify-center gap-2"
+					class="w-full bg-white text-black font-bold py-5 text-xl rounded-3xl box-3d transition-all active:scale-[0.98] shrink-0 flex items-center justify-center gap-2 mt-4"
 					onclick={() => currentStep++}
 				>
 					Get Started <ChevronRight class="w-6 h-6" />
@@ -165,14 +168,16 @@
 		{/if}
 
 		{#if currentStep === 2}
-			<div in:fly={{y: 20, duration: 400, delay: 100}} class="flex flex-col flex-1">
-				<div class="flex-1">
+			<div in:fly={{y: 20, duration: 400, delay: 100}} class="flex flex-col gap-8">
+				<div>
 					<h1 class="text-4xl font-display text-white mb-6 tracking-wide leading-tight">Initial Balance</h1>
-					<p class="text-gray-400 text-lg leading-relaxed mb-8">
-						To get started, what is your current total bank balance? We will add this as your initial account status.
-					</p>
+					<div class="text-gray-400 text-lg leading-relaxed mb-8 space-y-4">
+						<p>To start your zero-based budgeting journey, we need to know exactly how much money you currently have.</p>
+						<p>Enter the combined total of all your bank accounts, cash in hand, and any other liquid money you want to manage through Green Bar.</p>
+						<p class="text-sm text-gray-500">This total amount will be added to your <strong>Personal Corpus</strong>. From there, you can distribute it into your expense categories.</p>
+					</div>
 					
-					<div class="flex items-center text-5xl tracking-wide font-bold text-white border-b-2 border-gray-800 focus-within:border-white transition-colors w-full pb-2 mb-8">
+					<div class="flex items-center text-5xl tracking-wide font-bold text-white border-b-2 border-gray-800 focus-within:border-white transition-colors w-full pb-2">
 						<span class="mr-2 text-gray-500">₹</span>
 						<input 
 							type="number" 
@@ -182,7 +187,7 @@
 						/>
 					</div>
 				</div>
-				<div class="flex flex-col gap-4 shrink-0">
+				<div class="flex flex-col gap-4 shrink-0 mt-4">
 					<button 
 						class="w-full bg-white text-black font-bold py-5 text-xl rounded-3xl box-3d transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50"
 						onclick={handleSaveInitialBalance}
@@ -201,12 +206,18 @@
 		{/if}
 
 		{#if currentStep === 3}
-			<div in:fly={{y: 20, duration: 400, delay: 100}} class="flex flex-col flex-1">
-				<div class="flex-1">
+			<div in:fly={{y: 20, duration: 400, delay: 100}} class="flex flex-col gap-8">
+				<div>
 					<h1 class="text-4xl font-display text-white mb-6 tracking-wide leading-tight">Variable Expenses</h1>
-					<p class="text-gray-400 text-lg leading-relaxed mb-6">
-						These are day-to-day spending categories (e.g., Groceries, Dining, Fuel) where you set an <strong>upper limit</strong> for a period.
-					</p>
+					<div class="text-gray-400 text-lg leading-relaxed mb-6 space-y-4">
+						<p>Variable Expenses are for your day-to-day, flexible spending where the amount changes from month to month.</p>
+						<ul class="list-disc pl-5 space-y-2 text-base text-gray-400">
+							<li><strong>Examples:</strong> Groceries, Dining Out, Fuel, Entertainment, Shopping.</li>
+							<li><strong>How it works:</strong> You set an <strong>upper limit</strong> (a budget) for each category. As you spend, the bar fills up. The goal is to keep the bar green and not exceed your limit.</li>
+							<li>You can choose different reset periods for each category (e.g., weekly for groceries, monthly for dining).</li>
+						</ul>
+						<p class="text-sm text-gray-500 italic mt-4">Don't worry if you forget some, you can always add or edit these later.</p>
+					</div>
 					
 					<div class="bg-[#111] border border-gray-800 rounded-3xl p-4 mb-6">
 						{#if variableBudgets.length === 0}
@@ -231,7 +242,7 @@
 					</button>
 				</div>
 
-				<div class="flex flex-col gap-4 shrink-0 mt-8">
+				<div class="flex flex-col gap-4 shrink-0 mt-4">
 					<button 
 						class="w-full bg-white text-black font-bold py-5 text-xl rounded-3xl box-3d transition-all active:scale-[0.98] flex items-center justify-center gap-2"
 						onclick={() => currentStep++}
@@ -249,12 +260,17 @@
 		{/if}
 
 		{#if currentStep === 4}
-			<div in:fly={{y: 20, duration: 400, delay: 100}} class="flex flex-col flex-1">
-				<div class="flex-1">
+			<div in:fly={{y: 20, duration: 400, delay: 100}} class="flex flex-col gap-8">
+				<div>
 					<h1 class="text-4xl font-display text-white mb-6 tracking-wide leading-tight">Fixed Expenses</h1>
-					<p class="text-gray-400 text-lg leading-relaxed mb-6">
-						These are recurring full-payments (e.g., EMIs, Subscriptions, Rent) that you must pay exactly in full every period.
-					</p>
+					<div class="text-gray-400 text-lg leading-relaxed mb-6 space-y-4">
+						<p>Fixed Expenses are your essential, non-negotiable bills that occur on a regular schedule.</p>
+						<ul class="list-disc pl-5 space-y-2 text-base text-gray-400">
+							<li><strong>Examples:</strong> House Rent, Car EMIs, Netflix Subscriptions, Gym Memberships, Insurance Premiums.</li>
+							<li><strong>How it works:</strong> Unlike variable expenses, there is no progress bar. These are marked as either <strong>Paid</strong> or <strong>Unpaid</strong> for the current period.</li>
+							<li>Setting these up helps you reserve the exact amount needed for your obligations before spending on other things.</li>
+						</ul>
+					</div>
 					
 					<div class="bg-[#111] border border-gray-800 rounded-3xl p-4 mb-6">
 						{#if fixedBudgets.length === 0}
@@ -279,7 +295,7 @@
 					</button>
 				</div>
 
-				<div class="flex flex-col gap-4 shrink-0 mt-8">
+				<div class="flex flex-col gap-4 shrink-0 mt-4">
 					<button 
 						class="w-full bg-white text-black font-bold py-5 text-xl rounded-3xl box-3d transition-all active:scale-[0.98] flex items-center justify-center gap-2"
 						onclick={() => currentStep++}
@@ -297,12 +313,17 @@
 		{/if}
 
 		{#if currentStep === 5}
-			<div in:fly={{y: 20, duration: 400, delay: 100}} class="flex flex-col flex-1">
-				<div class="flex-1">
+			<div in:fly={{y: 20, duration: 400, delay: 100}} class="flex flex-col gap-8">
+				<div>
 					<h1 class="text-4xl font-display text-white mb-6 tracking-wide leading-tight">Personal Corpus</h1>
-					<p class="text-gray-400 text-lg leading-relaxed mb-6">
-						Your Personal Corpus is all the money in your account not allocated to any specific category. You can lock a portion of this if you like.
-					</p>
+					<div class="text-gray-400 text-lg leading-relaxed mb-6 space-y-4">
+						<p>Your Personal Corpus represents your ultimate savings and unallocated funds. Think of it as your primary vault.</p>
+						<ul class="list-disc pl-5 space-y-2 text-base text-gray-400">
+							<li>Whenever you receive a salary or any income, it lands directly in your Personal Corpus.</li>
+							<li>When you fund your variable or fixed expense categories, money is deducted from this Corpus.</li>
+							<li><strong>Locking Funds:</strong> You can set a "Locked Amount" (like an emergency fund or long-term savings goal) that you don't want to touch. This locked money won't be available for daily budgeting.</li>
+						</ul>
+					</div>
 
 					{#if corpusBudget}
 						<div class="bg-[#1a1a1a] border border-gray-800 rounded-3xl p-6 mb-6 flex justify-between items-center box-3d">
@@ -322,7 +343,7 @@
 					{/if}
 				</div>
 
-				<div class="flex flex-col gap-4 shrink-0 mt-8">
+				<div class="flex flex-col gap-4 shrink-0 mt-4">
 					<button 
 						class="w-full bg-white text-black font-bold py-5 text-xl rounded-3xl box-3d transition-all active:scale-[0.98] flex items-center justify-center gap-2"
 						onclick={() => currentStep++}
@@ -334,17 +355,21 @@
 		{/if}
 
 		{#if currentStep === 6}
-			<div in:fly={{y: 20, duration: 400, delay: 100}} class="flex flex-col flex-1 justify-center items-center text-center">
-				<div class="w-24 h-24 bg-[#1a1a1a] rounded-full flex items-center justify-center mb-8 box-3d">
+			<div in:fly={{y: 20, duration: 400, delay: 100}} class="flex flex-col gap-8 justify-center items-center text-center mt-12">
+				<div class="w-24 h-24 bg-[#1a1a1a] rounded-full flex items-center justify-center mb-4 box-3d shrink-0">
 					<Check class="w-12 h-12 text-white" />
 				</div>
-				<h1 class="text-4xl font-display text-white mb-4 tracking-wide leading-tight">You're All Set!</h1>
-				<p class="text-gray-400 text-lg leading-relaxed mb-12">
-					Your profile has been setup. You can always add or edit these categories later.
-				</p>
+				<div>
+					<h1 class="text-4xl font-display text-white mb-4 tracking-wide leading-tight">You're All Set!</h1>
+					<p class="text-gray-400 text-lg leading-relaxed mb-8">
+						Your profile has been successfully set up! You are now ready to take control of your finances. 
+						<br><br>
+						Remember, Green Bar is designed to be flexible. As your financial situation changes, you can always add, edit, or delete categories from the main dashboard.
+					</p>
+				</div>
 				
 				<button 
-					class="w-full bg-white text-black font-bold py-5 text-xl rounded-3xl box-3d transition-all active:scale-[0.98] mt-auto flex items-center justify-center gap-2 disabled:opacity-50"
+					class="w-full bg-white text-black font-bold py-5 text-xl rounded-3xl box-3d transition-all active:scale-[0.98] mt-4 flex items-center justify-center gap-2 disabled:opacity-50"
 					onclick={finishOnboarding}
 					disabled={loading}
 				>
