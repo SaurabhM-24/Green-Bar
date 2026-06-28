@@ -411,10 +411,10 @@
 			</button>
 		</div>
 	{:else}
-		{#each groupedTransactions as group}
+		{#each groupedTransactions as group, groupIndex}
 			<div class="mb-8">
 				<h2 class="text-xl text-gray-400 tracking-wide px-2 mb-4 font-display">{group.date}</h2>
-				<div class="bg-[#0a0a0a] rounded-[1.5rem] overflow-hidden box-3d">
+				<div id={groupIndex === 0 ? 'transaction-list' : undefined} class="bg-[#0a0a0a] rounded-[1.5rem] overflow-hidden box-3d">
 					{#each group.items as tx, i (tx.id)}
 						<div
 							animate:flip={{ duration: 300 }}

@@ -37,6 +37,7 @@
 </script>
 
 <button
+	id="app-header"
 	bind:this={headerBtn}
 	onclick={toggleDropdown}
 	class="fixed top-8 left-6 right-6 h-[90px] bg-[#0a0a0a]/90 backdrop-blur-2xl rounded-[2rem] flex items-center justify-between px-8 z-50 box-3d hover:bg-[#111111]/90 transition-colors cursor-pointer text-left focus:outline-none w-[calc(100%-3rem)]"

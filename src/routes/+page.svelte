@@ -11,7 +11,6 @@
 	import { cubicOut } from 'svelte/easing';
 	import { supabase } from '$lib/supabase';
 	import AddCategoryModal from '$lib/components/editCards/AddCategoryModal.svelte';
-	import TutorialOverlay from '$lib/components/TutorialOverlay.svelte';
 	import { appState } from '$lib/state.svelte.js';
 	import Footer from '$lib/components/Footer.svelte';
 
@@ -60,30 +59,6 @@
 	let showHideFixedModal = $state(false);
 	let hideVariableCard = $state(false);
 	let hideFixedCard = $state(false);
-	let showTutorial = $state(false);
-
-	$effect(() => {
-		async function checkTutorial() {
-			if (typeof localStorage !== 'undefined') {
-				if (localStorage.getItem('tutorial_shown') === 'true') return;
-			}
-			const {
-				data: { session }
-			} = await supabase.auth.getSession();
-			if (!session) return;
-
-			const { data, error } = await supabase
-				.from('profiles')
-				.select('onboarding_completed')
-				.eq('id', session.user.id)
-				.single();
-
-			if (!error && data?.onboarding_completed) {
-				showTutorial = true;
-			}
-		}
-		checkTutorial();
-	});
 
 	$effect(() => {
 		if (typeof localStorage !== 'undefined') {
@@ -543,17 +518,6 @@
 				</div>
 			</div>
 		</div>
-	{/if}
-
-	{#if showTutorial}
-		<TutorialOverlay
-			onComplete={() => {
-				showTutorial = false;
-				if (typeof localStorage !== 'undefined') {
-					localStorage.setItem('tutorial_shown', 'true');
-				}
-			}}
-		/>
 	{/if}
 
 	<Footer />

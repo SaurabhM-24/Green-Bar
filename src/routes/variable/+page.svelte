@@ -224,6 +224,7 @@
 		{#if !isEditingOrder}
 			<div class="relative">
 				<button
+					id="variable-menu-btn"
 					class="p-2 text-gray-400 hover:text-white"
 					onclick={(e) => {
 						e.stopPropagation();
@@ -288,6 +289,7 @@
 		</div>
 	{:else}
 		<div
+			id="variable-list"
 			class="space-y-6"
 			use:dndzone={{
 				items: budgets,

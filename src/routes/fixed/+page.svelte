@@ -245,7 +245,7 @@
 	{:else}
 		{#if corpusBudgets.length > 0}
 			<h1 class="text-3xl tracking-wide text-white mb-8 px-4 font-display">Corpus Funds</h1>
-			<div class="mb-8">
+			<div id="corpus-list" class="mb-8">
 				{#each corpusBudgets as b, index}
 					<div in:fly={{ y: 20, duration: 400, delay: index * 100 }}>
 						<CorpusCard
@@ -271,6 +271,7 @@
 			{#if !isEditingOrder}
 				<div class="relative">
 					<button
+						id="fixed-menu-btn"
 						class="p-2 text-gray-400 hover:text-white"
 						onclick={(e) => {
 							e.stopPropagation();
@@ -330,6 +331,7 @@
 				</div>
 			{/if}
 			<div
+				id="fixed-list"
 				use:dndzone={{
 					items: fixedBudgets,
 					dragDisabled: !isEditingOrder,

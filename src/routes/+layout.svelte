@@ -12,6 +12,7 @@
 	import { Plus } from 'lucide-svelte';
 	import { appState } from '$lib/state.svelte.js';
 	import { appData } from '$lib/data.svelte.js';
+	import TutorialOverlay from '$lib/components/TutorialOverlay.svelte';
 	import { onMount } from 'svelte';
 	import '../app.css';
 
@@ -22,6 +23,8 @@
 
 	/** @type {boolean} Global loading state for authentication check */
 	let loading = $state(true);
+
+	let showTutorial = $state(false);
 
 	/** @type {HTMLElement | undefined} Reference to the main scrolling container */
 	let mainContainer = $state();
@@ -83,6 +86,26 @@
 			appData.loadData();
 		}
 	});
+
+	$effect(() => {
+		async function checkTutorial() {
+			if (typeof localStorage !== 'undefined') {
+				if (localStorage.getItem('tutorial_shown') === 'true') return;
+			}
+			if (!session) return;
+
+			const { data, error } = await supabase
+				.from('profiles')
+				.select('onboarding_completed')
+				.eq('id', session.user.id)
+				.single();
+
+			if (!error && data?.onboarding_completed) {
+				showTutorial = true;
+			}
+		}
+		checkTutorial();
+	});
 </script>
 
 <svelte:head>
@@ -119,6 +142,17 @@
 			>
 				<Plus class="w-8 h-8 text-black" strokeWidth={2.5} />
 			</a>
+		{/if}
+
+		{#if showTutorial}
+			<TutorialOverlay
+				onComplete={() => {
+					showTutorial = false;
+					if (typeof localStorage !== 'undefined') {
+						localStorage.setItem('tutorial_shown', 'true');
+					}
+				}}
+			/>
 		{/if}
 	</div>
 {:else}

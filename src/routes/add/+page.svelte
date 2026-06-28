@@ -130,6 +130,7 @@
 
 	<!-- Card Container -->
 	<div
+		id="add-card-container"
 		class="bg-[#151515] w-full max-w-md rounded-3xl p-6 md:p-8 box-3d flex flex-col gap-6 relative mt-4"
 	>
 		<!-- Top Bar -->
