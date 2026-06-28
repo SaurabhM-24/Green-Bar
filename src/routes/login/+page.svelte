@@ -9,7 +9,7 @@
 
 	/** @type {string} User email input binding */
 	let email = $state('');
-	
+
 	/** @type {string} User password input binding */
 	let password = $state('');
 
@@ -21,10 +21,10 @@
 
 	/** @type {string} Last name input binding */
 	let lastName = $state('');
-	
+
 	/** @type {string} Error message string to display to the user */
 	let errorMsg = $state('');
-	
+
 	/** @type {boolean} Form submission loading state */
 	let loading = $state(false);
 
@@ -76,7 +76,9 @@
 	<div class="w-full max-w-sm">
 		<div class="mb-12 text-center">
 			<h1 class="text-3xl font-light text-white tracking-widest uppercase mb-3">Green Bar</h1>
-			<p class="text-gray-500 text-sm">{isSignUp ? 'Create an account to get started' : 'Sign in to track your expenses'}</p>
+			<p class="text-gray-500 text-sm">
+				{isSignUp ? 'Create an account to get started' : 'Sign in to track your expenses'}
+			</p>
 		</div>
 
 		<form onsubmit={handleLogin} class="space-y-6">
@@ -91,7 +93,11 @@
 			{#if isSignUp}
 				<div class="flex gap-4">
 					<div class="flex-1">
-						<label for="firstName" class="block text-xs uppercase tracking-wider text-gray-500 mb-2 pl-1">First Name</label>
+						<label
+							for="firstName"
+							class="block text-xs uppercase tracking-wider text-gray-500 mb-2 pl-1"
+							>First Name</label
+						>
 						<input
 							id="firstName"
 							type="text"
@@ -102,7 +108,11 @@
 						/>
 					</div>
 					<div class="flex-1">
-						<label for="lastName" class="block text-xs uppercase tracking-wider text-gray-500 mb-2 pl-1">Last Name</label>
+						<label
+							for="lastName"
+							class="block text-xs uppercase tracking-wider text-gray-500 mb-2 pl-1"
+							>Last Name</label
+						>
 						<input
 							id="lastName"
 							type="text"
@@ -158,14 +168,23 @@
 				disabled={loading}
 				class="w-full mt-4 bg-gray-200 hover:bg-white text-black font-medium py-5 text-lg rounded-3xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]"
 			>
-				{loading ? (isSignUp ? 'Creating Account...' : 'Authenticating...') : (isSignUp ? 'Sign Up' : 'Sign In')}
+				{loading
+					? isSignUp
+						? 'Creating Account...'
+						: 'Authenticating...'
+					: isSignUp
+						? 'Sign Up'
+						: 'Sign In'}
 			</button>
 
 			<div class="text-center mt-6">
 				<button
 					type="button"
 					class="text-sm text-gray-500 hover:text-white transition-colors"
-					onclick={() => { isSignUp = !isSignUp; errorMsg = ''; }}
+					onclick={() => {
+						isSignUp = !isSignUp;
+						errorMsg = '';
+					}}
 				>
 					{isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
 				</button>

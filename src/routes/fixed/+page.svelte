@@ -6,6 +6,7 @@
 	import { supabase } from '$lib/supabase';
 	import { appState } from '$lib/state.svelte.js';
 	import { appData } from '$lib/data.svelte.js';
+	import Footer from '$lib/components/Footer.svelte';
 	import CorpusCard from '$lib/components/CorpusCard.svelte';
 	import FixedItem from '$lib/components/FixedItem.svelte';
 	import CorpusModal from '$lib/components/editCards/CorpusModal.svelte';
@@ -94,7 +95,9 @@
 
 		const targetBudgets = isCorpusTab ? corpusBudgets : fixedBudgets;
 		const maxSortOrder =
-			targetBudgets.length > 0 ? Math.max(...targetBudgets.map((b) => Number(b.sort_order || 0))) : -1;
+			targetBudgets.length > 0
+				? Math.max(...targetBudgets.map((b) => Number(b.sort_order || 0)))
+				: -1;
 
 		const { error } = await supabase.from('budgets').insert([
 			{
@@ -224,7 +227,7 @@
 <div
 	in:fly={{ y: 15, duration: 300, delay: 200, easing: cubicOut }}
 	out:fade={{ duration: 200 }}
-	class="col-start-1 row-start-1 min-w-0 w-full px-4 pt-16 pb-16"
+	class="col-start-1 row-start-1 min-w-0 w-full px-4 pt-16 relative min-h-full flex flex-col"
 	role="presentation"
 	onclick={() => {
 		if (isMenuOpen) isMenuOpen = false;
@@ -420,5 +423,5 @@
 		<AddCategoryModal onclose={() => (isAddModalOpen = false)} onsave={handleAddSave} />
 	{/if}
 
-	<div class="h-12 shrink-0"></div>
+	<Footer />
 </div>

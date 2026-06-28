@@ -19,10 +19,10 @@
 
 	/** @type {import('@supabase/supabase-js').Session | null} Active user session */
 	let session = $state(null);
-	
+
 	/** @type {boolean} Global loading state for authentication check */
 	let loading = $state(true);
-	
+
 	/** @type {HTMLElement | undefined} Reference to the main scrolling container */
 	let mainContainer = $state();
 
@@ -101,7 +101,10 @@
 		<Header />
 
 		<!-- Main Content Area -->
-		<main bind:this={mainContainer} class="flex-1 grid overflow-x-hidden overflow-y-auto mt-[88px] mb-[104px] scroll-smooth p-3">
+		<main
+			bind:this={mainContainer}
+			class="flex-1 grid overflow-x-hidden overflow-y-auto mt-[88px] mb-[104px] scroll-smooth p-3"
+		>
 			{@render children()}
 		</main>
 

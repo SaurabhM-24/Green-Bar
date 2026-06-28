@@ -1,18 +1,18 @@
 @import 'tailwindcss';
 
 :root {
-  --box-3d-border: #6b7280;
-  --box-3d-shadow: #6b7280;
+	--box-3d-border: #6b7280;
+	--box-3d-shadow: #6b7280;
 }
 
 @theme {
-  --font-sans: 'Sour Gummy', sans-serif;
-  --font-display: 'Bagel Fat One', sans-serif;
+	--font-sans: 'Sour Gummy', sans-serif;
+	--font-display: 'Bagel Fat One', sans-serif;
 }
 
 @layer utilities {
-  .box-3d {
-    border: 2px solid var(--box-3d-border);
-    box-shadow: 4px 4px 0px 0px var(--box-3d-shadow);
-  }
+	.box-3d {
+		border: 2px solid var(--box-3d-border);
+		box-shadow: 4px 4px 0px 0px var(--box-3d-shadow);
+	}
 }

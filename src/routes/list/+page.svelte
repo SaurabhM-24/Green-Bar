@@ -10,7 +10,14 @@
 	import { appData } from '$lib/data.svelte.js';
 	import TransactionCard from '$lib/components/TransactionCard.svelte';
 	import TransactionDetailsModal from '$lib/components/editCards/TransactionDetailsModal.svelte';
-	import { ChevronDown, Calendar, ChevronLeft, ChevronRight, SlidersHorizontal } from 'lucide-svelte';
+	import Footer from '$lib/components/Footer.svelte';
+	import {
+		ChevronDown,
+		Calendar,
+		ChevronLeft,
+		ChevronRight,
+		SlidersHorizontal
+	} from 'lucide-svelte';
 	import { iconMap } from '$lib/icons.js';
 	import { fade, slide, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -18,7 +25,7 @@
 
 	let loading = $state(true);
 	let loadingMore = $state(false);
-	
+
 	let pageSize = 20;
 	let pageIndex = $state(0);
 	let hasMore = $state(true);
@@ -45,13 +52,13 @@
 			}
 		};
 	}
-	
+
 	/** @type {any[]} List of transactions for the selected month and filter */
 	let transactions = $state([]);
-	
+
 	let selectedTransaction = $state(null);
 	let isModalOpen = $state(false);
-	
+
 	/** @type {any[]} Filter options for dropdown derived from global app data */
 	let categories = $state([]);
 
@@ -72,15 +79,15 @@
 				currentGroup = { date: txDate, items: [] };
 				groups.push(currentGroup);
 			}
-			
+
 			let isOutOfCycle = false;
-			const category = categories.find(c => c.category_id === tx.category_id);
+			const category = categories.find((c) => c.category_id === tx.category_id);
 			if (category && category.current_period_start) {
 				if (new Date(tx.transaction_date) < new Date(category.current_period_start)) {
 					isOutOfCycle = true;
 				}
 			}
-			
+
 			currentGroup.items.push({ ...tx, isOutOfCycle });
 		}
 		return groups;
@@ -126,7 +133,7 @@
 
 		if (selectedCategory && selectedCategory !== 'All') {
 			// Find category ID
-			const catObj = categories.find(c => c.category === selectedCategory);
+			const catObj = categories.find((c) => c.category === selectedCategory);
 			if (catObj && catObj.category_id) {
 				query = query.eq('category_id', catObj.category_id);
 			}
@@ -140,9 +147,9 @@
 		}
 
 		// Ensure categories are mapped
-		newTxs.forEach(tx => {
+		newTxs.forEach((tx) => {
 			if (!tx.category) {
-				const c = categories.find(c => c.category_id === tx.category_id);
+				const c = categories.find((c) => c.category_id === tx.category_id);
 				if (c) tx.category = c.category;
 			}
 		});
@@ -167,7 +174,7 @@
 		const m = listMonth;
 		const y = listYear;
 		const cat = selectedCategory;
-		
+
 		untrack(() => {
 			loadData();
 		});
@@ -186,9 +193,10 @@
 
 	/** @param {any} data */
 	async function handleSave(data) {
-		const targetCat = appData.budgets.find(b => b.category === data.category) ||
-						  appData.corpusBudgets.find(b => b.category === data.category) ||
-						  appData.fixedBudgets.find(b => b.category === data.category);
+		const targetCat =
+			appData.budgets.find((b) => b.category === data.category) ||
+			appData.corpusBudgets.find((b) => b.category === data.category) ||
+			appData.fixedBudgets.find((b) => b.category === data.category);
 
 		const updatePayload = {
 			title: data.title,
@@ -208,11 +216,11 @@
 	}
 
 	let isCategoryDropdownOpen = $state(false);
-	
+
 	function toggleCategoryDropdown() {
 		isCategoryDropdownOpen = !isCategoryDropdownOpen;
 	}
-	
+
 	/** @param {string} cat */
 	function selectCategory(cat) {
 		selectedCategory = cat;
@@ -224,7 +232,11 @@
 	);
 </script>
 
-<div in:fly={{ y: 15, duration: 300, delay: 200, easing: cubicOut }} out:fade={{ duration: 200 }} class="col-start-1 row-start-1 min-w-0 w-full px-4 pt-16 pb-36">
+<div
+	in:fly={{ y: 15, duration: 300, delay: 200, easing: cubicOut }}
+	out:fade={{ duration: 200 }}
+	class="col-start-1 row-start-1 min-w-0 w-full px-4 pt-16 relative min-h-full flex flex-col"
+>
 	<!-- Filter Header -->
 	<div class="mb-8 flex items-center justify-between px-4">
 		<h1 class="text-3xl tracking-wide text-white font-display">History</h1>
@@ -245,23 +257,40 @@
 			</button>
 
 			{#if isFilterMenuOpen}
-				<div class="fixed inset-0 z-30" onclick={() => { isFilterMenuOpen = false; isDateDropdownOpen = false; isCategoryDropdownOpen = false; }} role="presentation" transition:fade={{ duration: 150 }}></div>
-				<div class="absolute right-0 mt-2 w-56 bg-[#1a1a1a] rounded-xl box-3d z-40 p-2 flex flex-col gap-1" transition:slide={{ duration: 250, easing: cubicOut }}>
+				<div
+					class="fixed inset-0 z-30"
+					onclick={() => {
+						isFilterMenuOpen = false;
+						isDateDropdownOpen = false;
+						isCategoryDropdownOpen = false;
+					}}
+					role="presentation"
+					transition:fade={{ duration: 150 }}
+				></div>
+				<div
+					class="absolute right-0 mt-2 w-56 bg-[#1a1a1a] rounded-xl box-3d z-40 p-2 flex flex-col gap-1"
+					transition:slide={{ duration: 250, easing: cubicOut }}
+				>
 					<!-- Main Dropdown List -->
 					{#if !isDateDropdownOpen && !isCategoryDropdownOpen}
-						<button 
+						<button
 							class="flex items-center justify-between px-4 py-3 text-sm tracking-wide text-gray-200 hover:bg-[#2a2a2a] rounded-lg transition-colors w-full text-left"
-							onclick={() => isDateDropdownOpen = true}
+							onclick={() => (isDateDropdownOpen = true)}
 						>
 							<div class="flex items-center gap-2">
 								<Calendar class="w-4 h-4 text-gray-500" />
-								<span>Date: {new Date(listYear, listMonth - 1).toLocaleString('default', { month: 'short' })} {listYear}</span>
+								<span
+									>Date: {new Date(listYear, listMonth - 1).toLocaleString('default', {
+										month: 'short'
+									})}
+									{listYear}</span
+								>
 							</div>
 							<ChevronRight class="w-4 h-4 text-gray-500" />
 						</button>
-						<button 
+						<button
 							class="flex items-center justify-between px-4 py-3 text-sm tracking-wide text-gray-200 hover:bg-[#2a2a2a] rounded-lg transition-colors w-full text-left"
-							onclick={() => isCategoryDropdownOpen = true}
+							onclick={() => (isCategoryDropdownOpen = true)}
 						>
 							<div class="flex items-center gap-2">
 								{#if selectedCategoryIcon && iconMap[selectedCategoryIcon]}
@@ -269,7 +298,11 @@
 										{#if iconMap[selectedCategoryIcon].avif}
 											<source srcset={iconMap[selectedCategoryIcon].avif} type="image/avif" />
 										{/if}
-										<img src={iconMap[selectedCategoryIcon].webp} alt="" class="h-4 w-4 object-contain" />
+										<img
+											src={iconMap[selectedCategoryIcon].webp}
+											alt=""
+											class="h-4 w-4 object-contain"
+										/>
 									</picture>
 								{/if}
 								<span>Category: {selectedCategory}</span>
@@ -281,19 +314,33 @@
 					<!-- Date Submenu -->
 					{#if isDateDropdownOpen}
 						<div class="flex items-center gap-2 mb-3 px-2 pt-2">
-							<button onclick={() => isDateDropdownOpen = false} class="p-1 hover:bg-[#2a2a2a] rounded-lg"><ChevronLeft class="w-5 h-5 text-gray-400" /></button>
+							<button
+								onclick={() => (isDateDropdownOpen = false)}
+								class="p-1 hover:bg-[#2a2a2a] rounded-lg"
+								><ChevronLeft class="w-5 h-5 text-gray-400" /></button
+							>
 							<span class="text-white tracking-wide text-sm font-medium">Select Month</span>
 						</div>
 						<div class="flex items-center justify-between mb-3 px-2">
-							<button onclick={() => listYear--} class="p-1 hover:bg-[#2a2a2a] rounded-lg"><ChevronLeft class="w-4 h-4 text-gray-400" /></button>
+							<button onclick={() => listYear--} class="p-1 hover:bg-[#2a2a2a] rounded-lg"
+								><ChevronLeft class="w-4 h-4 text-gray-400" /></button
+							>
 							<span class="text-gray-300 tracking-wide text-sm">{listYear}</span>
-							<button onclick={() => listYear++} class="p-1 hover:bg-[#2a2a2a] rounded-lg"><ChevronRight class="w-4 h-4 text-gray-400" /></button>
+							<button onclick={() => listYear++} class="p-1 hover:bg-[#2a2a2a] rounded-lg"
+								><ChevronRight class="w-4 h-4 text-gray-400" /></button
+							>
 						</div>
 						<div class="grid grid-cols-3 gap-1 px-1 pb-1">
 							{#each [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as m}
-								<button 
-									class="py-1.5 text-sm rounded-lg {listMonth === m ? 'bg-white text-black' : 'text-gray-400 hover:bg-[#2a2a2a]'}"
-									onclick={() => { listMonth = m; isDateDropdownOpen = false; isFilterMenuOpen = false; }}
+								<button
+									class="py-1.5 text-sm rounded-lg {listMonth === m
+										? 'bg-white text-black'
+										: 'text-gray-400 hover:bg-[#2a2a2a]'}"
+									onclick={() => {
+										listMonth = m;
+										isDateDropdownOpen = false;
+										isFilterMenuOpen = false;
+									}}
 								>
 									{new Date(2000, m - 1).toLocaleString('default', { month: 'short' })}
 								</button>
@@ -304,21 +351,36 @@
 					<!-- Category Submenu -->
 					{#if isCategoryDropdownOpen}
 						<div class="flex items-center gap-2 mb-2 px-2 pt-2 pb-1 border-b border-gray-800">
-							<button onclick={() => isCategoryDropdownOpen = false} class="p-1 hover:bg-[#2a2a2a] rounded-lg"><ChevronLeft class="w-5 h-5 text-gray-400" /></button>
+							<button
+								onclick={() => (isCategoryDropdownOpen = false)}
+								class="p-1 hover:bg-[#2a2a2a] rounded-lg"
+								><ChevronLeft class="w-5 h-5 text-gray-400" /></button
+							>
 							<span class="text-white tracking-wide text-sm font-medium">Select Category</span>
 						</div>
 						<div class="max-h-64 overflow-y-auto flex flex-col gap-1 px-1 pb-1">
 							{#each categories as cat}
-								<button 
-									class="flex items-center gap-3 text-left px-3 py-2.5 text-sm tracking-wide rounded-lg transition-colors {selectedCategory === cat.category ? 'bg-white text-black box-3d' : 'text-gray-200 hover:bg-[#2a2a2a]'}"
-									onclick={() => { selectCategory(cat.category); isCategoryDropdownOpen = false; isFilterMenuOpen = false; }}
+								<button
+									class="flex items-center gap-3 text-left px-3 py-2.5 text-sm tracking-wide rounded-lg transition-colors {selectedCategory ===
+									cat.category
+										? 'bg-white text-black box-3d'
+										: 'text-gray-200 hover:bg-[#2a2a2a]'}"
+									onclick={() => {
+										selectCategory(cat.category);
+										isCategoryDropdownOpen = false;
+										isFilterMenuOpen = false;
+									}}
 								>
 									{#if cat.icon_name && iconMap[cat.icon_name]}
 										<picture>
 											{#if iconMap[cat.icon_name].avif}
 												<source srcset={iconMap[cat.icon_name].avif} type="image/avif" />
 											{/if}
-											<img src={iconMap[cat.icon_name].webp} alt="" class="h-4 w-4 object-contain" />
+											<img
+												src={iconMap[cat.icon_name].webp}
+												alt=""
+												class="h-4 w-4 object-contain"
+											/>
 										</picture>
 									{/if}
 									<span>{cat.category}</span>
@@ -354,13 +416,17 @@
 				<h2 class="text-xl text-gray-400 tracking-wide px-2 mb-4 font-display">{group.date}</h2>
 				<div class="bg-[#0a0a0a] rounded-[1.5rem] overflow-hidden box-3d">
 					{#each group.items as tx, i (tx.id)}
-						<div animate:flip={{ duration: 300 }} in:fly={{ y: 20, duration: 400, delay: i * 50, easing: cubicOut }} out:slide={{ duration: 250 }}>
+						<div
+							animate:flip={{ duration: 300 }}
+							in:fly={{ y: 20, duration: 400, delay: i * 50, easing: cubicOut }}
+							out:slide={{ duration: 250 }}
+						>
 							<TransactionCard
 								title={tx.title}
 								description={tx.description}
 								amount={Number(tx.amount)}
 								type={tx.transaction_type}
-								iconName={categories.find(c => c.category === tx.category)?.icon_name}
+								iconName={categories.find((c) => c.category === tx.category)?.icon_name}
 								isOutOfCycle={tx.isOutOfCycle}
 								onclick={() => {
 									selectedTransaction = tx;
@@ -375,7 +441,9 @@
 		{#if hasMore && !loading}
 			<div use:intersect onintersect={loadMore} class="h-10 flex items-center justify-center">
 				{#if loadingMore}
-					<div class="h-6 w-6 rounded-full border-2 border-transparent border-t-gray-500 animate-spin"></div>
+					<div
+						class="h-6 w-6 rounded-full border-2 border-transparent border-t-gray-500 animate-spin"
+					></div>
 				{/if}
 			</div>
 		{/if}
@@ -385,12 +453,12 @@
 	{#if isModalOpen && selectedTransaction}
 		<TransactionDetailsModal
 			transaction={selectedTransaction}
-			categories={categories}
-			onclose={() => isModalOpen = false}
+			{categories}
+			onclose={() => (isModalOpen = false)}
 			ondelete={handleDelete}
 			onsave={handleSave}
 		/>
 	{/if}
 
-	<div class="h-32 shrink-0"></div>
+	<Footer />
 </div>

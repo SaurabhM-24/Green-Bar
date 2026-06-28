@@ -6,6 +6,7 @@
 	import { supabase } from '$lib/supabase';
 	import { appState } from '$lib/state.svelte.js';
 	import { appData } from '$lib/data.svelte.js';
+	import Footer from '$lib/components/Footer.svelte';
 	import CategoryCard from '$lib/components/CategoryCard.svelte';
 	import { dndzone } from 'svelte-dnd-action';
 	import VariableModal from '$lib/components/editCards/VariableModal.svelte';
@@ -207,7 +208,7 @@
 <div
 	in:fly={{ y: 15, duration: 300, delay: 200, easing: cubicOut }}
 	out:fade={{ duration: 200 }}
-	class="col-start-1 row-start-1 min-w-0 w-full px-4 pt-16 pb-16"
+	class="col-start-1 row-start-1 min-w-0 w-full px-4 pt-16 relative min-h-full flex flex-col"
 	role="presentation"
 	onclick={() => {
 		if (isMenuOpen) isMenuOpen = false;
@@ -378,5 +379,5 @@
 		<AddCategoryModal onclose={() => (isAddModalOpen = false)} onsave={handleAddSave} />
 	{/if}
 
-	<div class="h-6 shrink-0"></div>
+	<Footer />
 </div>

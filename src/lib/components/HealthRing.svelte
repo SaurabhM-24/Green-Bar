@@ -15,7 +15,7 @@
 
 	let radius = 28;
 	let circumference = $derived(2 * Math.PI * radius);
-	
+
 	let tweenedProgress = tweened(100, { duration: 1000, easing: cubicOut });
 	$effect(() => {
 		tweenedProgress.set(progress);
@@ -26,15 +26,22 @@
 
 	/** @type {string} Dynamic Tailwind text color for the SVG stroke */
 	let ringColor = $derived(
-		progress > 75 ? 'text-green-500' :
-		progress > 50 ? 'text-white' :
-		progress > 25 ? 'text-yellow-400' : 'text-red-500'
+		progress > 75
+			? 'text-green-500'
+			: progress > 50
+				? 'text-white'
+				: progress > 25
+					? 'text-yellow-400'
+					: 'text-red-500'
 	);
 </script>
 
 <div class="flex flex-col items-center w-full max-w-[4.5rem] min-w-0">
 	<div class="relative w-full max-w-16 aspect-square flex items-center justify-center mb-2">
-		<svg class="absolute inset-0 w-full h-full transform -rotate-90 pointer-events-none" viewBox="0 0 64 64">
+		<svg
+			class="absolute inset-0 w-full h-full transform -rotate-90 pointer-events-none"
+			viewBox="0 0 64 64"
+		>
 			<!-- Background Track -->
 			<circle
 				cx="32"
@@ -60,11 +67,17 @@
 			/>
 		</svg>
 		{#if iconName && iconMap[iconName]}
-			<picture class="z-10 bg-[#0f0f0f] rounded-full flex items-center justify-center w-[68.75%] h-[68.75%]">
+			<picture
+				class="z-10 bg-[#0f0f0f] rounded-full flex items-center justify-center w-[68.75%] h-[68.75%]"
+			>
 				{#if iconMap[iconName].avif}
 					<source srcset={iconMap[iconName].avif} type="image/avif" />
 				{/if}
-				<img src={iconMap[iconName].webp} alt="{category} icon" class="h-[55%] w-[55%] object-contain" />
+				<img
+					src={iconMap[iconName].webp}
+					alt="{category} icon"
+					class="h-[55%] w-[55%] object-contain"
+				/>
 			</picture>
 		{:else}
 			<div class="z-10 bg-[#0f0f0f] rounded-full w-[68.75%] h-[68.75%]"></div>
