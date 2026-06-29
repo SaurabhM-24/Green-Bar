@@ -53,10 +53,17 @@ Rent, EMIs, and subscriptions are isolated into a simple checklist. Secure the e
 
 ##  Getting Started
 
-### Prerequisites
+### Live App
+Green Bar is deployed and fully accessible online! You can try out the live web application here: **[greenbar.saurabhmishra.dev](https://greenbar.saurabhmishra.dev)**
+
+---
+
+### Local Development
+
+#### Prerequisites
 Make sure you have [Node.js](https://nodejs.org/) installed on your machine. You will also need a Supabase project set up. We are working upon making the supabase config available here, for developers to be able to run it in docker container locally. Please keep checking the repository for the latest updates.
 
-### Installation
+#### Installation
 
 1. **Clone the repository:**
    ```bash
