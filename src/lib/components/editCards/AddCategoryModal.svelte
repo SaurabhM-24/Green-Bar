@@ -4,32 +4,37 @@
 	import { slide, fade, scale, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 
-	let { onclose, onsave } = $props();
+	let { onclose, onsave, initialData = {}, zIndex = 100 } = $props();
 
 	let isIconDropdownOpen = $state(false);
 	let addData = $state({
-		category: '',
-		description: '',
-		limit_amount: '',
-		icon_name: '',
-		period_type: 'monthly',
-		reset_date: 1
+		category: initialData.category || '',
+		description: initialData.description || '',
+		limit_amount: initialData.limit_amount || '',
+		icon_name: initialData.icon_name || '',
+		period_type: initialData.period_type || 'monthly',
+		reset_date: initialData.reset_date || 1
 	});
 	let loading = $state(false);
 
-	function handleSave() {
+	async function handleSave() {
 		if (!addData.category) {
 			alert('Category name is required.');
 			return;
 		}
 		loading = true;
-		onsave({ ...addData });
+		try {
+			await onsave({ ...addData });
+		} finally {
+			loading = false;
+		}
 	}
 </script>
 
 <div
 	transition:fade={{ duration: 200 }}
-	class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] overflow-y-auto"
+	class="fixed inset-0 bg-black/40 backdrop-blur-sm overflow-y-auto"
+	style="z-index: {zIndex};"
 	onclick={() => {
 		if (!loading) onclose();
 	}}
@@ -38,6 +43,7 @@
 	<div class="min-h-full flex items-center justify-center p-4">
 		<!-- Modal Content -->
 		<div
+			id="add-category-modal"
 			transition:scale={{ start: 0.95, duration: 250, easing: cubicOut }}
 			class="bg-[#151515] w-full max-w-md rounded-3xl p-6 md:p-8 box-3d flex flex-col gap-6 relative"
 			onclick={(e) => e.stopPropagation()}
@@ -53,6 +59,7 @@
 						>Category Name</span
 					>
 					<textarea
+						id="modal-category-name"
 						rows="2"
 						style="field-sizing: content; min-width: 2ch;"
 						bind:value={addData.category}
@@ -77,6 +84,7 @@
 						>Description</span
 					>
 					<textarea
+						id="modal-category-desc"
 						bind:value={addData.description}
 						class="bg-transparent text-gray-400 text-base leading-relaxed focus:outline-none w-full resize-none min-h-[48px] p-0 border-b border-transparent hover:border-gray-700 focus:border-white transition-colors"
 						placeholder="Add a description..."
@@ -96,6 +104,7 @@
 						>
 							<span class="mr-1">₹</span>
 							<input
+								id="modal-category-limit"
 								type="number"
 								bind:value={addData.limit_amount}
 								placeholder="0"
@@ -106,6 +115,7 @@
 					<div class="flex-1 flex flex-col gap-1.5 relative pl-2">
 						<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Period</span>
 						<select
+							id="modal-category-period"
 							bind:value={addData.period_type}
 							class="bg-[#151515] text-gray-100 text-base leading-relaxed focus:outline-none w-full border-b border-transparent hover:border-gray-700 focus:border-white transition-colors pb-1"
 						>
@@ -137,6 +147,7 @@
 								class="flex items-center text-2xl tracking-wide font-medium text-white border-b border-transparent hover:border-gray-700 focus-within:border-current transition-colors w-full pb-0.5"
 							>
 								<input
+									id="modal-category-reset"
 									type="number"
 									bind:value={addData.reset_date}
 									class="bg-transparent w-full focus:outline-none [-moz-appearance:_textfield] [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none"
@@ -150,6 +161,7 @@
 					<div class="flex-1 flex flex-col gap-1.5 relative pl-2">
 						<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Icon</span>
 						<button
+							id="modal-category-icon"
 							class="flex items-center justify-between gap-3 bg-transparent w-full focus:outline-none border-b border-transparent hover:border-gray-700 focus:border-white transition-shadow text-left pb-1"
 							onclick={() => (isIconDropdownOpen = !isIconDropdownOpen)}
 						>
@@ -180,7 +192,7 @@
 								role="presentation"
 							></div>
 							<div
-								class="absolute right-0 top-full mt-2 w-56 max-h-64 overflow-y-auto bg-[#1a1a1a] rounded-xl box-3d z-50 p-2 flex flex-col gap-1"
+								class="absolute right-0 top-full mt-2 w-56 max-h-64 overflow-y-auto bg-[#1a1a1a] rounded-xl box-3d z-[250] p-2 flex flex-col gap-1"
 								transition:slide={{ duration: 250, easing: cubicOut }}
 							>
 								{#each iconsList as icon}
@@ -217,6 +229,7 @@
 					disabled={loading}>Cancel</button
 				>
 				<button
+					id="modal-category-save"
 					class="flex-1 py-3.5 rounded-xl bg-white hover:bg-gray-200 text-black font-bold box-3d tracking-wide transition-all active:scale-[0.98] flex items-center justify-center gap-2"
 					onclick={handleSave}
 					disabled={loading}

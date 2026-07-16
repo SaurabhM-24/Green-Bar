@@ -266,7 +266,7 @@
 		{/if}
 
 		<div class="flex items-center justify-between mb-6 px-4 mt-8">
-			<h1 class="text-3xl tracking-wide text-white font-display">Fixed Expenses</h1>
+			<h1 id="fixed-title" class="text-3xl tracking-wide text-white font-display">Fixed Expenses</h1>
 
 			{#if !isEditingOrder}
 				<div class="relative">
@@ -282,7 +282,7 @@
 					</button>
 					{#if isMenuOpen}
 						<div
-							class="absolute right-0 mt-2 w-48 bg-[#1a1a1a] rounded-xl box-3d z-50 overflow-hidden"
+							class="absolute right-0 mt-2 w-48 bg-[#1a1a1a] rounded-xl box-3d z-[250] overflow-hidden"
 							transition:slide={{ duration: 250, easing: cubicOut }}
 						>
 							<button
@@ -293,6 +293,7 @@
 							</button>
 							<hr class="border-gray-800 mx-3" />
 							<button
+								id="add-category-btn"
 								class="w-full text-left px-4 py-3 text-base tracking-wide text-gray-200 hover:bg-[#2a2a2a] transition-colors"
 								onclick={() => {
 									isAddModalOpen = true;

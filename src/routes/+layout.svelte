@@ -76,9 +76,7 @@
 
 			const isCompleted = !error && data?.onboarding_completed;
 
-			if (!isCompleted && $page.url.pathname !== '/welcome') {
-				goto('/welcome');
-			} else if (isCompleted && (publicRoutes.includes($page.url.pathname) || $page.url.pathname === '/welcome')) {
+			if (isCompleted && publicRoutes.includes($page.url.pathname)) {
 				goto('/');
 			}
 
@@ -109,13 +107,12 @@
 		}
 	});
 
+	let tutorialStartStep = $state(1);
+
 	$effect(() => {
 		const path = $page.url.pathname;
 		
 		async function checkTutorial() {
-			if (typeof localStorage !== 'undefined') {
-				if (localStorage.getItem('tutorial_shown') === 'true') return;
-			}
 			if (!session) return;
 
 			const { data, error } = await supabase
@@ -124,8 +121,14 @@
 				.eq('id', session.user.id)
 				.single();
 
-			if (!error && data?.onboarding_completed) {
+			const isCompleted = !error && data?.onboarding_completed;
+
+			if (!isCompleted) {
+				// Must complete welcome flow
+				tutorialStartStep = 1;
 				showTutorial = true;
+			} else {
+				showTutorial = false;
 			}
 		}
 
@@ -174,11 +177,9 @@
 
 		{#if showTutorial}
 			<TutorialOverlay
+				startStep={tutorialStartStep}
 				onComplete={() => {
 					showTutorial = false;
-					if (typeof localStorage !== 'undefined') {
-						localStorage.setItem('tutorial_shown', 'true');
-					}
 				}}
 			/>
 		{/if}
