@@ -153,7 +153,7 @@
 									role="presentation"
 								></div>
 								<div
-									class="absolute left-0 top-full mt-2 w-full bg-[#1a1a1a] rounded-xl box-3d z-40 p-2 flex flex-col gap-1"
+									class="absolute left-0 top-full mt-2 w-full bg-[#1a1a1a] rounded-xl box-3d z-[250] p-2 flex flex-col gap-1"
 									transition:slide={{ duration: 250, easing: cubicOut }}
 								>
 									{#each ['Debit', 'Credit'] as tOpt}
@@ -258,7 +258,7 @@
 									role="presentation"
 								></div>
 								<div
-									class="absolute right-0 top-full mt-2 w-56 max-h-64 overflow-y-auto bg-[#1a1a1a] rounded-xl box-3d z-50 p-2 flex flex-col gap-1"
+									class="absolute right-0 top-full mt-2 w-56 max-h-64 overflow-y-auto bg-[#1a1a1a] rounded-xl box-3d z-[250] p-2 flex flex-col gap-1"
 									transition:slide={{ duration: 250, easing: cubicOut }}
 								>
 									{#each categories.filter((c) => c.category !== 'All') as cat}
@@ -338,6 +338,7 @@
 								onclick={() => (isDeleting = false)}>Cancel</button
 							>
 							<button
+								id="modal-confirm-delete-btn"
 								class="flex-1 py-3.5 rounded-xl bg-[#ff6b6b] hover:bg-[#ff8787] text-black font-bold box-3d tracking-wide transition-all active:scale-[0.98]"
 								onclick={() => ondelete(transaction.id)}>Confirm Delete</button
 							>
@@ -372,6 +373,7 @@
 							onclick={startEditing}>Edit</button
 						>
 						<button
+							id="modal-delete-btn"
 							class="flex-1 py-3.5 rounded-xl bg-[#ff6b6b] hover:bg-[#ff8787] text-black font-bold box-3d tracking-wide transition-all active:scale-[0.98]"
 							onclick={() => (isDeleting = true)}>Delete</button
 						>

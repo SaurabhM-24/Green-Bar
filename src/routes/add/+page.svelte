@@ -189,7 +189,7 @@
 							role="presentation"
 						></div>
 						<div
-							class="absolute left-0 top-full mt-2 w-full bg-[#1a1a1a] rounded-xl box-3d z-40 p-2 flex flex-col gap-1"
+							class="absolute left-0 top-full mt-2 w-full bg-[#1a1a1a] rounded-xl box-3d z-[250] p-2 flex flex-col gap-1"
 							transition:slide={{ duration: 250 }}
 						>
 							{#each ['debit', 'credit'] as tOpt}
@@ -239,6 +239,7 @@
 				<div class="flex-1 flex flex-col gap-1.5 relative min-w-0 pl-2">
 					<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Category</span>
 					<button
+						id="category-dropdown-btn"
 						class="flex items-center justify-between gap-3 bg-transparent w-full focus:outline-none border-b border-transparent hover:border-gray-700 focus:border-white transition-shadow text-left pb-1"
 						onclick={() => (isCategoryDropdownOpen = !isCategoryDropdownOpen)}
 					>
@@ -271,7 +272,7 @@
 							role="presentation"
 						></div>
 						<div
-							class="absolute right-0 top-full mt-2 w-56 max-h-64 overflow-y-auto bg-[#1a1a1a] rounded-xl box-3d z-50 p-2 flex flex-col gap-1"
+							class="absolute right-0 top-full mt-2 w-56 max-h-64 overflow-y-auto bg-[#1a1a1a] rounded-xl box-3d z-[250] p-2 flex flex-col gap-1"
 							transition:slide={{ duration: 250 }}
 						>
 							{#each categories as cat}
@@ -309,6 +310,7 @@
 		<!-- Actions -->
 		<div class="mt-2 border-t border-gray-800/60 pt-6">
 			<button
+				id="add-txn-save-btn"
 				class="w-full py-4 rounded-xl bg-white hover:bg-gray-200 text-black font-bold text-lg box-3d tracking-wide transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70 disabled:active:scale-100"
 				onclick={handleSubmit}
 				disabled={loading}
