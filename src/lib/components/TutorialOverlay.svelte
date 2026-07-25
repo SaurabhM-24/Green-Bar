@@ -35,7 +35,7 @@
 			page: '/',
 			selector: 'a[href="/fixed"].mt-2',
 			title: 'Account Status',
-			desc: 'This is where you can check your balance. Click it to go to corpus page.',
+			desc: 'This is where you can check your balance. <b>Click it to go to corpus page.</b>',
 			waitForTargetClick: true
 		},
 		// 4. Fixed Page: Highlight Personal Corpus Card. Show "Got it" button.
@@ -48,14 +48,14 @@
 			showGotIt: true
 		},
 		// 5. Fixed Page: Ask for fixed expenses
-		{ 
-			type: 'highlight', 
-			page: '/fixed', 
+		{
+			type: 'highlight',
+			page: '/fixed',
 			selector: '#fixed-title',
 			title: 'Fixed Expenses',
 			desc: 'Do you have any expenses which need to be paid on fixed intervals? Like EMIs, subscriptions, rent, etc.',
-            isQuestion: true,
-            questionType: 'fixed'
+			isQuestion: true,
+			questionType: 'fixed'
 		},
 		// 6. Highlight Menu
 		{
@@ -63,7 +63,7 @@
 			page: '/fixed',
 			selector: '#fixed-menu-btn',
 			title: 'Menu',
-			desc: 'Click here to add a new category.',
+			desc: 'Click on the three dots to add a new category.',
 			waitForTargetClick: true
 		},
 		// 7. Highlight Add Category
@@ -72,106 +72,106 @@
 			page: '/fixed',
 			selector: '#add-category-btn',
 			title: 'Add Category',
-			desc: 'Click here to open the Add Category form.',
+			desc: 'Click on <b>Add Category</b> button to open the Add Category form.',
 			waitForTargetClick: true
 		},
-        // 8. Wait for modal to open and highlight name
-        {
-            type: 'highlight',
-            page: '/fixed',
-            selector: '#modal-category-name',
-            title: 'Category Name',
-            desc: 'Name this expense, e.g. Netflix, Rent.',
-            allowPointerEvents: true,
-            showNext: true
-        },
-        // 9. Highlight desc
-        {
-            type: 'highlight',
-            page: '/fixed',
-            selector: '#modal-category-desc',
-            title: 'Description',
-            desc: 'Describe this expense.',
-            allowPointerEvents: true,
-            showNext: true
-        },
-        // 10. Highlight amount
-        {
-            type: 'highlight',
-            page: '/fixed',
-            selector: '#modal-category-limit',
-            title: 'Amount',
-            desc: 'What amount do you need to pay?',
-            allowPointerEvents: true,
-            showNext: true
-        },
-        // 11. Highlight Period
-        {
-            type: 'highlight',
-            page: '/fixed',
-            selector: '#modal-category-period',
-            title: 'Period',
-            desc: 'How often do you pay this?',
-            allowPointerEvents: true,
-            showNext: true
-        },
-        // 12. Highlight Reset Date
-        {
-            type: 'highlight',
-            page: '/fixed',
-            selector: '#modal-category-reset',
-            title: 'Reset Date',
-            desc: 'When should this budget reset?',
-            allowPointerEvents: true,
-            showNext: true
-        },
-        // 13. Highlight Icon
-        {
-            type: 'highlight',
-            page: '/fixed',
-            selector: '#modal-category-icon',
-            title: 'Icon',
-            desc: 'Choose an icon for this category.',
-            allowPointerEvents: true,
-            showNext: true,
-            preferTop: true
-        },
-        // 14. Highlight Save
-        {
-            type: 'highlight',
-            page: '/fixed',
-            selector: '#modal-category-save',
-            title: 'Create Category',
-            desc: 'Save your new category.',
-            waitForTargetClick: true
-        },
-        // 15. Highlight newly created category (Success)
-        {
-            type: 'highlight',
-            page: '/fixed',
-            selector: '#fixed-list > div:last-child',
-            title: 'Category Created!',
-            desc: 'Your new fixed expense category has been successfully added.',
-            showGotIt: true
-        },
+		// 8. Wait for modal to open and highlight name
+		{
+			type: 'highlight',
+			page: '/fixed',
+			selector: '#modal-category-name',
+			title: 'Category Name',
+			desc: 'Name this expense, e.g. Netflix or Rent.',
+			allowPointerEvents: true,
+			showNext: true
+		},
+		// 9. Highlight desc
+		{
+			type: 'highlight',
+			page: '/fixed',
+			selector: '#modal-category-desc',
+			title: 'Description',
+			desc: 'Describe this expense.',
+			allowPointerEvents: true,
+			showNext: true
+		},
+		// 10. Highlight amount
+		{
+			type: 'highlight',
+			page: '/fixed',
+			selector: '#modal-category-limit',
+			title: 'Amount',
+			desc: 'What amount do you need to pay?',
+			allowPointerEvents: true,
+			showNext: true
+		},
+		// 11. Highlight Period
+		{
+			type: 'highlight',
+			page: '/fixed',
+			selector: '#modal-category-period',
+			title: 'Period',
+			desc: 'How often do you pay this?',
+			allowPointerEvents: true,
+			showNext: true
+		},
+		// 12. Highlight Reset Date
+		{
+			type: 'highlight',
+			page: '/fixed',
+			selector: '#modal-category-reset',
+			title: 'Reset Date',
+			desc: 'On what date should this budget reset?',
+			allowPointerEvents: true,
+			showNext: true
+		},
+		// 13. Highlight Icon
+		{
+			type: 'highlight',
+			page: '/fixed',
+			selector: '#modal-category-icon',
+			title: 'Icon',
+			desc: 'Choose an icon for this category.',
+			allowPointerEvents: true,
+			showNext: true,
+			preferTop: true
+		},
+		// 14. Highlight Save
+		{
+			type: 'highlight',
+			page: '/fixed',
+			selector: '#modal-category-save',
+			title: 'Create Category',
+			desc: 'Save your new category.',
+			waitForTargetClick: true
+		},
+		// 15. Highlight newly created category (Success)
+		{
+			type: 'highlight',
+			page: '/fixed',
+			selector: '#fixed-list > div:last-child',
+			title: 'Category Created!',
+			desc: 'Your new fixed expense category has been successfully added.<br/>Tap on it in future to edit it.',
+			showGotIt: true
+		},
 		// 16. Variable Page Intro
 		{
 			type: 'highlight',
 			page: '/fixed',
 			selector: 'nav a[href="/variable"]',
 			title: 'Variable Expenses',
-			desc: 'Let\'s head over to the Variable Expenses page. Tap the icon in the bottom navigation bar.',
+			desc: "Let's head over to the Variable Expenses page. Tap the icon in the bottom navigation bar.",
 			waitForTargetClick: true
 		},
 		// 17. Variable Page: Ask for variable expenses
-		{ 
-			type: 'highlight', 
-			page: '/variable', 
+		{
+			type: 'highlight',
+			page: '/variable',
 			selector: '#variable-title',
 			title: 'Variable Expenses',
 			desc: 'Do you have any expenses that are spent variably? Like groceries, fuel, weekend movies, etc.',
-            isQuestion: true,
-            questionType: 'variable'
+			isQuestion: true,
+			questionType: 'variable'
 		},
 		// 18. Highlight Menu
 		{
@@ -179,7 +179,7 @@
 			page: '/variable',
 			selector: '#variable-menu-btn',
 			title: 'Menu',
-			desc: 'Click here to add a new category.',
+			desc: 'Click on the three dots to add a new category.',
 			waitForTargetClick: true
 		},
 		// 19. Highlight Add Category
@@ -188,95 +188,95 @@
 			page: '/variable',
 			selector: '#add-category-btn',
 			title: 'Add Category',
-			desc: 'Click here to open the Add Category form.',
+			desc: 'Click on <b>Add Category</b> button to open the Add Category form.',
 			waitForTargetClick: true
 		},
-        // 20. Wait for modal to open and highlight name
-        {
-            type: 'highlight',
-            page: '/variable',
-            selector: '#modal-category-name',
-            title: 'Category Name',
-            desc: 'Name this variable expense, e.g. Groceries.',
-            allowPointerEvents: true,
-            showNext: true
-        },
-        // 21. Highlight desc
-        {
-            type: 'highlight',
-            page: '/variable',
-            selector: '#modal-category-desc',
-            title: 'Description',
-            desc: 'Describe this expense.',
-            allowPointerEvents: true,
-            showNext: true
-        },
-        // 22. Highlight amount
-        {
-            type: 'highlight',
-            page: '/variable',
-            selector: '#modal-category-limit',
-            title: 'Amount',
-            desc: 'What is your budget limit for this?',
-            allowPointerEvents: true,
-            showNext: true
-        },
-        // 23. Highlight Period
-        {
-            type: 'highlight',
-            page: '/variable',
-            selector: '#modal-category-period',
-            title: 'Period',
-            desc: 'How often does this budget reset?',
-            allowPointerEvents: true,
-            showNext: true
-        },
-        // 24. Highlight Reset Date
-        {
-            type: 'highlight',
-            page: '/variable',
-            selector: '#modal-category-reset',
-            title: 'Reset Date',
-            desc: 'When should this budget reset?',
-            allowPointerEvents: true,
-            showNext: true
-        },
-        // 25. Highlight Icon
-        {
-            type: 'highlight',
-            page: '/variable',
-            selector: '#modal-category-icon',
-            title: 'Icon',
-            desc: 'Choose an icon for this category.',
-            allowPointerEvents: true,
-            showNext: true,
-            preferTop: true
-        },
-        // 26. Highlight Save
-        {
-            type: 'highlight',
-            page: '/variable',
-            selector: '#modal-category-save',
-            title: 'Create Category',
-            desc: 'Save your new category.',
-            waitForTargetClick: true
-        },
-        // 27. Highlight newly created category (Success)
-        {
-            type: 'highlight',
-            page: '/variable',
-            selector: '#variable-list > div:last-child',
-            title: 'Category Created!',
-            desc: 'Your new variable expense category has been successfully added.',
-            showGotIt: true
-        },
+		// 20. Wait for modal to open and highlight name
+		{
+			type: 'highlight',
+			page: '/variable',
+			selector: '#modal-category-name',
+			title: 'Category Name',
+			desc: 'Name this variable expense, e.g. Groceries.',
+			allowPointerEvents: true,
+			showNext: true
+		},
+		// 21. Highlight desc
+		{
+			type: 'highlight',
+			page: '/variable',
+			selector: '#modal-category-desc',
+			title: 'Description',
+			desc: 'Describe this expense.',
+			allowPointerEvents: true,
+			showNext: true
+		},
+		// 22. Highlight amount
+		{
+			type: 'highlight',
+			page: '/variable',
+			selector: '#modal-category-limit',
+			title: 'Amount',
+			desc: 'What is your budget limit for this?',
+			allowPointerEvents: true,
+			showNext: true
+		},
+		// 23. Highlight Period
+		{
+			type: 'highlight',
+			page: '/variable',
+			selector: '#modal-category-period',
+			title: 'Period',
+			desc: 'How often does this budget reset?',
+			allowPointerEvents: true,
+			showNext: true
+		},
+		// 24. Highlight Reset Date
+		{
+			type: 'highlight',
+			page: '/variable',
+			selector: '#modal-category-reset',
+			title: 'Reset Date',
+			desc: 'When should this budget reset?',
+			allowPointerEvents: true,
+			showNext: true
+		},
+		// 25. Highlight Icon
+		{
+			type: 'highlight',
+			page: '/variable',
+			selector: '#modal-category-icon',
+			title: 'Icon',
+			desc: 'Choose an icon for this category.',
+			allowPointerEvents: true,
+			showNext: true,
+			preferTop: true
+		},
+		// 26. Highlight Save
+		{
+			type: 'highlight',
+			page: '/variable',
+			selector: '#modal-category-save',
+			title: 'Create Category',
+			desc: 'Save your new category.',
+			waitForTargetClick: true
+		},
+		// 27. Highlight newly created category (Success)
+		{
+			type: 'highlight',
+			page: '/variable',
+			selector: '#variable-list > div:last-child',
+			title: 'Category Created!',
+			desc: 'Your new variable expense category has been successfully added.<br/>Tap on it in future to edit it.',
+			showGotIt: true
+		},
 		// 28. Back to Home
 		{
 			type: 'highlight',
 			page: '/variable',
 			selector: 'nav a[href="/"]',
 			title: 'Back to Home',
-			desc: 'Let\'s head back to the Home dashboard. Tap the Home icon in the navigation bar.',
+			desc: "Let's head back to the Home dashboard. Tap the Home icon in the navigation bar.",
 			waitForTargetClick: true
 		},
 		// 29. Dashboard: Highlight Variable Expenses card -> "Got it".
@@ -285,7 +285,7 @@
 			page: '/',
 			selector: 'a[href="/variable"]',
 			title: 'Variable Expenses View',
-			desc: 'Get the high level view of your variable categories from this home page.',
+			desc: 'You can get a high level view of your variable expenses from this card.',
 			showGotIt: true
 		},
 		// 30. Dashboard: Highlight Fixed Expenses card -> "Got it".
@@ -303,7 +303,7 @@
 			page: '/',
 			selector: 'a[href="/add"]',
 			title: 'One Final Step!',
-			desc: 'Congratulations on finishing the setup! Complete one final step - adding a dummy transaction. Click the + button.',
+			desc: 'Congratulations on finishing the setup! <b>Complete one final step - adding a dummy transaction.</b> Click the + button.',
 			waitForTargetClick: true
 		},
 		// 32. Add Page: Walkthrough Name
@@ -332,7 +332,7 @@
 			page: '/add',
 			selector: 'input[type="date"]',
 			title: 'Date',
-			desc: 'Add yesterday\'s date.',
+			desc: "Add yesterday's date.",
 			allowPointerEvents: true,
 			showNext: true
 		},
@@ -364,7 +364,7 @@
 			desc: 'Choose any category.',
 			allowPointerEvents: true,
 			showNext: true,
-            preferTop: true
+			preferTop: true
 		},
 		// 38. Add Page: Walkthrough Save
 		{
@@ -391,7 +391,7 @@
 			page: '/list',
 			selector: '#modal-delete-btn',
 			title: 'Delete Transaction',
-			desc: 'Since this is a dummy transaction, let\'s delete it.',
+			desc: "Since this is a dummy transaction, let's delete it.",
 			waitForTargetClick: true
 		},
 		// 41. List Page: Confirm Delete
@@ -419,7 +419,7 @@
 			page: '/list',
 			selector: 'nav a[href="/"]',
 			title: 'Back to Home',
-			desc: 'Let\'s head back to the Dashboard.',
+			desc: "Let's head back to the Dashboard.",
 			waitForTargetClick: true
 		},
 		// 43. Dashboard: Final Congratulation
@@ -454,13 +454,13 @@
 	let currentStepDef = $derived(steps[step - 1]);
 
 	let modalTop = $derived.by(() => {
-        let topVal;
+		let topVal;
 		if (currentStepDef?.selector === 'body' || !targetRect) {
 			topVal = window.innerHeight / 2;
 		} else {
 			const spaceBelow = window.innerHeight - targetRect.bottom;
 			const spaceAbove = targetRect.top;
-			
+
 			if (currentStepDef?.preferTop && spaceAbove >= modalHeight + 20) {
 				topVal = targetRect.top - modalHeight - 20;
 			} else if (spaceBelow >= modalHeight + 20) {
@@ -484,7 +484,7 @@
 		const spaceBelow = window.innerHeight - targetRect.bottom;
 		const spaceAbove = targetRect.top;
 
-        if (currentStepDef?.preferTop && spaceAbove >= modalHeight + 20) return 'none';
+		if (currentStepDef?.preferTop && spaceAbove >= modalHeight + 20) return 'none';
 
 		if (spaceBelow >= modalHeight + 20 || spaceAbove >= modalHeight + 20) return 'none';
 		return 'translateY(-50%)';
@@ -492,28 +492,28 @@
 
 	let mascotStyle = $derived.by(() => {
 		if (currentStepDef?.type === 'slide') {
-			return `top: 50%; left: 50%; margin-left: -48px; transform: translateY(-280px);`;
-		}
-		
-		if (currentStepDef?.selector === 'body' || !targetRect) {
-			return `top: 50%; left: 50%; margin-left: -48px; margin-top: -${modalHeight / 2 + 20}px; transform: translateY(-100%);`;
+			return `top: 50%; left: 50%; margin-left: -48px; margin-top: -${modalHeight / 2 - 20}px; transform: translateY(-280px);`;
 		}
 
-		let topPos = modalTop; 
+		if (currentStepDef?.selector === 'body' || !targetRect) {
+			return `top: 50%; left: 50%; margin-left: -48px; transform: translateY(-100%);`;
+		}
+
+		let topPos = modalTop;
 		const spaceBelow = window.innerHeight - targetRect.bottom;
 		const spaceAbove = targetRect.top;
-		
-        let isModalBelow = false;
-        if (currentStepDef?.preferTop && spaceAbove >= modalHeight + 20) {
-            isModalBelow = false;
-        } else if (spaceBelow >= modalHeight + 20) {
-            isModalBelow = true;
-        } else if (spaceAbove >= modalHeight + 20) {
-            isModalBelow = false;
-        }
+
+		let isModalBelow = false;
+		if (currentStepDef?.preferTop && spaceAbove >= modalHeight + 20) {
+			isModalBelow = false;
+		} else if (spaceBelow >= modalHeight + 20) {
+			isModalBelow = true;
+		} else if (spaceAbove >= modalHeight + 20) {
+			isModalBelow = false;
+		}
 
 		let transformY = isModalBelow ? `calc(${modalHeight}px - 20px)` : 'calc(-100% + 20px)';
-		
+
 		return `top: ${topPos}; left: 50%; margin-left: -100px; transform: translateY(${transformY});`;
 	});
 
@@ -533,25 +533,28 @@
 			if (currentDef.selector && currentDef.selector !== 'body') {
 				const el = document.querySelector(currentDef.selector);
 				if (el) {
-                    const rect = el.getBoundingClientRect();
+					const rect = el.getBoundingClientRect();
 					if (step !== lastScrolledStep) {
-                        lastScrolledStep = step;
-                        [50, 300, 600].forEach(delay => {
-                            setTimeout(() => {
-                                const currentEl = document.querySelector(currentDef.selector);
-                                if (currentEl) {
-                                    const rect = currentEl.getBoundingClientRect();
-                                    const isVisible = rect.top >= 60 && rect.bottom <= window.innerHeight - 60;
-                                    if (!isVisible && rect.height > 0) {
-                                        currentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                    }
-                                }
-                            }, delay);
-                        });
+						lastScrolledStep = step;
+						[50, 300, 600].forEach((delay) => {
+							setTimeout(() => {
+								const currentEl = document.querySelector(currentDef.selector);
+								if (currentEl) {
+									const rect = currentEl.getBoundingClientRect();
+									const isVisible = rect.top >= 60 && rect.bottom <= window.innerHeight - 60;
+									if (!isVisible && rect.height > 0) {
+										currentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+									}
+								}
+							}, delay);
+						});
 					}
 
 					let finalRect = rect;
-					if (currentDef.selector === '#modal-category-icon' || currentDef.selector === '#category-dropdown-btn') {
+					if (
+						currentDef.selector === '#modal-category-icon' ||
+						currentDef.selector === '#category-dropdown-btn'
+					) {
 						const dropdownEl = el.parentElement?.querySelector('.absolute.overflow-y-auto');
 						if (dropdownEl) {
 							const dropdownRect = dropdownEl.getBoundingClientRect();
@@ -572,7 +575,7 @@
 		}
 
 		const interval = setInterval(updateRect, 100);
-		
+
 		if (step > 0) {
 			updateRect(); // Instantly update on step change, avoiding 100ms delay
 		}
@@ -588,9 +591,14 @@
 	});
 
 	async function finishTutorial() {
-		const { data: { session } } = await supabase.auth.getSession();
+		const {
+			data: { session }
+		} = await supabase.auth.getSession();
 		if (session) {
-			await supabase.from('profiles').update({ onboarding_completed: true }).eq('id', session.user.id);
+			await supabase
+				.from('profiles')
+				.update({ onboarding_completed: true })
+				.eq('id', session.user.id);
 		}
 		targetRect = null;
 		if ($page.url.pathname !== '/') {
@@ -606,7 +614,7 @@
 			stepHistory.push(step); // Save history for go back
 
 			const nextStepDef = steps[step - 1];
-			
+
 			// Dynamic skips for questions
 			if (nextStepDef.isQuestion && nextStepDef.questionType === 'fixed' && answer === false) {
 				step += 11; // Skip to Variable Page Intro
@@ -620,7 +628,7 @@
 			}
 
 			const fallbackNav = /** @type {any} */ (currentStepDef).nextPage;
-			const forceTransition = (step === 3);
+			const forceTransition = step === 3;
 			step++;
 			await handleNav(steps[step - 1].page, fallbackNav, forceTransition);
 		} else {
@@ -658,74 +666,92 @@
 	}
 
 	async function handleSaveInitialBalance() {
-		const { data: { session } } = await supabase.auth.getSession();
+		const {
+			data: { session }
+		} = await supabase.auth.getSession();
 		if (!session) return;
-		
+
 		if (!initialBalance) {
 			nextStep();
 			return;
 		}
 
 		loading = true;
-		let category_id = appData.corpusBudgets.find(b => b.category.toLowerCase() === 'personal corpus')?.category_id;
-		
+		let category_id = appData.corpusBudgets.find(
+			(b) => b.category.toLowerCase() === 'personal corpus'
+		)?.category_id;
+
 		if (!category_id) {
-			const { data } = await supabase.from('budgets').select('*').eq('user_id', session.user.id).eq('budget_type', 'corpus').ilike('category', 'personal corpus').single();
+			const { data } = await supabase
+				.from('budgets')
+				.select('*')
+				.eq('user_id', session.user.id)
+				.eq('budget_type', 'corpus')
+				.ilike('category', 'personal corpus')
+				.single();
 			category_id = data?.category_id;
 		}
 
 		if (category_id) {
-			const { error } = await supabase.from('transactions').insert([{
-				id: crypto.randomUUID(),
-				amount: Number(initialBalance),
-				transaction_type: 'credit',
-				title: 'Initial account status',
-				category_id: category_id,
-				user_id: session.user.id,
-				transaction_date: new Date().toISOString()
-			}]);
+			const { error } = await supabase.from('transactions').insert([
+				{
+					id: crypto.randomUUID(),
+					amount: Number(initialBalance),
+					transaction_type: 'credit',
+					title: 'Initial account status',
+					category_id: category_id,
+					user_id: session.user.id,
+					transaction_date: '2000-01-01'
+				}
+			]);
 			if (error) alert('Error saving balance: ' + error.message);
 		}
-		
+
 		loading = false;
 		nextStep();
 	}
 </script>
 
-<svelte:window onclick={(e) => {
-	if (currentStepDef?.waitForTargetClick && !isPageTransitioning) {
-		if (!e.isTrusted) return; // Prevent double firing from programmatic clicks
-		const el = document.querySelector(currentStepDef.selector);
-		if (el && e.target instanceof Element && (e.target === el || el.contains(e.target))) {
-			if (e.target.tagName !== 'BUTTON' || e.target.getAttribute('aria-label') !== 'Target') {
-				if (currentStepDef.waitToDisappear) {
-					const checkInterval = setInterval(() => {
-						if (!document.querySelector(currentStepDef.selector)) {
-							clearInterval(checkInterval);
-							setTimeout(() => nextStep(), 500);
-						}
-					}, 200);
-				} else {
-					setTimeout(() => nextStep(), 100);
+<svelte:window
+	onclick={(e) => {
+		if (currentStepDef?.waitForTargetClick && !isPageTransitioning) {
+			if (!e.isTrusted) return; // Prevent double firing from programmatic clicks
+			const el = document.querySelector(currentStepDef.selector);
+			if (el && e.target instanceof Element && (e.target === el || el.contains(e.target))) {
+				if (e.target.tagName !== 'BUTTON' || e.target.getAttribute('aria-label') !== 'Target') {
+					if (currentStepDef.waitToDisappear) {
+						const checkInterval = setInterval(() => {
+							if (!document.querySelector(currentStepDef.selector)) {
+								clearInterval(checkInterval);
+								setTimeout(() => nextStep(), 500);
+							}
+						}, 200);
+					} else {
+						setTimeout(() => nextStep(), 100);
+					}
 				}
 			}
 		}
-	}
-}} />
+	}}
+/>
 
 {#if !isPageTransitioning}
 	<!-- Dynamic Mascot -->
-	<div 
+	<div
 		class="absolute z-[220] pointer-events-none drop-shadow-2xl"
 		style="{mascotStyle} transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);"
 	>
-		<img src="/mascot.png" alt="Mascot" class="w-24 h-auto md:w-32 hover:scale-105 transition-transform" />
+		<img
+			src="/mascot.png"
+			alt="Mascot"
+			class="w-32 h-auto md:w-32 hover:scale-105 transition-transform"
+		/>
 	</div>
 
 	<!-- Global Go Back -->
 	{#if stepHistory.length > 0}
-		<button 
-			class="fixed top-6 left-6 text-gray-300 hover:text-white transition-colors z-[210] pointer-events-auto font-semibold text-sm tracking-widest bg-black/50 hover:bg-black/70 px-5 py-3 rounded-2xl backdrop-blur-md flex items-center gap-2 box-3d shadow-xl" 
+		<button
+			class="fixed top-6 left-6 text-gray-300 hover:text-white transition-colors z-[210] pointer-events-auto font-semibold text-sm tracking-widest bg-black/50 hover:bg-black/70 px-5 py-3 rounded-2xl backdrop-blur-md flex items-center gap-2 box-3d shadow-xl"
 			onclick={prevStep}
 			transition:fade={{ duration: 200 }}
 		>
@@ -734,60 +760,106 @@
 	{/if}
 
 	{#if currentStepDef.type === 'slide'}
-		<div class="fixed inset-0 z-[200] bg-black/40 backdrop-blur-sm text-gray-300 font-sans p-6 flex flex-col items-center justify-center w-full" transition:fade={{ duration: 300 }}>
-			
-			<div class="w-full max-w-lg bg-[#151515] p-8 md:p-10 rounded-[2.5rem] box-3d shadow-2xl relative flex flex-col gap-6" in:fly={{ y: 30, duration: 500, easing: cubicOut }}>
-				
+		<div
+			class="fixed inset-0 z-[200] bg-black/40 backdrop-blur-sm text-gray-300 font-sans p-6 flex flex-col items-center justify-center w-full"
+			transition:fade={{ duration: 300 }}
+		>
+			<div
+				class="w-full max-w-lg bg-[#151515] p-8 md:p-10 rounded-[2.5rem] box-3d shadow-2xl relative flex flex-col gap-6"
+				in:fly={{ y: 30, duration: 500, easing: cubicOut }}
+			>
 				<div class="mt-4">
-				{#if currentStepDef.id === 'welcome-1'}
-					<h1 class="text-4xl font-display text-white mb-4 tracking-wide leading-tight">Welcome to Green Bar</h1>
-					<p class="text-gray-400 text-lg leading-relaxed mb-6">
-						Every single rupee gets a job. By assigning your money to specific categories upfront, you take total control of your finances.
-					</p>
-					<div class="bg-[#1a1a1a] border border-gray-800 p-4 rounded-2xl mb-8">
-						<strong class="text-white block mb-1">💡 Pro Tip</strong>
-						<span class="text-sm text-gray-400">
-							Tap the Share button in your browser and select <strong>"Add to Home Screen"</strong> for the best app experience.
-						</span>
-					</div>
-					<button class="w-full bg-white text-black font-bold py-4 text-xl rounded-2xl box-3d flex justify-center items-center gap-2 transition-transform active:scale-95" onclick={() => nextStep()}>
-						Get Started <ChevronRight class="w-6 h-6" />
-					</button>
-				{:else if currentStepDef.id === 'welcome-2'}
-					<h1 class="text-4xl font-display text-white mb-4 tracking-wide leading-tight">Fill Your Vault</h1>
-					<p class="text-gray-400 text-base leading-relaxed mb-6">
-						Enter the combined total of everything you want to manage. This becomes your <strong>Personal Corpus</strong>.
-					</p>
-					<div class="flex items-center text-5xl tracking-wide font-bold text-white border-b-2 border-gray-800 focus-within:border-white transition-colors w-full pb-2 mb-8">
-						<span class="mr-2 text-gray-500">₹</span>
-						<input type="number" bind:value={initialBalance} placeholder="0" class="bg-transparent w-full focus:outline-none [-moz-appearance:_textfield]" />
-					</div>
-					<div class="flex gap-4 flex-col">
-						<button class="w-full bg-white text-black font-bold py-4 text-xl rounded-2xl box-3d flex justify-center items-center gap-2 transition-transform active:scale-95 disabled:opacity-50" onclick={handleSaveInitialBalance} disabled={loading}>
-							{loading ? 'Saving...' : 'Save Balance'} <ChevronRight class="w-6 h-6" />
-						</button>
-						<button class="text-gray-500 font-medium hover:text-white transition-colors" onclick={() => nextStep()}>Skip for now</button>
-					</div>
-				{:else if currentStepDef.id === 'welcome-3'}
-					<div class="text-center flex flex-col items-center">
-						<div class="w-20 h-20 bg-[#1a1a1a] rounded-full flex items-center justify-center mb-6 box-3d">
-							<Check class="w-10 h-10 text-white" />
-						</div>
-						<h1 class="text-4xl font-display text-white mb-4 tracking-wide leading-tight">Setup Complete</h1>
-						<p class="text-gray-400 text-base leading-relaxed mb-8">
-							Your Personal Corpus is ready. Let's step inside the app to allocate this money into categories.
+					{#if currentStepDef.id === 'welcome-1'}
+						<h1 class="text-4xl font-display text-white mb-4 tracking-wide leading-tight">
+							Welcome to Green Bar
+						</h1>
+						<p class="text-gray-400 text-lg leading-relaxed mb-6">
+							A gamified expense tracker where every rupee gets a job. <br /> By dividing your money into
+							specific categories upfront, you take total control of your finances.
 						</p>
-						<button class="w-full bg-white text-black font-bold py-4 text-xl rounded-2xl box-3d flex justify-center items-center gap-2 transition-transform active:scale-95" onclick={() => nextStep()}>
-							Enter Dashboard <ChevronRight class="w-6 h-6" />
+						<div class="bg-[#1a1a1a] border border-gray-800 p-4 rounded-2xl mb-8">
+							<strong class="text-white block mb-1">💡 Pro Tip: <br /> Download the webapp</strong>
+							<span class="text-sm text-gray-400">
+								Tap the Share button in your browser and select <strong>"Add to Home Screen"</strong
+								> for the best app experience.
+							</span>
+						</div>
+						<button
+							class="w-full bg-white text-black font-bold py-4 text-xl rounded-2xl box-3d flex justify-center items-center gap-2 transition-transform active:scale-95"
+							onclick={() => nextStep()}
+						>
+							Get Started <ChevronRight class="w-6 h-6" />
 						</button>
-					</div>
-				{/if}
+					{:else if currentStepDef.id === 'welcome-2'}
+						<h1 class="text-4xl font-display text-white mb-4 tracking-wide leading-tight">
+							Fill Your Vault
+						</h1>
+						<p class="text-gray-400 text-base leading-relaxed mb-6">
+							To begin using the app, enter your current bank balance. This will become your <strong
+								>Personal Corpus</strong
+							> in the app.
+						</p>
+						<div
+							class="flex items-center text-5xl tracking-wide font-bold text-white border-b-2 border-gray-800 focus-within:border-white transition-colors w-full pb-2 mb-8"
+						>
+							<span class="mr-2 text-gray-500">₹</span>
+							<input
+								type="number"
+								bind:value={initialBalance}
+								placeholder="0"
+								class="bg-transparent w-full focus:outline-none [-moz-appearance:_textfield]"
+							/>
+						</div>
+						<div class="flex gap-4 flex-col">
+							<button
+								class="w-full bg-white text-black font-bold py-4 text-xl rounded-2xl box-3d flex justify-center items-center gap-2 transition-transform active:scale-95 disabled:opacity-50"
+								onclick={handleSaveInitialBalance}
+								disabled={loading}
+							>
+								{loading ? 'Saving...' : 'Save Balance'}
+								<ChevronRight class="w-6 h-6" />
+							</button>
+							<button
+								class="text-gray-500 font-medium hover:text-white transition-colors"
+								onclick={() => nextStep()}>Skip for now</button
+							>
+						</div>
+					{:else if currentStepDef.id === 'welcome-3'}
+						<div class="text-center flex flex-col items-center">
+							<div
+								class="w-20 h-20 bg-[#1a1a1a] rounded-full flex items-center justify-center mb-6 box-3d"
+							>
+								<Check class="w-10 h-10 text-white" />
+							</div>
+							<h1 class="text-4xl font-display text-white mb-4 tracking-wide leading-tight">
+								Initial Setup Complete
+							</h1>
+							<p class="text-gray-400 text-base leading-relaxed mb-8">
+								Your Personal Corpus is ready. Now let's step inside the app to allocate this money
+								into categories.
+							</p>
+							<button
+								class="w-full bg-white text-black font-bold py-4 text-xl rounded-2xl box-3d flex justify-center items-center gap-2 transition-transform active:scale-95"
+								onclick={() => nextStep()}
+							>
+								Enter Dashboard <ChevronRight class="w-6 h-6" />
+							</button>
+						</div>
+					{/if}
 				</div>
 			</div>
 		</div>
 	{:else}
-		<div class="fixed inset-0 z-[200] {currentStepDef.allowPointerEvents ? 'pointer-events-none' : 'pointer-events-auto'}" transition:fade={{ duration: 300 }}>
-			<svg class="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+		<div
+			class="fixed inset-0 z-[200] {currentStepDef.allowPointerEvents
+				? 'pointer-events-none'
+				: 'pointer-events-auto'}"
+			transition:fade={{ duration: 300 }}
+		>
+			<svg
+				class="absolute inset-0 w-full h-full pointer-events-none"
+				xmlns="http://www.w3.org/2000/svg"
+			>
 				<defs>
 					<mask id="tutorial-hole">
 						<rect width="100%" height="100%" fill="white" />
@@ -806,16 +878,17 @@
 				</defs>
 				<rect width="100%" height="100%" fill="rgba(0,0,0,0.85)" mask="url(#tutorial-hole)" />
 			</svg>
-			
+
 			{#if targetRect && currentStepDef.waitForTargetClick}
-				<button 
+				<button
 					class="absolute z-[210] cursor-pointer bg-transparent pointer-events-auto"
 					style="left: {targetRect.left}px; top: {targetRect.top}px; width: {targetRect.width}px; height: {targetRect.height}px;"
 					onclick={() => {
 						const el = /** @type {HTMLElement} */ (document.querySelector(currentStepDef.selector));
 						if (el) el.click();
-						else if (/** @type {any} */ (currentStepDef).nextPage) handleNav(/** @type {any} */ (currentStepDef).nextPage);
-						
+						else if (/** @type {any} */ (currentStepDef).nextPage)
+							handleNav(/** @type {any} */ (currentStepDef).nextPage);
+
 						if (currentStepDef.waitToDisappear) {
 							const checkInterval = setInterval(() => {
 								if (!document.querySelector(currentStepDef.selector)) {
@@ -842,24 +915,47 @@
 						transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
 					"
 				>
-					<h3 class="text-2xl font-display text-black mb-3 tracking-wide">{currentStepDef.title}</h3>
-					<p class="text-gray-700 mb-6 leading-relaxed text-lg">{currentStepDef.desc}</p>
+					<h3 class="text-2xl font-display text-black mb-3 tracking-wide">
+						{currentStepDef.title}
+					</h3>
+					<p class="text-gray-700 mb-6 leading-relaxed text-lg">{@html currentStepDef.desc}</p>
 
 					<div class="flex items-center justify-between mt-2">
-                        {#if currentStepDef.isQuestion}
-                            <div class="flex flex-col gap-3 w-full">
-                                <button class="bg-black text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 box-3d w-full" onclick={() => nextStep(true)}>Yes, I do</button>
-                                <button class="bg-gray-200 text-black px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 box-3d w-full" onclick={() => nextStep(false)}>No, I don't</button>
-                            </div>
+						{#if currentStepDef.isQuestion}
+							<div class="flex flex-col gap-3 w-full">
+								<button
+									class="bg-black text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 box-3d w-full"
+									onclick={() => nextStep(true)}>Yes, I do</button
+								>
+								<button
+									class="bg-gray-200 text-black px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 box-3d w-full"
+									onclick={() => nextStep(false)}>No, I don't</button
+								>
+							</div>
 						{:else if currentStepDef.showGotIt}
-							<button class="bg-black text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 box-3d w-full justify-center" onclick={() => nextStep()}>Got it</button>
+							<button
+								class="bg-black text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 box-3d w-full justify-center"
+								onclick={() => nextStep()}>Got it</button
+							>
 						{:else if currentStepDef.showNext}
-							<button class="bg-black text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 box-3d w-full justify-center" onclick={() => nextStep()}>Next <ChevronRight class="w-5 h-5"/></button>
+							<button
+								class="bg-black text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 box-3d w-full justify-center"
+								onclick={() => nextStep()}>Next <ChevronRight class="w-5 h-5" /></button
+							>
 						{:else if currentStepDef.showFinish}
-							<button class="bg-black text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 box-3d w-full justify-center" onclick={finishTutorial}>Finish <Check class="w-5 h-5"/></button>
+							<button
+								class="bg-black text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 box-3d w-full justify-center"
+								onclick={finishTutorial}>Finish <Check class="w-5 h-5" /></button
+							>
 						{:else if !currentStepDef.waitForTargetClick}
-							<button class="text-gray-500 font-medium hover:text-black transition-colors" onclick={() => nextStep()}>Skip</button>
-							<button class="bg-black text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 box-3d" onclick={() => nextStep()}>Next <ChevronRight class="w-5 h-5" /></button>
+							<button
+								class="text-gray-500 font-medium hover:text-black transition-colors"
+								onclick={() => nextStep()}>Skip</button
+							>
+							<button
+								class="bg-black text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 box-3d"
+								onclick={() => nextStep()}>Next <ChevronRight class="w-5 h-5" /></button
+							>
 						{/if}
 					</div>
 				</div>
