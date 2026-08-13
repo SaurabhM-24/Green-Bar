@@ -6,6 +6,8 @@
 	import { page } from '$app/stores';
 	import { supabase } from '$lib/supabase';
 	import { appData } from '$lib/data.svelte.js';
+	import { encryptData } from '$lib/crypto';
+	import { cryptoStore } from '$lib/cryptoStore.svelte';
 
 	let { onComplete, startStep = 1 } = $props();
 
@@ -692,16 +694,20 @@
 			category_id = data?.category_id;
 		}
 
-		if (category_id) {
-			const { error } = await supabase.from('transactions').insert([
+		if (category_id && cryptoStore.dmk) {
+			const payload = {
+				amount: Number(initialBalance),
+				transaction_type: 'credit',
+				title: 'Initial account status',
+				category_id: category_id,
+				transaction_date: '2000-01-01'
+			};
+			const encryptedData = await encryptData(payload, cryptoStore.dmk);
+			const { error } = await supabase.from('transactions_encrypted').insert([
 				{
 					id: crypto.randomUUID(),
-					amount: Number(initialBalance),
-					transaction_type: 'credit',
-					title: 'Initial account status',
-					category_id: category_id,
 					user_id: session.user.id,
-					transaction_date: '2000-01-01'
+					encrypted_data: encryptedData
 				}
 			]);
 			if (error) alert('Error saving balance: ' + error.message);

@@ -12,6 +12,8 @@
 	import CorpusModal from '$lib/components/editCards/CorpusModal.svelte';
 	import FixedModal from '$lib/components/editCards/FixedModal.svelte';
 	import AddCategoryModal from '$lib/components/editCards/AddCategoryModal.svelte';
+	import { encryptData } from '$lib/crypto';
+	import { cryptoStore } from '$lib/cryptoStore.svelte';
 	import { dndzone } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
 	import { fly, slide, fade } from 'svelte/transition';
@@ -49,19 +51,15 @@
 
 	/** @param {string} id */
 	async function handleDelete(id) {
-		const { data: txs, error: txError } = await supabase
-			.from('transactions')
-			.select('id')
-			.eq('category_id', id)
-			.limit(1);
+		const hasTxs = appData.allTransactions.some((tx) => tx.category_id === id);
 
-		if (txs && txs.length > 0) {
+		if (hasTxs) {
 			pendingDeleteId = id;
 			isCorpusModalOpen = false;
 			isFixedModalOpen = false;
 			showDeactivateModal = true;
 		} else {
-			const { error } = await supabase.from('budgets').delete().eq('category_id', id);
+			const { error } = await supabase.from('budgets_encrypted').delete().eq('category_id', id);
 			if (!error) {
 				isCorpusModalOpen = false;
 				selectedCorpusBudget = null;
@@ -73,21 +71,34 @@
 	}
 
 	async function confirmDeactivate() {
-		if (pendingDeleteId) {
-			const { error } = await supabase
-				.from('budgets')
-				.update({ limit_amount: -1 })
-				.eq('category_id', pendingDeleteId);
-			if (!error) {
-				showDeactivateModal = false;
-				pendingDeleteId = null;
-				appData.loadData();
+		if (pendingDeleteId && cryptoStore.dmk) {
+			const b = appData.budgets.find((bd) => bd.category_id === pendingDeleteId) 
+			          || appData.corpusBudgets.find((bd) => bd.category_id === pendingDeleteId)
+			          || appData.fixedBudgets.find((bd) => bd.category_id === pendingDeleteId);
+			if (b) {
+				const payload = { ...b, limit_amount: -1 };
+				delete payload.id;
+				delete payload.category_id;
+				delete payload.current_period_start;
+
+				const encryptedData = await encryptData(payload, cryptoStore.dmk);
+				const { error } = await supabase
+					.from('budgets_encrypted')
+					.update({ encrypted_data: encryptedData })
+					.eq('category_id', pendingDeleteId);
+					
+				if (!error) {
+					showDeactivateModal = false;
+					pendingDeleteId = null;
+					appData.loadData();
+				}
 			}
 		}
 	}
 
 	/** @param {any} data */
 	async function handleAddSave(data) {
+		if (!cryptoStore.dmk) return;
 		const {
 			data: { session }
 		} = await supabase.auth.getSession();
@@ -99,18 +110,24 @@
 				? Math.max(...targetBudgets.map((b) => Number(b.sort_order || 0)))
 				: -1;
 
-		const { error } = await supabase.from('budgets').insert([
+		const payload = {
+			category: data.category,
+			description: data.description || null,
+			limit_amount: data.limit_amount ? Number(data.limit_amount) : 0,
+			icon_name: data.icon_name || null,
+			budget_type: isCorpusTab ? 'corpus' : 'fixed',
+			period_type: data.period_type || 'monthly',
+			reset_date: data.reset_date ? Number(data.reset_date) : 1,
+			sort_order: maxSortOrder + 1
+		};
+
+		const encryptedData = await encryptData(payload, cryptoStore.dmk);
+
+		const { error } = await supabase.from('budgets_encrypted').insert([
 			{
 				category_id: crypto.randomUUID(),
-				category: data.category,
-				description: data.description || null,
-				limit_amount: data.limit_amount ? Number(data.limit_amount) : 0,
-				icon_name: data.icon_name || null,
-				budget_type: isCorpusTab ? 'corpus' : 'fixed',
-				period_type: data.period_type || 'monthly',
-				reset_date: data.reset_date ? Number(data.reset_date) : 1,
 				user_id: user_id,
-				sort_order: maxSortOrder + 1
+				encrypted_data: encryptedData
 			}
 		]);
 
@@ -124,19 +141,34 @@
 
 	/** @param {any} data */
 	async function handleSave(data) {
+		if (!cryptoStore.dmk) return;
+		const b = appData.corpusBudgets.find((bd) => bd.category_id === data.category_id) 
+		          || appData.fixedBudgets.find((bd) => bd.category_id === data.category_id);
+		if (!b) return;
+
+		const payload = {
+			...b,
+			category: data.category,
+			limit_amount: data.limit_amount,
+			description: data.description,
+			icon_name: data.icon_name,
+			period_type: data.period_type,
+			reset_date: data.reset_date
+		};
+		delete payload.id;
+		delete payload.category_id;
+		delete payload.current_period_start;
+
+		const encryptedData = await encryptData(payload, cryptoStore.dmk);
+
 		const { error } = await supabase
-			.from('budgets')
-			.update({
-				category: data.category,
-				limit_amount: data.limit_amount,
-				description: data.description,
-				icon_name: data.icon_name,
-				period_type: data.period_type,
-				reset_date: data.reset_date
-			})
+			.from('budgets_encrypted')
+			.update({ encrypted_data: encryptedData })
 			.eq('category_id', data.category_id);
+			
 		if (!error) {
 			selectedCorpusBudget = null;
+			isCorpusModalOpen = false;
 			isFixedModalOpen = false;
 			selectedFixedBudget = null;
 			appData.loadData();
@@ -163,12 +195,22 @@
 	 * @description Saves the new sort order to Supabase based on the user's reordering.
 	 */
 	async function saveOrder() {
+		if (!cryptoStore.dmk) return;
 		savingOrder = true;
 		try {
-			const updates = fixedBudgets.map((b, index) => {
+			const updates = fixedBudgets.map(async (b, index) => {
+				const existing = appData.fixedBudgets.find(bd => bd.category_id === b.category_id);
+				if (!existing) return;
+
+				const payload = { ...existing, sort_order: index };
+				delete payload.id;
+				delete payload.category_id;
+				delete payload.current_period_start;
+
+				const encryptedData = await encryptData(payload, /** @type {CryptoKey} */ (cryptoStore.dmk));
 				return supabase
-					.from('budgets')
-					.update({ sort_order: index })
+					.from('budgets_encrypted')
+					.update({ encrypted_data: encryptedData })
 					.eq('category_id', b.category_id);
 			});
 			await Promise.all(updates);
@@ -353,7 +395,7 @@
 						<div class={isEditingOrder ? 'pointer-events-none' : ''}>
 							<FixedItem
 								title={b.category}
-								isChecked={transactionCategories.has(b.category)}
+								isChecked={transactionCategories.has(b.id)}
 								isLast={index === fixedBudgets.length - 1}
 								iconName={b.icon_name}
 								periodText={getResetText(b)}
@@ -385,7 +427,7 @@
 	{#if isFixedModalOpen && selectedFixedBudget}
 		<FixedModal
 			budget={selectedFixedBudget}
-			isPaid={transactionCategories.has(selectedFixedBudget.category)}
+			isPaid={transactionCategories.has(selectedFixedBudget.id)}
 			onclose={() => (isFixedModalOpen = false)}
 			ondelete={handleDelete}
 			onsave={handleSave}

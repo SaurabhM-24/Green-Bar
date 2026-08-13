@@ -12,6 +12,8 @@
 	import { supabase } from '$lib/supabase';
 	import AddCategoryModal from '$lib/components/editCards/AddCategoryModal.svelte';
 	import { appState } from '$lib/state.svelte.js';
+	import { encryptData } from '$lib/crypto';
+	import { cryptoStore } from '$lib/cryptoStore.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 
 	/** @type {boolean} Application loading state */
@@ -93,24 +95,32 @@
 
 	/** @param {any} data */
 	async function handleAddVariableSave(data) {
+		if (!cryptoStore.dmk) return;
 		const {
 			data: { session }
 		} = await supabase.auth.getSession();
 		const user_id = session?.user?.id;
 		const maxSortOrder =
 			budgets.length > 0 ? Math.max(...budgets.map((b) => Number(b.sort_order || 0))) : -1;
-		const { error } = await supabase.from('budgets').insert([
+			
+		const payload = {
+			category: data.category,
+			description: data.description || null,
+			limit_amount: data.limit_amount ? Number(data.limit_amount) : 0,
+			icon_name: data.icon_name || null,
+			budget_type: 'variable',
+			period_type: data.period_type || 'monthly',
+			reset_date: data.reset_date ? Number(data.reset_date) : 1,
+			sort_order: maxSortOrder + 1
+		};
+
+		const encryptedData = await encryptData(payload, cryptoStore.dmk);
+
+		const { error } = await supabase.from('budgets_encrypted').insert([
 			{
 				category_id: crypto.randomUUID(),
-				category: data.category,
-				description: data.description || null,
-				limit_amount: data.limit_amount ? Number(data.limit_amount) : 0,
-				icon_name: data.icon_name || null,
-				budget_type: 'variable',
-				period_type: data.period_type || 'monthly',
-				reset_date: data.reset_date ? Number(data.reset_date) : 1,
 				user_id: user_id,
-				sort_order: maxSortOrder + 1
+				encrypted_data: encryptedData
 			}
 		]);
 		if (!error) {
@@ -121,6 +131,7 @@
 
 	/** @param {any} data */
 	async function handleAddFixedSave(data) {
+		if (!cryptoStore.dmk) return;
 		const {
 			data: { session }
 		} = await supabase.auth.getSession();
@@ -129,18 +140,25 @@
 			fixedBudgets.length > 0
 				? Math.max(...fixedBudgets.map((b) => Number(b.sort_order || 0)))
 				: -1;
-		const { error } = await supabase.from('budgets').insert([
+
+		const payload = {
+			category: data.category,
+			description: data.description || null,
+			limit_amount: data.limit_amount ? Number(data.limit_amount) : 0,
+			icon_name: data.icon_name || null,
+			budget_type: 'fixed',
+			period_type: data.period_type || 'monthly',
+			reset_date: data.reset_date ? Number(data.reset_date) : 1,
+			sort_order: maxSortOrder + 1
+		};
+
+		const encryptedData = await encryptData(payload, cryptoStore.dmk);
+
+		const { error } = await supabase.from('budgets_encrypted').insert([
 			{
 				category_id: crypto.randomUUID(),
-				category: data.category,
-				description: data.description || null,
-				limit_amount: data.limit_amount ? Number(data.limit_amount) : 0,
-				icon_name: data.icon_name || null,
-				budget_type: 'fixed',
-				period_type: data.period_type || 'monthly',
-				reset_date: data.reset_date ? Number(data.reset_date) : 1,
 				user_id: user_id,
-				sort_order: maxSortOrder + 1
+				encrypted_data: encryptedData
 			}
 		]);
 		if (!error) {
@@ -287,11 +305,11 @@
 										<div
 											class="h-full rounded-full transition-all duration-1000 {getProgressColor(
 												Number(b.limit_amount || 0),
-												categoryTotals[b.category] || 0
+												categoryTotals[b.id] || 0
 											)}"
 											style="width: {getProgressWidth(
 												Number(b.limit_amount || 0),
-												categoryTotals[b.category] || 0
+												categoryTotals[b.id] || 0
 											)}"
 										></div>
 									</div>
@@ -309,7 +327,7 @@
 								<HealthRing
 									category={b.category}
 									totalData={Number(b.limit_amount || 0)}
-									usedData={categoryTotals[b.category] || 0}
+									usedData={categoryTotals[b.id] || 0}
 									iconName={b.icon_name}
 								/>
 							</div>
@@ -375,7 +393,7 @@
 									</div>
 									<span class="text-sm text-gray-300 tracking-wide truncate">{b.category}</span>
 								</div>
-								{#if transactionCategories.has(b.category)}
+								{#if transactionCategories.has(b.id)}
 									<div class="shrink-0 bg-green-500 rounded-full p-1 border border-[#0f0f0f] ml-2">
 										<Check class="w-3 h-3 text-black" strokeWidth={4} />
 									</div>
@@ -406,7 +424,7 @@
 										</picture>
 									{/if}
 
-									{#if transactionCategories.has(b.category)}
+									{#if transactionCategories.has(b.id)}
 										<div
 											class="absolute -bottom-2 -right-2 bg-green-500 rounded-full p-1 border-2 border-[#0f0f0f] z-10"
 										>
