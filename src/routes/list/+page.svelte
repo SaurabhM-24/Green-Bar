@@ -11,6 +11,8 @@
 	import TransactionCard from '$lib/components/TransactionCard.svelte';
 	import TransactionDetailsModal from '$lib/components/editCards/TransactionDetailsModal.svelte';
 	import Footer from '$lib/components/Footer.svelte';
+	import { encryptData } from '$lib/crypto';
+	import { cryptoStore } from '$lib/cryptoStore.svelte';
 	import {
 		ChevronDown,
 		Calendar,
@@ -107,7 +109,7 @@
 	/**
 	 * @param {boolean} [isAppend=false]
 	 */
-	async function loadData(isAppend = false) {
+	function loadData(isAppend = false) {
 		if (!isAppend) {
 			loading = true;
 			pageIndex = 0;
@@ -117,30 +119,27 @@
 			loadingMore = true;
 		}
 
-		const startDate = `${listYear}-${String(listMonth).padStart(2, '0')}-01`;
-		const lastDay = new Date(listYear, listMonth, 0).getDate();
-		const endDate = `${listYear}-${String(listMonth).padStart(2, '0')}-${lastDay}T23:59:59`;
-
-		let query = supabase
-			.from('transactions')
-			.select('*')
-			.eq('user_id', appData.userId)
-			.gte('transaction_date', startDate)
-			.lte('transaction_date', endDate)
-			.order('transaction_date', { ascending: false })
-			.order('created_at', { ascending: false })
-			.range(pageIndex * pageSize, (pageIndex + 1) * pageSize - 1);
-
-		if (selectedCategory && selectedCategory !== 'All') {
-			// Find category ID
-			const catObj = categories.find((c) => c.category === selectedCategory);
-			if (catObj && catObj.category_id) {
-				query = query.eq('category_id', catObj.category_id);
+		// Filter locally from allTransactions
+		const filtered = appData.allTransactions.filter(tx => {
+			if (!tx.transaction_date) return false;
+			const txDate = new Date(tx.transaction_date);
+			if (txDate.getFullYear() !== listYear || txDate.getMonth() + 1 !== listMonth) return false;
+			
+			if (selectedCategory && selectedCategory !== 'All') {
+				const catObj = categories.find((c) => c.category === selectedCategory);
+				if (catObj && catObj.category_id !== tx.category_id) return false;
 			}
-		}
+			return true;
+		});
 
-		const { data, error } = await query;
-		const newTxs = data || [];
+		// Sort by date desc, then created_at desc (if exists)
+		filtered.sort((a, b) => {
+			const dDiff = new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime();
+			if (dDiff !== 0) return dDiff;
+			return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+		});
+
+		const newTxs = filtered.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize);
 
 		if (newTxs.length < pageSize) {
 			hasMore = false;
@@ -182,23 +181,25 @@
 
 	/** @param {any} id */
 	async function handleDelete(id) {
-		const { error } = await supabase.from('transactions').delete().eq('id', id);
+		const { error } = await supabase.from('transactions_encrypted').delete().eq('id', id);
 		if (!error) {
 			isModalOpen = false;
 			selectedTransaction = null;
+			await appData.loadData();
 			loadData();
-			appData.loadData();
 		}
 	}
 
 	/** @param {any} data */
 	async function handleSave(data) {
+		if (!cryptoStore.dmk) return;
 		const targetCat =
 			appData.budgets.find((b) => b.category === data.category) ||
 			appData.corpusBudgets.find((b) => b.category === data.category) ||
 			appData.fixedBudgets.find((b) => b.category === data.category);
 
 		const updatePayload = {
+			...data,
 			title: data.title,
 			description: data.description,
 			amount: data.amount,
@@ -206,12 +207,17 @@
 			category_id: targetCat ? targetCat.category_id : null,
 			transaction_type: data.transaction_type
 		};
-		const { error } = await supabase.from('transactions').update(updatePayload).eq('id', data.id);
+		delete updatePayload.id;
+		delete updatePayload.category;
+		delete updatePayload.isOutOfCycle;
+
+		const encryptedData = await encryptData(updatePayload, cryptoStore.dmk);
+		const { error } = await supabase.from('transactions_encrypted').update({ encrypted_data: encryptedData }).eq('id', data.id);
 		if (!error) {
 			isModalOpen = false;
 			selectedTransaction = null;
+			await appData.loadData();
 			loadData();
-			appData.loadData();
 		}
 	}
 

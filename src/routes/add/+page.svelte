@@ -10,6 +10,8 @@
 	import Footer from '$lib/components/Footer.svelte';
 	import { CheckCircle2, ChevronDown } from 'lucide-svelte';
 	import { iconMap } from '$lib/icons.js';
+	import { encryptData } from '$lib/crypto';
+	import { cryptoStore } from '$lib/cryptoStore.svelte';
 	import { slide, fade, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 
@@ -57,20 +59,34 @@
 		const parsedAmount = Math.abs(Number(amount));
 		const finalAmount = type === 'debit' ? -parsedAmount : parsedAmount;
 
+		if (!cryptoStore.dmk) return;
+		const {
+			data: { session }
+		} = await supabase.auth.getSession();
+		const user_id = session?.user?.id;
+		
 		const targetCat =
 			categories.find((c) => c.category === category) ||
 			appData.budgets.find((b) => b.category === category) ||
 			appData.corpusBudgets.find((b) => b.category === category) ||
 			appData.fixedBudgets.find((b) => b.category === category);
 
-		const { error } = await supabase.from('transactions').insert([
+		const payload = {
+			transaction_date: date,
+			amount: finalAmount,
+			title: title,
+			description: description || null,
+			category_id: targetCat ? targetCat.category_id : null,
+			transaction_type: type
+		};
+
+		const encryptedData = await encryptData(payload, cryptoStore.dmk);
+
+		const { error } = await supabase.from('transactions_encrypted').insert([
 			{
-				transaction_date: date,
-				amount: finalAmount,
-				title: title,
-				description: description || null,
-				category_id: targetCat ? targetCat.category_id : null,
-				transaction_type: type
+				id: crypto.randomUUID(),
+				user_id: user_id,
+				encrypted_data: encryptedData
 			}
 		]);
 

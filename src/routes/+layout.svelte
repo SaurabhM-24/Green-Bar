@@ -12,6 +12,8 @@
 	import { appState } from '$lib/state.svelte.js';
 	import { appData } from '$lib/data.svelte.js';
 	import TutorialOverlay from '$lib/components/TutorialOverlay.svelte';
+	import EncryptionGate from '$lib/components/EncryptionGate.svelte';
+	import { cryptoStore } from '$lib/cryptoStore.svelte';
 	import { onMount } from 'svelte';
 	import '../app.css';
 
@@ -30,7 +32,7 @@
 
 	onMount(() => {
 		const handleVisibilityChange = () => {
-			if (document.visibilityState === 'visible' && session) {
+			if (document.visibilityState === 'visible' && session && cryptoStore.isUnlocked) {
 				appData.loadData(true); // background refresh
 			}
 		};
@@ -102,7 +104,7 @@
 	 * @description Effect: Fetches app data whenever the session or selected month/year changes.
 	 */
 	$effect(() => {
-		if (session) {
+		if (session && cryptoStore.isUnlocked) {
 			appData.loadData();
 		}
 	});
@@ -133,7 +135,11 @@
 		}
 
 		if (session && path === '/') {
-			checkTutorial();
+			if (cryptoStore.isUnlocked) {
+				checkTutorial();
+			} else {
+				showTutorial = false;
+			}
 		}
 	});
 </script>
@@ -159,7 +165,11 @@
 			bind:this={mainContainer}
 			class="flex-1 grid overflow-x-hidden overflow-y-auto mt-[88px] mb-[104px] scroll-smooth p-3"
 		>
-			{@render children()}
+			{#if !cryptoStore.isUnlocked}
+				<EncryptionGate {session} />
+			{:else}
+				{@render children()}
+			{/if}
 		</main>
 
 		<!-- NavBar -->
