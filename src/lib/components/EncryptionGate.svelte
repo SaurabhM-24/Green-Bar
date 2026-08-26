@@ -65,25 +65,39 @@
 
 	async function attemptWebAuthnUnlock() {
 		errorMsg = '';
-		const passkeyRecord = userKeys.find(k => k.key_type === 'passkey');
+		const passkeyRecords = userKeys.filter(k => k.key_type === 'passkey');
 		
-		if (!passkeyRecord) {
+		if (passkeyRecords.length === 0) {
 			fallbackMode = true;
 			return;
 		}
 
 		try {
-			const saltBuffer = base64ToBuffer(passkeyRecord.salt);
+			// All passkeys should share the same salt, so we use the salt from the oldest passkey 
+			// (or the first one in the list) to evaluate the PRF.
+			const saltBuffer = base64ToBuffer(passkeyRecords[0].salt);
 			const { prfKey } = await assertWebAuthnPRF(saltBuffer);
-			
 			const passkeyKek = await importRawKey(prfKey);
-			const decryptedBase64Dmk = await decryptData(passkeyRecord.encrypted_dmk, passkeyKek);
 			
-			const rawDmk = base64ToBuffer(decryptedBase64Dmk);
-			const dmk = await importRawKey(rawDmk);
-			
-			await migrateLegacyData(dmk);
-			cryptoStore.setDMK(dmk);
+			let success = false;
+			for (const record of passkeyRecords.reverse()) {
+				try {
+					const decryptedBase64Dmk = await decryptData(record.encrypted_dmk, passkeyKek);
+					const rawDmk = base64ToBuffer(decryptedBase64Dmk);
+					const dmk = await importRawKey(rawDmk);
+					
+					await migrateLegacyData(dmk);
+					cryptoStore.setDMK(dmk);
+					success = true;
+					break;
+				} catch (decryptErr) {
+					// Ignore and try the next passkey record
+				}
+			}
+
+			if (!success) {
+				throw new Error('Failed to decrypt DMK with any passkey record.');
+			}
 		} catch (err) {
 			console.warn("WebAuthn assertion failed, switching to fallback mode:", err);
 			fallbackMode = true;
@@ -96,26 +110,50 @@
 		isProcessing = true;
 		errorMsg = '';
 
-		const pinRecord = userKeys.find(k => k.key_type === 'pin');
-		if (!pinRecord) {
+		const pinRecords = userKeys.filter(k => k.key_type === 'pin');
+		if (pinRecords.length === 0) {
 			errorMsg = "No PIN record found for this account.";
 			isProcessing = false;
 			return;
 		}
 
-		try {
-			const saltBuffer = base64ToBuffer(pinRecord.salt);
-			const pinKek = await deriveKEKFromPIN(unlockPin, saltBuffer);
-			
-			const decryptedBase64Dmk = await decryptData(pinRecord.encrypted_dmk, pinKek);
-			
-			const rawDmk = base64ToBuffer(decryptedBase64Dmk);
-			const dmk = await importRawKey(rawDmk);
-			
-			await migrateLegacyData(dmk);
-			cryptoStore.setDMK(dmk);
-		} catch (err) {
-			console.error(err);
+		let success = false;
+		let successfulPinId = null;
+		
+		for (const pinRecord of pinRecords.reverse()) {
+			try {
+				const saltBuffer = base64ToBuffer(pinRecord.salt);
+				const pinKek = await deriveKEKFromPIN(unlockPin, saltBuffer);
+				
+				const decryptedBase64Dmk = await decryptData(pinRecord.encrypted_dmk, pinKek);
+				
+				const rawDmk = base64ToBuffer(decryptedBase64Dmk);
+				const dmk = await importRawKey(rawDmk);
+				
+				await migrateLegacyData(dmk);
+				cryptoStore.setDMK(dmk);
+				success = true;
+				successfulPinId = pinRecord.id;
+				break;
+			} catch (err) {
+				// Ignore and try the next PIN record
+			}
+		}
+
+		if (success && pinRecords.length > 1 && successfulPinId) {
+			// Cleanup: if RLS allows it, remove the old PINs so only the working one remains
+			supabase
+				.from('user_keys')
+				.delete()
+				.eq('user_id', session.user.id)
+				.eq('key_type', 'pin')
+				.neq('id', successfulPinId)
+				.then(({ error }) => {
+					if (error) console.error('Failed to cleanup old PINs:', error);
+				});
+		}
+
+		if (!success) {
 			errorMsg = "Invalid PIN or failed to decrypt.";
 		}
 		isProcessing = false;
