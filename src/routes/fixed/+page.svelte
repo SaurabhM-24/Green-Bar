@@ -118,7 +118,8 @@
 			budget_type: isCorpusTab ? 'corpus' : 'fixed',
 			period_type: data.period_type || 'monthly',
 			reset_date: data.reset_date ? Number(data.reset_date) : 1,
-			sort_order: maxSortOrder + 1
+			sort_order: maxSortOrder + 1,
+			last_manual_reset: data.period_type === 'manual' ? new Date().toISOString() : null
 		};
 
 		const encryptedData = await encryptData(payload, cryptoStore.dmk);
@@ -153,7 +154,8 @@
 			description: data.description,
 			icon_name: data.icon_name,
 			period_type: data.period_type,
-			reset_date: data.reset_date
+			reset_date: data.reset_date,
+			last_manual_reset: b.last_manual_reset || (data.period_type === 'manual' ? new Date().toISOString() : null)
 		};
 		delete payload.id;
 		delete payload.category_id;

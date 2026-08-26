@@ -77,7 +77,8 @@
 			title: title,
 			description: description || null,
 			category_id: targetCat ? targetCat.category_id : null,
-			transaction_type: type
+			transaction_type: type,
+			created_at: new Date().toISOString()
 		};
 
 		const encryptedData = await encryptData(payload, cryptoStore.dmk);

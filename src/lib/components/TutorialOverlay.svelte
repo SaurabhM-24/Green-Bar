@@ -699,8 +699,10 @@
 				amount: Number(initialBalance),
 				transaction_type: 'credit',
 				title: 'Initial account status',
+				description: null,
 				category_id: category_id,
-				transaction_date: '2000-01-01'
+				transaction_date: '2000-01-01',
+				created_at: new Date().toISOString()
 			};
 			const encryptedData = await encryptData(payload, cryptoStore.dmk);
 			const { error } = await supabase.from('transactions_encrypted').insert([

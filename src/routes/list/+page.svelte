@@ -136,7 +136,9 @@
 		filtered.sort((a, b) => {
 			const dDiff = new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime();
 			if (dDiff !== 0) return dDiff;
-			return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+			const bCreated = b.created_at ? new Date(b.created_at).getTime() : 0;
+			const aCreated = a.created_at ? new Date(a.created_at).getTime() : 0;
+			return (isNaN(bCreated) ? 0 : bCreated) - (isNaN(aCreated) ? 0 : aCreated);
 		});
 
 		const newTxs = filtered.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize);
@@ -205,7 +207,8 @@
 			amount: data.amount,
 			transaction_date: data.transaction_date,
 			category_id: targetCat ? targetCat.category_id : null,
-			transaction_type: data.transaction_type
+			transaction_type: data.transaction_type,
+			created_at: data.created_at || new Date().toISOString()
 		};
 		delete updatePayload.id;
 		delete updatePayload.category;

@@ -111,7 +111,8 @@
 			budget_type: 'variable',
 			period_type: data.period_type || 'monthly',
 			reset_date: data.reset_date ? Number(data.reset_date) : 1,
-			sort_order: maxSortOrder + 1
+			sort_order: maxSortOrder + 1,
+			last_manual_reset: data.period_type === 'manual' ? new Date().toISOString() : null
 		};
 
 		const encryptedData = await encryptData(payload, cryptoStore.dmk);
@@ -149,7 +150,8 @@
 			budget_type: 'fixed',
 			period_type: data.period_type || 'monthly',
 			reset_date: data.reset_date ? Number(data.reset_date) : 1,
-			sort_order: maxSortOrder + 1
+			sort_order: maxSortOrder + 1,
+			last_manual_reset: data.period_type === 'manual' ? new Date().toISOString() : null
 		};
 
 		const encryptedData = await encryptData(payload, cryptoStore.dmk);

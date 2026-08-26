@@ -23,22 +23,41 @@
 
 	import { supabase } from '$lib/supabase';
 	import { appData } from '$lib/data.svelte.js';
+	import { encryptData } from '$lib/crypto';
+	import { cryptoStore } from '$lib/cryptoStore.svelte';
 	let isResetting = $state(false);
 
 	async function handleManualReset() {
+		if (!cryptoStore.dmk) return;
 		isResetting = true;
-		const { error } = await supabase
-			.from('budgets')
-			.update({ last_manual_reset: new Date().toISOString() })
-			.eq('category_id', budget.category_id);
 
-		if (!error) {
-			await appData.loadData();
-			onclose();
-		} else {
+		const payload = {
+			...budget,
+			last_manual_reset: new Date().toISOString()
+		};
+		delete payload.id;
+		delete payload.category_id;
+		delete payload.current_period_start;
+
+		try {
+			const encryptedData = await encryptData(payload, cryptoStore.dmk);
+			const { error } = await supabase
+				.from('budgets_encrypted')
+				.update({ encrypted_data: encryptedData })
+				.eq('category_id', budget.category_id);
+
+			if (!error) {
+				await appData.loadData();
+				onclose();
+			} else {
+				alert('Failed to reset budget: ' + error.message);
+			}
+		} catch (err) {
+			console.error('Reset error:', err);
 			alert('Failed to reset budget');
+		} finally {
+			isResetting = false;
 		}
-		isResetting = false;
 	}
 </script>
 
