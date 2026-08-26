@@ -66,7 +66,7 @@ export async function importRawKey(rawKey) {
 		'raw',
 		rawKey,
 		{ name: 'AES-GCM' },
-		false,
+		true,
 		['encrypt', 'decrypt']
 	);
 }
@@ -169,11 +169,12 @@ export async function exportKey(key) {
  * Registers a new WebAuthn credential with the PRF extension.
  * @param {string} userName 
  * @param {Uint8Array} userId 
+ * @param {ArrayBuffer|null} [existingSalt=null]
  * @returns {Promise<{credential: PublicKeyCredential, prfSupported: boolean, prfKey: ArrayBuffer|null, prfSalt: ArrayBuffer|null}>}
  */
-export async function registerWebAuthnPRF(userName, userId) {
+export async function registerWebAuthnPRF(userName, userId, existingSalt = null) {
 	const challenge = generateRandomBytes(32);
-	const prfSalt = generateRandomBytes(32);
+	const prfSalt = existingSalt ? new Uint8Array(existingSalt) : generateRandomBytes(32);
 
 	/** @type {any} */
 	const publicKey = {
