@@ -88,7 +88,7 @@
 					</p>
 					<p>
 						Green Bar uses <strong>Zero-Based Budgeting</strong>. You start by putting all your
-						available money into your Personal Corpus, and then you assign every single rupee to a
+						available money into your Leftover, and then you assign every single rupee to a
 						specific category.
 					</p>
 					<p class="text-white font-medium border-l-2 border-green-500 pl-4 py-1">
@@ -136,7 +136,7 @@
 						<span class="text-2xl">🏦</span>
 					</div>
 					<div>
-						<h3 class="text-xl text-white font-medium tracking-wide mb-1">The Personal Corpus</h3>
+						<h3 class="text-xl text-white font-medium tracking-wide mb-1">The Leftover</h3>
 						<span class="text-xs text-green-400 uppercase tracking-widest font-bold"
 							>Your Headquarters</span
 						>

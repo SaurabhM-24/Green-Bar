@@ -46,7 +46,7 @@
 	/** @type {number} The available operational balance (Total Balance - Corpus Limit) */
 	let accountBalance = $derived(totalAccountBalance - corpusLimit);
 
-	/** @type {number} The remaining personal corpus cache */
+	/** @type {number} The remaining Leftover cache */
 	let personalCorpus = $derived(globalLiquidBalance + currentPeriodCorpusUsed);
 
 	/** @type {string} Formatted user name for the greeting */
@@ -102,7 +102,7 @@
 		const user_id = session?.user?.id;
 		const maxSortOrder =
 			budgets.length > 0 ? Math.max(...budgets.map((b) => Number(b.sort_order || 0))) : -1;
-			
+
 		const payload = {
 			category: data.category,
 			description: data.description || null,
@@ -445,14 +445,14 @@
 
 		<!-- Balance Card -->
 		<a
-			href="/fixed"
+			href="/balance"
 			class="block bg-[#0f0f0f] rounded-3xl p-6 box-3d active:scale-[0.98] transition-transform mt-2"
 			in:fly={{ y: 20, duration: 400, delay: 200 }}
 		>
-			<h2 class="text-xl text-white tracking-wide mb-6 font-display">Account Status</h2>
+			<h2 class="text-xl text-white tracking-wide mb-6 font-display">Account Balance</h2>
 			<div>
 				<div class="flex justify-between items-center">
-					<h3 class="text-lg text-gray-400 tracking-wide">Personal Corpus:</h3>
+					<h3 class="text-lg text-gray-400 tracking-wide">Leftover:</h3>
 					<span class="text-xl text-white tracking-wide">
 						₹{personalCorpus.toLocaleString('en-IN')}
 					</span>
@@ -461,7 +461,7 @@
 				<div class="flex justify-between items-center">
 					<h3 class="text-lg text-gray-400 tracking-wide">Total Account Balance:</h3>
 					<span class="text-xl text-white tracking-wide">
-						₹{accountBalance.toLocaleString('en-IN')}
+						₹{totalAccountBalance.toLocaleString('en-IN')}
 					</span>
 				</div>
 			</div>

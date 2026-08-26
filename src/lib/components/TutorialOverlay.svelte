@@ -31,7 +31,7 @@
 		// 2. Welcome Slide 3 (Setup Complete)
 		{ type: 'slide', id: 'welcome-3', page: '/' },
 
-		// 3. Dashboard: Highlight Personal Corpus Card. Wait for user to click it.
+		// 3. Dashboard: Highlight Leftover Card. Wait for user to click it.
 		{
 			type: 'highlight',
 			page: '/',
@@ -40,12 +40,12 @@
 			desc: 'This is where you can check your balance. <b>Click it to go to corpus page.</b>',
 			waitForTargetClick: true
 		},
-		// 4. Fixed Page: Highlight Personal Corpus Card. Show "Got it" button.
+		// 4. Fixed Page: Highlight Leftover Card. Show "Got it" button.
 		{
 			type: 'highlight',
 			page: '/fixed',
 			selector: '#corpus-list > div:first-child',
-			title: 'Personal Corpus',
+			title: 'Leftover',
 			desc: 'This card can be edited by clicking upon it.',
 			showGotIt: true
 		},
@@ -680,7 +680,7 @@
 
 		loading = true;
 		let category_id = appData.corpusBudgets.find(
-			(b) => b.category.toLowerCase() === 'personal corpus'
+			(b) => b.category.toLowerCase() === 'Leftover'
 		)?.category_id;
 
 		if (!category_id) {
@@ -689,7 +689,7 @@
 				.select('*')
 				.eq('user_id', session.user.id)
 				.eq('budget_type', 'corpus')
-				.ilike('category', 'personal corpus')
+				.ilike('category', 'Leftover')
 				.single();
 			category_id = data?.category_id;
 		}
@@ -802,7 +802,7 @@
 						</h1>
 						<p class="text-gray-400 text-base leading-relaxed mb-6">
 							To begin using the app, enter your current bank balance. This will become your <strong
-								>Personal Corpus</strong
+								>Leftover</strong
 							> in the app.
 						</p>
 						<div
@@ -841,7 +841,7 @@
 								Initial Setup Complete
 							</h1>
 							<p class="text-gray-400 text-base leading-relaxed mb-8">
-								Your Personal Corpus is ready. Now let's step inside the app to allocate this money
+								Your Leftover is ready. Now let's step inside the app to allocate this money
 								into categories.
 							</p>
 							<button
