@@ -265,6 +265,7 @@
 
 		<div class="relative z-40">
 			<button
+				id="history-filter-btn"
 				class="bg-[#111111] text-gray-300 text-sm tracking-wide py-3 px-4 rounded-xl focus:outline-none box-3d flex items-center gap-2"
 				onclick={() => {
 					isFilterMenuOpen = !isFilterMenuOpen;
@@ -423,7 +424,7 @@
 			></div>
 		</div>
 	{:else if transactions.length === 0}
-		<div class="text-center mt-12 bg-[#0a0a0a] rounded-3xl p-8 flex flex-col items-center box-3d">
+		<div id="transaction-list-empty" class="text-center mt-12 bg-[#0a0a0a] rounded-3xl p-8 flex flex-col items-center box-3d">
 			<span class="text-gray-500 tracking-wide text-base mb-4">No transactions found.</span>
 			<button
 				onclick={() => goto('/add')}

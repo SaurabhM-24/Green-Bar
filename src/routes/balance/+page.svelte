@@ -266,6 +266,7 @@
 		</div>
 
 		<div
+			id="bank-balance-card"
 			class="bg-[#0f0f0f] rounded-[2.5rem] p-8 mb-8 box-3d flex flex-col gap-6"
 			in:fly={{ y: 20, duration: 400, delay: 200 }}
 		>

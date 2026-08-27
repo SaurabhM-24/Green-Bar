@@ -275,7 +275,7 @@
 				</button>
 				{#if isMenuOpen}
 					<div
-						class="absolute right-0 mt-2 w-48 bg-[#1a1a1a] rounded-xl box-3d z-[250] overflow-hidden"
+						class="absolute right-0 mt-2 w-48 bg-[#1a1a1a] rounded-xl box-3d z-[60] overflow-hidden"
 						transition:slide={{ duration: 250, easing: cubicOut }}
 					>
 						<button
@@ -325,7 +325,7 @@
 			></div>
 		</div>
 	{:else if budgets.length === 0}
-		<div class="text-center mt-12 text-gray-500 tracking-wide text-base">
+		<div id="variable-empty-state" class="text-center mt-12 text-gray-500 tracking-wide text-base">
 			No variable budgets found.
 		</div>
 	{:else}

@@ -181,7 +181,7 @@
 			<hr class="border-gray-800/60" />
 
 			<!-- Date & Type -->
-			<div class="flex gap-4">
+			<div id="add-date-type-container" class="flex gap-4">
 				<div class="flex-1 flex flex-col gap-1.5 border-r border-gray-800/60 pr-4">
 					<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Date</span>
 					<input
@@ -233,7 +233,7 @@
 			<!-- Amount and Category Side-by-Side -->
 			<div class="flex gap-4 items-end mt-1">
 				<!-- Amount -->
-				<div class="flex-1 flex flex-col gap-1.5 min-w-0 border-r border-gray-800/60 pr-4">
+				<div id="add-amount-container" class="flex-1 flex flex-col gap-1.5 min-w-0 border-r border-gray-800/60 pr-4">
 					<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold"
 						>Amount (₹)</span
 					>

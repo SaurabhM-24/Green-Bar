@@ -286,7 +286,7 @@
 					</button>
 					{#if isMenuOpen}
 						<div
-							class="absolute right-0 mt-2 w-48 bg-[#1a1a1a] rounded-xl box-3d z-[250] overflow-hidden"
+							class="absolute right-0 mt-2 w-48 bg-[#1a1a1a] rounded-xl box-3d z-[60] overflow-hidden"
 							transition:slide={{ duration: 250, easing: cubicOut }}
 						>
 							<button
@@ -329,7 +329,7 @@
 			{/if}
 		</div>
 
-		<div class="bg-[#0f0f0f] rounded-3xl p-6 box-3d">
+		<div id="fixed-container-card" class="bg-[#0f0f0f] rounded-3xl p-6 box-3d">
 			{#if fixedBudgets.length === 0}
 				<div class="text-center py-4 text-gray-500 tracking-wide text-base">
 					No fixed budgets found.
