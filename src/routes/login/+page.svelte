@@ -56,7 +56,7 @@
 				errorMsg = error.message;
 			} else {
 				// The layout automatically takes over the routing and handles the EncryptionGate
-				goto('/');
+				goto('/', { replaceState: true });
 			}
 			loading = false;
 		}

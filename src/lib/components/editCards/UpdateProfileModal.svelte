@@ -3,14 +3,18 @@
 	import { slide, fade, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { supabase } from '$lib/supabase';
+	import { goto } from '$app/navigation';
+	import { cryptoStore } from '$lib/cryptoStore.svelte';
 
 	let { onclose, onsave = () => {} } = $props();
 
 	let loading = $state(true);
 	let saving = $state(false);
+	let deleting = $state(false);
 	let errorMsg = $state('');
 	let successMsg = $state('');
 	let showConfirmation = $state(false);
+	let isDeletingAccount = $state(false);
 
 	let profileData = $state({
 		first_name: '',
@@ -74,6 +78,57 @@
 			return;
 		}
 		showConfirmation = true;
+	}
+
+	async function handleDeleteAccount() {
+		deleting = true;
+		errorMsg = '';
+
+		try {
+			if (!userId) {
+				const {
+					data: { user }
+				} = await supabase.auth.getUser();
+				userId = user?.id || null;
+			}
+
+			if (userId) {
+				// 1. Delete transactions_encrypted
+				await supabase.from('transactions_encrypted').delete().eq('user_id', userId);
+
+				// 2. Delete budgets_encrypted
+				await supabase.from('budgets_encrypted').delete().eq('user_id', userId);
+
+				// 3. Delete user_keys
+				await supabase.from('user_keys').delete().eq('user_id', userId);
+
+				// 4. Delete profile
+				await supabase.from('profiles').delete().eq('id', userId);
+
+				// 5. Delete from auth.users using RPC if configured
+				try {
+					await supabase.rpc('delete_user');
+				} catch (rpcErr) {
+					console.warn('delete_user RPC call note:', rpcErr);
+				}
+			}
+
+			// Clear DMK
+			cryptoStore.clearDMK();
+
+			// Sign out from Supabase Auth
+			await supabase.auth.signOut();
+
+			// Close modal
+			onclose();
+
+			// Redirect to landing page
+			goto('/landing', { replaceState: true });
+		} catch (err) {
+			const error = /** @type {Error} */ (err);
+			errorMsg = error.message || 'Failed to delete account.';
+			deleting = false;
+		}
 	}
 
 	async function handleSave() {
@@ -157,13 +212,22 @@
 			<!-- Top Bar -->
 			<div class="flex justify-between items-start gap-4">
 				<div class="flex flex-col gap-1 w-full">
-					<h2 class="text-3xl tracking-wide text-white font-display">Update Profile</h2>
-					<p class="text-sm text-gray-400">Manage your personal information and credentials.</p>
+					<h2 class="text-3xl tracking-wide text-white font-display">
+						{isDeletingAccount ? 'Delete Account' : 'Update Profile'}
+					</h2>
+					<p class="text-sm text-gray-400">
+						{isDeletingAccount
+							? 'Permanently remove your account and all stored data.'
+							: 'Manage your personal information and credentials.'}
+					</p>
 				</div>
 				<button
 					class="absolute top-6 right-6 p-2 text-gray-400 hover:text-white transition-colors bg-[#222] rounded-xl box-3d shrink-0 z-50"
-					onclick={onclose}
-					disabled={saving}
+					onclick={() => {
+						if (isDeletingAccount) isDeletingAccount = false;
+						else onclose();
+					}}
+					disabled={saving || deleting}
 				>
 					<X class="w-5 h-5" />
 				</button>
@@ -175,8 +239,55 @@
 						class="h-8 w-8 rounded-full border-2 border-[#1a1a1a] border-t-gray-400 animate-spin"
 					></div>
 				</div>
+			{:else if isDeletingAccount}
+				<!-- Delete Account Confirmation View -->
+				<div class="flex flex-col gap-4 py-4" transition:slide={{ duration: 200 }}>
+					<div
+						class="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm leading-relaxed"
+					>
+						<p class="font-bold text-base mb-1 text-red-300">Warning: Permanent Deletion</p>
+						All your data, including budgets, transactions, encryption keys, and profile information
+						will be permanently deleted and cannot be recovered in any way.
+					</div>
+					<p class="text-gray-300 text-base text-center font-medium mt-1">
+						Are you sure you want to delete your account?
+					</p>
+				</div>
+
+				{#if errorMsg}
+					<div class="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+						{errorMsg}
+					</div>
+				{/if}
+
+				<!-- Actions for Deleting Account -->
+				<div class="mt-2 border-t border-gray-800/60 pt-6 flex gap-4">
+					<button
+						type="button"
+						class="flex-1 py-3.5 rounded-xl bg-[#222] hover:bg-[#2a2a2a] text-white font-medium box-3d tracking-wide transition-all active:scale-[0.98]"
+						onclick={() => (isDeletingAccount = false)}
+						disabled={deleting}
+					>
+						No
+					</button>
+					<button
+						type="button"
+						class="flex-1 py-3.5 rounded-xl bg-[#ff6b6b] hover:bg-[#ff8787] text-black font-bold box-3d tracking-wide transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+						onclick={handleDeleteAccount}
+						disabled={deleting}
+					>
+						{#if deleting}
+							<div
+								class="h-5 w-5 rounded-full border-2 border-black border-t-transparent animate-spin"
+							></div>
+							<span>Deleting...</span>
+						{:else}
+							Yes
+						{/if}
+					</button>
+				</div>
 			{:else if showConfirmation}
-				<!-- Confirmation View -->
+				<!-- Save Confirmation View -->
 				<div class="flex flex-col gap-4 py-4" transition:slide={{ duration: 200 }}>
 					<p class="text-gray-200 text-lg text-center font-medium">
 						Are you sure you want to save these changes?
@@ -300,11 +411,18 @@
 				<!-- Actions -->
 				<div class="mt-2 border-t border-gray-800/60 pt-6 flex gap-4">
 					<button
-						class="flex-1 py-3.5 rounded-xl bg-[#222] hover:bg-[#2a2a2a] text-white font-medium box-3d tracking-wide transition-all active:scale-[0.98]"
-						onclick={onclose}
-						disabled={saving}>Cancel</button
+						type="button"
+						class="flex-1 py-3.5 rounded-xl bg-[#ff6b6b] hover:bg-[#ff8787] text-black font-bold box-3d tracking-wide transition-all active:scale-[0.98]"
+						onclick={() => {
+							errorMsg = '';
+							isDeletingAccount = true;
+						}}
+						disabled={saving}
 					>
+						Delete Account
+					</button>
 					<button
+						type="button"
 						class="flex-1 py-3.5 rounded-xl bg-white hover:bg-gray-200 text-black font-bold box-3d tracking-wide transition-all active:scale-[0.98] flex items-center justify-center gap-2"
 						onclick={handlePreSave}
 						disabled={saving}

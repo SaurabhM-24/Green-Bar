@@ -4,7 +4,7 @@
 	 * Handles global authentication state, layout structure, and automatic route protection.
 	 */
 	import { supabase } from '$lib/supabase';
-	import { goto } from '$app/navigation';
+	import { goto, beforeNavigate, afterNavigate } from '$app/navigation';
 	import { page } from '$app/stores';
 	import Header from '$lib/components/Header.svelte';
 	import NavBar from '$lib/components/NavBar.svelte';
@@ -14,7 +14,10 @@
 	import TutorialOverlay from '$lib/components/TutorialOverlay.svelte';
 	import EncryptionGate from '$lib/components/EncryptionGate.svelte';
 	import { cryptoStore } from '$lib/cryptoStore.svelte';
+	import { clickOutside } from '$lib/actions/clickOutside.js';
 	import { onMount } from 'svelte';
+	import { fade, scale } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 	import '../app.css';
 
 	let { children } = $props();
@@ -26,9 +29,37 @@
 	let loading = $state(true);
 
 	let showTutorial = $state(false);
+	let showExitModal = $state(false);
 
 	/** @type {HTMLElement | undefined} Reference to the main scrolling container */
 	let mainContainer = $state();
+
+	/**
+	 * @description Completely closes the app or navigates to a blank page.
+	 */
+	function closeApp() {
+		try {
+			if (typeof window !== 'undefined') {
+				// Android/Cordova/Capacitor exit app if available
+				// @ts-ignore
+				if (window.navigator?.app?.exitApp) {
+					// @ts-ignore
+					window.navigator.app.exitApp();
+					return;
+				}
+				// Standard window.close
+				window.close();
+				// Self-close trick for tabs
+				window.open('', '_self', '');
+				window.close();
+				// Blank fallback to prevent displaying any remaining app/biometric screen
+				window.location.replace('about:blank');
+			}
+		} catch (err) {
+			console.error('Failed to close app:', err);
+			window.location.replace('about:blank');
+		}
+	}
 
 	onMount(() => {
 		const handleVisibilityChange = () => {
@@ -37,9 +68,45 @@
 			}
 		};
 		document.addEventListener('visibilitychange', handleVisibilityChange);
+
 		return () => {
 			document.removeEventListener('visibilitychange', handleVisibilityChange);
 		};
+	});
+
+	/**
+	 * @description Intercepts popstate (back button) events to enforce:
+	 * 1. Back button on any subpage directly redirects to '/' without popping intermediate history.
+	 * 2. Back button on '/' opens the Exit Confirmation popup.
+	 * 3. Back button while Exit Confirmation is open exits the app completely.
+	 */
+	beforeNavigate((navigation) => {
+		if (!session) return;
+
+		if (navigation.type === 'popstate') {
+			const currentPath = $page.url.pathname;
+
+			if (currentPath !== '/') {
+				navigation.cancel();
+				goto('/', { replaceState: true });
+				return;
+			}
+
+			// User is on Home page ('/')
+			navigation.cancel();
+
+			if (!showExitModal) {
+				showExitModal = true;
+			} else {
+				closeApp();
+			}
+		}
+	});
+
+	afterNavigate(({ to }) => {
+		if (to?.url.pathname !== '/') {
+			showExitModal = false;
+		}
 	});
 
 	/**
@@ -64,7 +131,7 @@
 		async function handleAuthRouting(_session) {
 			if (!_session) {
 				if (!publicRoutes.includes($page.url.pathname)) {
-					goto('/landing');
+					goto('/landing', { replaceState: true });
 				}
 				loading = false;
 				return;
@@ -79,7 +146,7 @@
 			const isCompleted = !error && data?.onboarding_completed;
 
 			if (isCompleted && publicRoutes.includes($page.url.pathname)) {
-				goto('/');
+				goto('/', { replaceState: true });
 			}
 
 			loading = false;
@@ -192,6 +259,43 @@
 					showTutorial = false;
 				}}
 			/>
+		{/if}
+
+		{#if showExitModal}
+			<div
+				transition:fade={{ duration: 150 }}
+				class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4"
+			>
+				<div
+					use:clickOutside={{ handler: () => (showExitModal = false) }}
+					transition:scale={{ start: 0.95, duration: 200, easing: cubicOut }}
+					class="bg-[#151515] w-full max-w-sm rounded-3xl p-6 md:p-8 box-3d flex flex-col gap-6 relative shadow-2xl"
+				>
+					<div class="text-center">
+						<h2 class="text-2xl font-display text-white tracking-wide">Exit Green Bar?</h2>
+						<p class="text-gray-400 text-sm mt-2 leading-relaxed">
+							Are you sure you want to exit the application?
+						</p>
+					</div>
+
+					<div class="flex gap-4 mt-2">
+						<button
+							type="button"
+							class="flex-1 py-3.5 rounded-xl bg-[#222] hover:bg-[#2a2a2a] text-white font-medium box-3d tracking-wide transition-all active:translate-y-1"
+							onclick={() => (showExitModal = false)}
+						>
+							No
+						</button>
+						<button
+							type="button"
+							class="flex-1 py-3.5 rounded-xl bg-[#ff6b6b] hover:bg-[#ff8787] text-black font-bold box-3d tracking-wide transition-all active:translate-y-1"
+							onclick={closeApp}
+						>
+							Yes
+						</button>
+					</div>
+				</div>
+			</div>
 		{/if}
 	</div>
 {:else}
