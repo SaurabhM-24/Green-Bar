@@ -7,9 +7,7 @@
 	import { appState } from '$lib/state.svelte.js';
 	import { appData } from '$lib/data.svelte.js';
 	import Footer from '$lib/components/Footer.svelte';
-	import CorpusCard from '$lib/components/CorpusCard.svelte';
 	import FixedItem from '$lib/components/FixedItem.svelte';
-	import CorpusModal from '$lib/components/editCards/CorpusModal.svelte';
 	import FixedModal from '$lib/components/editCards/FixedModal.svelte';
 	import AddCategoryModal from '$lib/components/editCards/AddCategoryModal.svelte';
 	import { encryptData } from '$lib/crypto';
@@ -21,24 +19,15 @@
 	import { MoreVertical } from 'lucide-svelte';
 
 	let loading = $derived(appData.loading);
-	let corpusBudgets = $derived(appData.corpusBudgets);
 
 	/** @type {any[]} List of fixed budgets for reordering */
 	let fixedBudgets = $state([]);
-	const isCorpusTab = false;
 	let transactionCategories = $derived(appData.transactionCategories);
-
-	let globalLiquidBalance = $derived(appData.globalLiquidBalance);
-	let currentPeriodCorpusUsed = $derived(appData.currentPeriodCorpusUsed);
 
 	let isEditingOrder = $state(false);
 	let isMenuOpen = $state(false);
 	let savingOrder = $state(false);
 	const flipDurationMs = 200;
-
-	let isCorpusModalOpen = $state(false);
-	/** @type {any} */
-	let selectedCorpusBudget = $state(null);
 
 	let isFixedModalOpen = $state(false);
 	let isAddModalOpen = $state(false);
@@ -55,14 +44,11 @@
 
 		if (hasTxs) {
 			pendingDeleteId = id;
-			isCorpusModalOpen = false;
 			isFixedModalOpen = false;
 			showDeactivateModal = true;
 		} else {
 			const { error } = await supabase.from('budgets_encrypted').delete().eq('category_id', id);
 			if (!error) {
-				isCorpusModalOpen = false;
-				selectedCorpusBudget = null;
 				isFixedModalOpen = false;
 				selectedFixedBudget = null;
 				appData.loadData();
@@ -73,7 +59,6 @@
 	async function confirmDeactivate() {
 		if (pendingDeleteId && cryptoStore.dmk) {
 			const b = appData.budgets.find((bd) => bd.category_id === pendingDeleteId) 
-			          || appData.corpusBudgets.find((bd) => bd.category_id === pendingDeleteId)
 			          || appData.fixedBudgets.find((bd) => bd.category_id === pendingDeleteId);
 			if (b) {
 				const payload = { ...b, limit_amount: -1 };
@@ -104,7 +89,7 @@
 		} = await supabase.auth.getSession();
 		const user_id = session?.user?.id;
 
-		const targetBudgets = isCorpusTab ? corpusBudgets : fixedBudgets;
+		const targetBudgets = fixedBudgets;
 		const maxSortOrder =
 			targetBudgets.length > 0
 				? Math.max(...targetBudgets.map((b) => Number(b.sort_order || 0)))
@@ -115,7 +100,7 @@
 			description: data.description || null,
 			limit_amount: data.limit_amount ? Number(data.limit_amount) : 0,
 			icon_name: data.icon_name || null,
-			budget_type: isCorpusTab ? 'corpus' : 'fixed',
+			budget_type: 'fixed',
 			period_type: data.period_type || 'monthly',
 			reset_date: data.reset_date ? Number(data.reset_date) : 1,
 			sort_order: maxSortOrder + 1,
@@ -143,8 +128,7 @@
 	/** @param {any} data */
 	async function handleSave(data) {
 		if (!cryptoStore.dmk) return;
-		const b = appData.corpusBudgets.find((bd) => bd.category_id === data.category_id) 
-		          || appData.fixedBudgets.find((bd) => bd.category_id === data.category_id);
+		const b = appData.fixedBudgets.find((bd) => bd.category_id === data.category_id);
 		if (!b) return;
 
 		const payload = {
@@ -169,8 +153,6 @@
 			.eq('category_id', data.category_id);
 			
 		if (!error) {
-			selectedCorpusBudget = null;
-			isCorpusModalOpen = false;
 			isFixedModalOpen = false;
 			selectedFixedBudget = null;
 			appData.loadData();
@@ -287,28 +269,6 @@
 			></div>
 		</div>
 	{:else}
-		{#if corpusBudgets.length > 0}
-			<h1 class="text-3xl tracking-wide text-white mb-8 px-4 font-display">Corpus Funds</h1>
-			<div id="corpus-list" class="mb-8">
-				{#each corpusBudgets as b, index}
-					<div in:fly={{ y: 20, duration: 400, delay: index * 100 }}>
-						<CorpusCard
-							title={b.category}
-							lockedData={Number(b.limit_amount || 0)}
-							leftData={globalLiquidBalance + currentPeriodCorpusUsed}
-							usedData={-currentPeriodCorpusUsed}
-							iconName={b.icon_name}
-							periodText={getResetText(b)}
-							onclick={() => {
-								selectedCorpusBudget = b;
-								isCorpusModalOpen = true;
-							}}
-						/>
-					</div>
-				{/each}
-			</div>
-		{/if}
-
 		<div class="flex items-center justify-between mb-6 px-4 mt-8">
 			<h1 id="fixed-title" class="text-3xl tracking-wide text-white font-display">Fixed Expenses</h1>
 
@@ -413,17 +373,6 @@
 				{/each}
 			</div>
 		</div>
-	{/if}
-
-	{#if isCorpusModalOpen && selectedCorpusBudget}
-		<CorpusModal
-			budget={selectedCorpusBudget}
-			amountUsed={-currentPeriodCorpusUsed}
-			amountLeft={globalLiquidBalance + currentPeriodCorpusUsed}
-			onclose={() => (isCorpusModalOpen = false)}
-			ondelete={handleDelete}
-			onsave={handleSave}
-		/>
 	{/if}
 
 	{#if isFixedModalOpen && selectedFixedBudget}

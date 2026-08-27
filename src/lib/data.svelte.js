@@ -269,9 +269,8 @@ class DataStore {
 			} else {
 				isPast = true;
 			}
-
 			if (isPast) corpusSum += amount;
-			if (catName.toLowerCase() === 'personal corpus' && !isPast) periodCorpusSum += amount;
+			if ((catName.toLowerCase() === 'personal corpus' || catName.toLowerCase() === 'leftover') && !isPast) periodCorpusSum += amount;
 		});
 
 		this.categoryTotals = totals;

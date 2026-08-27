@@ -253,7 +253,7 @@
 		if (legacyBudgets && legacyBudgets.length > 0) return;
 
 		const payload = {
-			category: 'Personal Corpus',
+			category: 'Leftover',
 			description: 'Unallocated personal funds',
 			limit_amount: 0,
 			icon_name: 'wallet',
