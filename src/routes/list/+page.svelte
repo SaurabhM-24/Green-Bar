@@ -67,6 +67,13 @@
 	/** @type {string} Currently selected category for filtering */
 	let selectedCategory = $state($page.url.searchParams.get('category') || 'All');
 
+	$effect(() => {
+		const urlCat = $page.url.searchParams.get('category');
+		if (urlCat) {
+			selectedCategory = urlCat;
+		}
+	});
+
 	/**
 	 * @description Derived array grouping transactions by their transaction_date.
 	 */
@@ -126,8 +133,12 @@
 			if (txDate.getFullYear() !== listYear || txDate.getMonth() + 1 !== listMonth) return false;
 			
 			if (selectedCategory && selectedCategory !== 'All') {
-				const catObj = categories.find((c) => c.category === selectedCategory);
-				if (catObj && catObj.category_id !== tx.category_id) return false;
+				const catObj = categories.find((c) => c.category?.toLowerCase() === selectedCategory.toLowerCase());
+				if (catObj && catObj.category_id) {
+					if (catObj.category_id !== tx.category_id) return false;
+				} else {
+					if (tx.category?.toLowerCase() !== selectedCategory.toLowerCase()) return false;
+				}
 			}
 			return true;
 		});
@@ -175,6 +186,8 @@
 		const m = listMonth;
 		const y = listYear;
 		const cat = selectedCategory;
+		const allTxs = appData.allTransactions;
+		const cats = categories;
 
 		untrack(() => {
 			loadData();

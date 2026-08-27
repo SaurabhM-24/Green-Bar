@@ -1,5 +1,6 @@
 <script>
 	import { X, ChevronDown } from 'lucide-svelte';
+	import { goto } from '$app/navigation';
 
 	let { budget, isPaid, onclose, ondelete, onsave } = $props();
 
@@ -361,10 +362,12 @@
 						in:fly={{ y: 10, duration: 200, delay: 150, easing: cubicOut }}
 						out:fade={{ duration: 150 }}
 					>
-						<a
-							href="/list?category={budget.category}"
+						<button
 							class="block w-full text-center py-3.5 rounded-xl bg-white hover:bg-gray-200 text-black font-bold box-3d tracking-wide transition-all active:scale-[0.98]"
-							>View Transactions</a
+							onclick={() => {
+								onclose();
+								goto(`/list?category=${encodeURIComponent(budget.category)}`);
+							}}>View Transactions</button
 						>
 						{#if budget.period_type === 'manual'}
 							<button
