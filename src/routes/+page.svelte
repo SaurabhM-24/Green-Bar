@@ -42,11 +42,8 @@
 	/** @type {number} Reserved monthly corpus limit */
 	let corpusLimit = $derived(appData.corpusLimit);
 
-	/** @type {number} The available operational balance (Total Balance - Corpus Limit) */
-	let accountBalance = $derived(totalAccountBalance - corpusLimit);
-
 	/** @type {number} The remaining Leftover cache */
-	let personalCorpus = $derived(globalLiquidBalance + currentPeriodCorpusUsed);
+	let personalCorpus = $derived(appData.corpusLeft);
 
 	/** @type {string} Formatted user name for the greeting */
 	let userName = $derived(appData.userName);
@@ -59,6 +56,7 @@
 	 * @param {number} usedData
 	 */
 	function getProgressColor(totalData, usedData) {
+		if (usedData < 0) return 'bg-green-500';
 		const progress = totalData > 0 ? Math.max(((totalData - usedData) / totalData) * 100, 0) : 0;
 		if (progress > 75) return 'bg-green-500';
 		if (progress > 50) return 'bg-white';
@@ -71,6 +69,7 @@
 	 * @param {number} usedData
 	 */
 	function getProgressWidth(totalData, usedData) {
+		if (usedData < 0) return '100%';
 		const progress = totalData > 0 ? Math.max(((totalData - usedData) / totalData) * 100, 0) : 0;
 		return progress + '%';
 	}

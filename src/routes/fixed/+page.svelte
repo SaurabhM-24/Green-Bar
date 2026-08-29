@@ -58,8 +58,9 @@
 
 	async function confirmDeactivate() {
 		if (pendingDeleteId && cryptoStore.dmk) {
-			const b = appData.budgets.find((bd) => bd.category_id === pendingDeleteId) 
-			          || appData.fixedBudgets.find((bd) => bd.category_id === pendingDeleteId);
+			const b =
+				appData.budgets.find((bd) => bd.category_id === pendingDeleteId) ||
+				appData.fixedBudgets.find((bd) => bd.category_id === pendingDeleteId);
 			if (b) {
 				const payload = { ...b, limit_amount: -1 };
 				delete payload.id;
@@ -71,7 +72,7 @@
 					.from('budgets_encrypted')
 					.update({ encrypted_data: encryptedData })
 					.eq('category_id', pendingDeleteId);
-					
+
 				if (!error) {
 					showDeactivateModal = false;
 					pendingDeleteId = null;
@@ -139,7 +140,8 @@
 			icon_name: data.icon_name,
 			period_type: data.period_type,
 			reset_date: data.reset_date,
-			last_manual_reset: b.last_manual_reset || (data.period_type === 'manual' ? new Date().toISOString() : null)
+			last_manual_reset:
+				b.last_manual_reset || (data.period_type === 'manual' ? new Date().toISOString() : null)
 		};
 		delete payload.id;
 		delete payload.category_id;
@@ -151,7 +153,7 @@
 			.from('budgets_encrypted')
 			.update({ encrypted_data: encryptedData })
 			.eq('category_id', data.category_id);
-			
+
 		if (!error) {
 			isFixedModalOpen = false;
 			selectedFixedBudget = null;
@@ -183,7 +185,7 @@
 		savingOrder = true;
 		try {
 			const updates = fixedBudgets.map(async (b, index) => {
-				const existing = appData.fixedBudgets.find(bd => bd.category_id === b.category_id);
+				const existing = appData.fixedBudgets.find((bd) => bd.category_id === b.category_id);
 				if (!existing) return;
 
 				const payload = { ...existing, sort_order: index };
@@ -191,7 +193,10 @@
 				delete payload.category_id;
 				delete payload.current_period_start;
 
-				const encryptedData = await encryptData(payload, /** @type {CryptoKey} */ (cryptoStore.dmk));
+				const encryptedData = await encryptData(
+					payload,
+					/** @type {CryptoKey} */ (cryptoStore.dmk)
+				);
 				return supabase
 					.from('budgets_encrypted')
 					.update({ encrypted_data: encryptedData })
@@ -269,8 +274,10 @@
 			></div>
 		</div>
 	{:else}
-		<div class="flex items-center justify-between mb-6 px-4 mt-8">
-			<h1 id="fixed-title" class="text-3xl tracking-wide text-white font-display">Fixed Expenses</h1>
+		<div class="flex items-center justify-between mb-6 px-4">
+			<h1 id="fixed-title" class="text-3xl tracking-wide text-white font-display">
+				Fixed Expenses
+			</h1>
 
 			{#if !isEditingOrder}
 				<div class="relative">
@@ -329,7 +336,7 @@
 			{/if}
 		</div>
 
-		<div id="fixed-container-card" class="bg-[#0f0f0f] rounded-3xl p-6 box-3d">
+		<div id="fixed-container-card" class="bg-[#0f0f0f] rounded-3xl p-6 box-3d mb-8">
 			{#if fixedBudgets.length === 0}
 				<div class="text-center py-4 text-gray-500 tracking-wide text-base">
 					No fixed budgets found.

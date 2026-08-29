@@ -19,8 +19,9 @@
 	let variableBudgets = $derived(appData.budgets);
 	let fixedBudgets = $derived(appData.fixedBudgets);
 	let categoryTotals = $derived(appData.categoryTotals);
+	let categoryLeft = $derived(appData.categoryLeft);
 	let totalAccountBalance = $derived(appData.totalAccountBalance);
-	let globalLiquidBalance = $derived(appData.globalLiquidBalance);
+	let corpusLeft = $derived(appData.corpusLeft);
 	let currentPeriodCorpusUsed = $derived(appData.currentPeriodCorpusUsed);
 
 	let isCorpusModalOpen = $state(false);
@@ -50,7 +51,10 @@
 
 		// Variable Budgets
 		variableBudgets.forEach((b) => {
-			const left = Math.max(0, Number(b.limit_amount || 0) - (categoryTotals[b.id] || 0));
+			const left = Math.max(
+				0,
+				categoryLeft[b.id] ?? (Number(b.limit_amount || 0) - (categoryTotals[b.id] || 0))
+			);
 			if (left > 0) {
 				sections.push({
 					id: b.id,
@@ -66,7 +70,10 @@
 
 		// Fixed Budgets
 		fixedBudgets.forEach((b) => {
-			const left = Math.max(0, Number(b.limit_amount || 0) - (categoryTotals[b.id] || 0));
+			const left = Math.max(
+				0,
+				categoryLeft[b.id] ?? (Number(b.limit_amount || 0) - (categoryTotals[b.id] || 0))
+			);
 			if (left > 0) {
 				sections.push({
 					id: b.id,
@@ -252,8 +259,8 @@
 					<CorpusCard
 						title={corpusBudgets[0].category}
 						lockedData={Number(corpusBudgets[0].limit_amount || 0)}
-						leftData={globalLiquidBalance + currentPeriodCorpusUsed}
-						usedData={-currentPeriodCorpusUsed}
+						leftData={corpusLeft}
+						usedData={currentPeriodCorpusUsed}
 						iconName={corpusBudgets[0].icon_name}
 						periodText={getResetText(corpusBudgets[0])}
 						onclick={() => {
@@ -330,8 +337,8 @@
 	{#if isCorpusModalOpen && selectedCorpusBudget}
 		<CorpusModal
 			budget={selectedCorpusBudget}
-			amountUsed={-currentPeriodCorpusUsed}
-			amountLeft={globalLiquidBalance + currentPeriodCorpusUsed}
+			amountUsed={currentPeriodCorpusUsed}
+			amountLeft={corpusLeft}
 			onclose={() => (isCorpusModalOpen = false)}
 			ondelete={handleDelete}
 			onsave={handleSave}

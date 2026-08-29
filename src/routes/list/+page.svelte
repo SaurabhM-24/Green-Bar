@@ -7,7 +7,7 @@
 	import { goto } from '$app/navigation';
 	import { supabase } from '$lib/supabase';
 	import { untrack } from 'svelte';
-	import { appData } from '$lib/data.svelte.js';
+	import { appData, parseDate } from '$lib/data.svelte.js';
 	import TransactionCard from '$lib/components/TransactionCard.svelte';
 	import TransactionDetailsModal from '$lib/components/editCards/TransactionDetailsModal.svelte';
 	import Footer from '$lib/components/Footer.svelte';
@@ -92,7 +92,11 @@
 			let isOutOfCycle = false;
 			const category = categories.find((c) => c.category_id === tx.category_id);
 			if (category && category.current_period_start) {
-				if (new Date(tx.transaction_date) < new Date(category.current_period_start)) {
+				const txCompDate =
+					category.period_type === 'manual' && tx.created_at
+						? new Date(tx.created_at)
+						: parseDate(tx.transaction_date);
+				if (txCompDate < new Date(category.current_period_start)) {
 					isOutOfCycle = true;
 				}
 			}
