@@ -6,12 +6,17 @@
 	import { iconMap } from '$lib/icons.js';
 	let { title, lockedData, leftData, usedData, iconName, periodText, onclick } = $props();
 
+	/** @type {boolean} Indicates if corpus credits exceeded debits this period */
+	let isExtra = $derived(usedData < 0);
+
+	/** @type {number} Positive representation of used or extra amount */
+	let displayUsed = $derived(Math.abs(usedData));
+
 	/**
 	 * @description The initial expendable capacity for the month.
-	 * (Current exact balance left + what was spent this month).
 	 * @type {number}
 	 */
-	let maxExpendableThisMonth = $derived(leftData + usedData);
+	let maxExpendableThisMonth = $derived(isExtra ? leftData : leftData + usedData);
 
 	/** @type {number} Total scale representing locked base plus the starting expendable cash */
 	let visualTotal = $derived(lockedData + maxExpendableThisMonth);
@@ -45,7 +50,9 @@
 	</div>
 
 	<!-- Health Bar (Multi-Segment) -->
-	<div class="h-8 w-full bg-[#1a1a1a] rounded-xl overflow-hidden mb-6 flex box-3d">
+	<div
+		class="relative h-8 w-full bg-[#1a1a1a] rounded-xl overflow-hidden mb-6 flex box-3d items-center"
+	>
 		<div
 			class="h-full bg-white opacity-40 transition-all duration-700 ease-out"
 			style="width: {lockedProgress}%"
@@ -54,9 +61,16 @@
 			class="h-full bg-white transition-all duration-700 ease-out"
 			style="width: {leftProgress}%"
 		></div>
+		{#if isExtra}
+			<div
+				class="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5 text-black font-extrabold text-2xl select-none pointer-events-none drop-shadow"
+			>
+				<span>+</span><span>+</span>
+			</div>
+		{/if}
 	</div>
 
-	<div class="flex justify-between text-sm tracking-wider">
+	<div class="flex justify-between items-end text-sm tracking-wider">
 		<div class="flex flex-col">
 			<span class="text-gray-500 tracking-wider uppercase mb-1 text-xs">Locked</span>
 			<span class="text-gray-400 text-base tracking-wide"
@@ -67,10 +81,25 @@
 			<span class="text-gray-500 tracking-wider uppercase mb-1 text-xs">Left</span>
 			<span class="text-white text-base tracking-wide">₹{leftData.toLocaleString('en-IN')}</span>
 		</div>
-		<div class="flex flex-col text-right">
-			<span class="text-gray-500 tracking-wider uppercase mb-1 text-xs">Used</span>
-			<span class="text-[#ff6b6b] text-base tracking-wide">₹{usedData.toLocaleString('en-IN')}</span
-			>
-		</div>
+		{#if isExtra}
+			<div class="flex flex-col text-right bg-green-500 text-black px-3 py-1 rounded-xl box-3d">
+				<div class="flex items-center justify-end gap-1.5 mb-0.5">
+					<span class="line-through text-black/70 text-xs font-semibold uppercase tracking-wider"
+						>Used</span
+					>
+					<span class="text-black text-xs font-bold uppercase tracking-wider">Extra</span>
+				</div>
+				<span class="text-black text-base font-bold tracking-wide"
+					>₹{displayUsed.toLocaleString('en-IN')}</span
+				>
+			</div>
+		{:else}
+			<div class="flex flex-col text-right">
+				<span class="text-gray-500 tracking-wider uppercase mb-1 text-xs">Used</span>
+				<span class="text-[#ff6b6b] text-base tracking-wide"
+					>₹{displayUsed.toLocaleString('en-IN')}</span
+				>
+			</div>
+		{/if}
 	</div>
 </button>

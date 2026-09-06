@@ -305,12 +305,19 @@
 					<!-- Amounts -->
 					<div class="flex gap-4">
 						<div class="flex-1 flex flex-col gap-1.5 border-r border-gray-800/60 pr-4">
-							<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold"
-								>Amount Used</span
-							>
+							<span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">
+								{#if amountUsed < 0}
+									<span class="line-through">Amount Used</span>
+									<span class="text-green-400 font-bold">Extra</span>
+								{:else}
+									Amount Used
+								{/if}
+							</span>
 							<span
-								class="text-gray-200 text-lg border-b border-transparent w-full inline-block pb-1"
-								>₹{amountUsed.toLocaleString('en-IN')}</span
+								class="text-lg border-b border-transparent w-full inline-block pb-1 {amountUsed < 0
+									? 'text-green-400 font-bold'
+									: 'text-gray-200'}"
+								>₹{Math.abs(amountUsed).toLocaleString('en-IN')}</span
 							>
 						</div>
 						<div class="flex-1 flex flex-col gap-1.5 relative pl-2">

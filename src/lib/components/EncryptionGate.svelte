@@ -86,7 +86,6 @@
 					const rawDmk = base64ToBuffer(decryptedBase64Dmk);
 					const dmk = await importRawKey(rawDmk);
 					
-					await migrateLegacyData(dmk);
 					cryptoStore.setDMK(dmk);
 					success = true;
 					break;
@@ -130,7 +129,6 @@
 				const rawDmk = base64ToBuffer(decryptedBase64Dmk);
 				const dmk = await importRawKey(rawDmk);
 				
-				await migrateLegacyData(dmk);
 				cryptoStore.setDMK(dmk);
 				success = true;
 				successfulPinId = pinRecord.id;
@@ -222,15 +220,13 @@
 			const { error: insertError } = await supabase.from('user_keys').insert(newKeys);
 			if (insertError) throw insertError;
 
+			await setupDefaultEncryptedBudget(dmk);
+
 			if (webAuthnSucceeded) {
-				await setupDefaultEncryptedBudget(dmk);
-				await migrateLegacyData(dmk);
 				cryptoStore.setDMK(dmk);
 			} else {
 				successMsg = "Encryption set up successfully with PIN. (WebAuthn was skipped)";
-				await setupDefaultEncryptedBudget(dmk);
-				await migrateLegacyData(dmk);
-				setTimeout(() => { cryptoStore.setDMK(dmk); }, 4000);
+				setTimeout(() => { cryptoStore.setDMK(dmk); }, 2000);
 			}
 
 		} catch (err) {
@@ -246,11 +242,13 @@
 	 * @param {CryptoKey} dmk
 	 */
 	async function setupDefaultEncryptedBudget(dmk) {
-		const { data: existingEncrypted } = await supabase.from('budgets_encrypted').select('category_id').eq('user_id', session.user.id).limit(1);
-		if (existingEncrypted && existingEncrypted.length > 0) return;
+		const { data: existingEncrypted } = await supabase
+			.from('budgets_encrypted')
+			.select('category_id')
+			.eq('user_id', session.user.id)
+			.limit(1);
 
-		const { data: legacyBudgets } = await supabase.from('budgets').select('category_id').eq('user_id', session.user.id).limit(1);
-		if (legacyBudgets && legacyBudgets.length > 0) return;
+		if (existingEncrypted && existingEncrypted.length > 0) return;
 
 		const payload = {
 			category: 'Leftover',
@@ -269,73 +267,6 @@
 			user_id: session.user.id,
 			encrypted_data: encryptedData
 		});
-	}
-
-	/**
-	 * @param {CryptoKey} dmk
-	 */
-	async function migrateLegacyData(dmk) {
-		const { data: legacyBudgets } = await supabase.from('budgets').select('*').eq('user_id', session.user.id);
-		const { data: legacyTransactions } = await supabase.from('transactions').select('*').eq('user_id', session.user.id);
-
-		if ((!legacyBudgets || legacyBudgets.length === 0) && (!legacyTransactions || legacyTransactions.length === 0)) {
-			return; // nothing to migrate
-		}
-
-		isProcessing = true;
-		successMsg = "Migrating legacy data to encrypted storage... Please wait.";
-
-		if (legacyBudgets && legacyBudgets.length > 0) {
-			const encryptedBudgets = await Promise.all(legacyBudgets.map(async (b) => {
-				const payload = {
-					category: b.category,
-					description: b.description || null,
-					limit_amount: b.limit_amount ? Number(b.limit_amount) : 0,
-					icon_name: b.icon_name || null,
-					budget_type: b.budget_type || 'variable',
-					period_type: b.period_type || 'monthly',
-					reset_date: b.reset_date ? Number(b.reset_date) : 1,
-					sort_order: b.sort_order ? Number(b.sort_order) : 0,
-					last_manual_reset: b.last_manual_reset ? new Date(b.last_manual_reset).toISOString() : (b.period_type === 'manual' ? new Date().toISOString() : null)
-				};
-				const enc = await encryptData(payload, dmk);
-				return { category_id: b.category_id, user_id: session.user.id, encrypted_data: enc };
-			}));
-			
-			// batch insert to budgets_encrypted
-			await supabase.from('budgets_encrypted').insert(encryptedBudgets);
-		}
-
-		if (legacyTransactions && legacyTransactions.length > 0) {
-			const encryptedTxs = await Promise.all(legacyTransactions.map(async (tx) => {
-				const payload = {
-					transaction_date: tx.transaction_date,
-					amount: Number(tx.amount),
-					title: tx.title || tx.details || '',
-					description: tx.description || null,
-					category_id: tx.category_id || null,
-					transaction_type: tx.transaction_type || (Number(tx.amount) < 0 ? 'debit' : 'credit'),
-					created_at: tx.created_at ? new Date(tx.created_at).toISOString() : new Date().toISOString()
-				};
-				const enc = await encryptData(payload, dmk);
-				return { id: tx.id, user_id: session.user.id, encrypted_data: enc };
-			}));
-			
-			// batch insert. chunk it to respect request size limits
-			const chunkSize = 500;
-			for (let i = 0; i < encryptedTxs.length; i += chunkSize) {
-				const chunk = encryptedTxs.slice(i, i + chunkSize);
-				await supabase.from('transactions_encrypted').insert(chunk);
-			}
-			await supabase.from('transactions').delete().eq('user_id', session.user.id);
-		}
-
-		// Delete budgets AFTER transactions to prevent foreign key constraint violations
-		if (legacyBudgets && legacyBudgets.length > 0) {
-			await supabase.from('budgets').delete().eq('user_id', session.user.id);
-		}
-		
-		successMsg = "Migration complete.";
 	}
 </script>
 

@@ -11,6 +11,8 @@
 	import { Plus } from 'lucide-svelte';
 	import { appState } from '$lib/state.svelte.js';
 	import { appData } from '$lib/data.svelte.js';
+	import OnboardingOverlay from '$lib/components/OnboardingOverlay.svelte';
+	import TutorialPromptModal from '$lib/components/TutorialPromptModal.svelte';
 	import TutorialOverlay from '$lib/components/TutorialOverlay.svelte';
 	import EncryptionGate from '$lib/components/EncryptionGate.svelte';
 	import { cryptoStore } from '$lib/cryptoStore.svelte';
@@ -28,6 +30,8 @@
 	/** @type {boolean} Global loading state for authentication check */
 	let loading = $state(true);
 
+	let showOnboarding = $state(false);
+	let showTutorialPrompt = $state(false);
 	let showTutorial = $state(false);
 	let showExitModal = $state(false);
 
@@ -176,13 +180,18 @@
 		}
 	});
 
-	let tutorialStartStep = $state(1);
-
+	/**
+	 * @description Effect: Checks onboarding and tutorial prompt status.
+	 */
 	$effect(() => {
 		const path = $page.url.pathname;
-		
-		async function checkTutorial() {
-			if (!session) return;
+
+		async function checkOnboardingAndTutorial() {
+			if (!session || !cryptoStore.isUnlocked) {
+				showOnboarding = false;
+				showTutorialPrompt = false;
+				return;
+			}
 
 			const { data, error } = await supabase
 				.from('profiles')
@@ -190,25 +199,61 @@
 				.eq('id', session.user.id)
 				.single();
 
-			const isCompleted = !error && data?.onboarding_completed;
+			const isOnboardingCompleted = !error && data?.onboarding_completed;
 
-			if (!isCompleted) {
-				// Must complete welcome flow
-				tutorialStartStep = 1;
-				showTutorial = true;
-			} else {
+			if (!isOnboardingCompleted) {
+				showOnboarding = true;
+				showTutorialPrompt = false;
 				showTutorial = false;
+			} else {
+				showOnboarding = false;
+				let tutorialStatus = null;
+				try {
+					tutorialStatus = localStorage.getItem('greenbar_tutorial_status');
+				} catch (e) {}
+
+				if (tutorialStatus !== 'completed' && path === '/' && !showTutorial) {
+					showTutorialPrompt = true;
+				} else {
+					showTutorialPrompt = false;
+				}
 			}
 		}
 
-		if (session && path === '/') {
-			if (cryptoStore.isUnlocked) {
-				checkTutorial();
-			} else {
-				showTutorial = false;
-			}
-		}
+		checkOnboardingAndTutorial();
 	});
+
+	function handleOnboardingComplete() {
+		showOnboarding = false;
+		let tutorialStatus = null;
+		try {
+			tutorialStatus = localStorage.getItem('greenbar_tutorial_status');
+		} catch (e) {}
+
+		if (tutorialStatus !== 'completed') {
+			showTutorialPrompt = true;
+		}
+	}
+
+	function handleTutorialStart() {
+		showTutorialPrompt = false;
+		showTutorial = true;
+	}
+
+	function handleTutorialSkip() {
+		showTutorialPrompt = false;
+		try {
+			localStorage.setItem('greenbar_tutorial_status', 'completed');
+		} catch (e) {}
+	}
+
+	function handleTutorialComplete() {
+		showTutorial = false;
+		showTutorialPrompt = false;
+		try {
+			localStorage.setItem('greenbar_tutorial_status', 'completed');
+		} catch (e) {}
+	}
 </script>
 
 <svelte:head>
@@ -252,13 +297,19 @@
 			</a>
 		{/if}
 
-		{#if showTutorial}
-			<TutorialOverlay
-				startStep={tutorialStartStep}
-				onComplete={() => {
-					showTutorial = false;
-				}}
+		{#if showOnboarding}
+			<OnboardingOverlay onComplete={handleOnboardingComplete} />
+		{/if}
+
+		{#if showTutorialPrompt}
+			<TutorialPromptModal
+				onStart={handleTutorialStart}
+				onSkip={handleTutorialSkip}
 			/>
+		{/if}
+
+		{#if showTutorial}
+			<TutorialOverlay onComplete={handleTutorialComplete} />
 		{/if}
 
 		{#if showExitModal}

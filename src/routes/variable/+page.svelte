@@ -56,7 +56,7 @@
 
 	async function confirmDeactivate() {
 		if (pendingDeleteId && cryptoStore.dmk) {
-			const b = appData.budgets.find(bd => bd.category_id === pendingDeleteId);
+			const b = appData.budgets.find((bd) => bd.category_id === pendingDeleteId);
 			if (b) {
 				const payload = { ...b, limit_amount: -1 };
 				delete payload.id;
@@ -133,7 +133,8 @@
 			icon_name: data.icon_name,
 			period_type: data.period_type,
 			reset_date: data.reset_date,
-			last_manual_reset: b.last_manual_reset || (data.period_type === 'manual' ? new Date().toISOString() : null)
+			last_manual_reset:
+				b.last_manual_reset || (data.period_type === 'manual' ? new Date().toISOString() : null)
 		};
 		delete payload.id;
 		delete payload.category_id;
@@ -145,7 +146,7 @@
 			.from('budgets_encrypted')
 			.update({ encrypted_data: encryptedData })
 			.eq('category_id', data.category_id);
-			
+
 		if (!error) {
 			isModalOpen = false;
 			selectedBudget = null;
@@ -178,7 +179,7 @@
 		try {
 			// Update each budget's sort_order based on its index
 			const updates = budgets.map(async (b, index) => {
-				const existing = appData.budgets.find(bd => bd.category_id === b.category_id);
+				const existing = appData.budgets.find((bd) => bd.category_id === b.category_id);
 				if (!existing) return;
 
 				const payload = { ...existing, sort_order: index };
@@ -186,7 +187,10 @@
 				delete payload.category_id;
 				delete payload.current_period_start;
 
-				const encryptedData = await encryptData(payload, /** @type {CryptoKey} */ (cryptoStore.dmk));
+				const encryptedData = await encryptData(
+					payload,
+					/** @type {CryptoKey} */ (cryptoStore.dmk)
+				);
 				return supabase
 					.from('budgets_encrypted')
 					.update({ encrypted_data: encryptedData })
@@ -258,8 +262,10 @@
 	}}
 >
 	<!-- Header area -->
-	<div class="flex items-center justify-between mb-8 px-4">
-		<h1 id="variable-title" class="text-3xl tracking-wide text-white font-display">Variable Expenses</h1>
+	<div class="flex items-center justify-between mb-6 px-4">
+		<h1 id="variable-title" class="text-3xl tracking-wide text-white font-display">
+			Variable Expenses
+		</h1>
 
 		{#if !isEditingOrder}
 			<div class="relative">
@@ -275,7 +281,7 @@
 				</button>
 				{#if isMenuOpen}
 					<div
-						class="absolute right-0 mt-2 w-48 bg-[#1a1a1a] rounded-xl box-3d z-[250] overflow-hidden"
+						class="absolute right-0 mt-2 w-48 bg-[#1a1a1a] rounded-xl box-3d z-[60] overflow-hidden"
 						transition:slide={{ duration: 250, easing: cubicOut }}
 					>
 						<button
@@ -325,7 +331,7 @@
 			></div>
 		</div>
 	{:else if budgets.length === 0}
-		<div class="text-center mt-12 text-gray-500 tracking-wide text-base">
+		<div id="variable-empty-state" class="text-center mt-12 text-gray-500 tracking-wide text-base">
 			No variable budgets found.
 		</div>
 	{:else}
@@ -372,10 +378,13 @@
 		<VariableModal
 			budget={selectedBudget}
 			amountUsed={categoryTotals[selectedBudget.id] || 0}
-			amountLeft={Math.max(
-				0,
-				Number(selectedBudget.limit_amount || 0) - (categoryTotals[selectedBudget.id] || 0)
-			)}
+			amountLeft={appData.categoryLeft[selectedBudget.id] ??
+				((categoryTotals[selectedBudget.id] || 0) < 0
+					? Number(selectedBudget.limit_amount || 0)
+					: Math.max(
+							0,
+							Number(selectedBudget.limit_amount || 0) - (categoryTotals[selectedBudget.id] || 0)
+						))}
 			onclose={() => (isModalOpen = false)}
 			ondelete={handleDelete}
 			onsave={handleSave}

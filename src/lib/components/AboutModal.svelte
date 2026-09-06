@@ -46,6 +46,18 @@
 		</div>
 
 		<div class="flex flex-col gap-3 relative z-10 mt-2">
+			<button
+				type="button"
+				class="w-full py-3.5 rounded-xl bg-[#222] hover:bg-[#2a2a2a] text-white font-medium box-3d tracking-wide transition-all active:scale-[0.98] cursor-pointer"
+				onclick={() => {
+					try {
+						localStorage.removeItem('greenbar_tutorial_status');
+					} catch (e) {}
+					window.location.href = '/';
+				}}
+			>
+				Replay App Tutorial
+			</button>
 			<a
 				href="https://github.com/SaurabhM-24/Green-Bar"
 				target="_blank"
@@ -56,7 +68,7 @@
 				View on GitHub
 			</a>
 			<button
-				class="w-full py-3.5 rounded-xl bg-[#222] hover:bg-[#2a2a2a] text-white font-medium box-3d tracking-wide transition-all active:scale-[0.98]"
+				class="w-full py-3.5 rounded-xl bg-[#181818] hover:bg-[#222] text-gray-400 hover:text-white font-medium box-3d tracking-wide transition-all active:scale-[0.98] cursor-pointer"
 				onclick={onclose}
 			>
 				Close

@@ -10,7 +10,7 @@
 
 	/** @type {number} Derived progress percentage. Prevents division by zero. */
 	let progress = $derived(
-		totalData > 0 ? Math.max(((totalData - usedData) / totalData) * 100, 0) : 0
+		usedData < 0 ? 100 : totalData > 0 ? Math.max(((totalData - usedData) / totalData) * 100, 0) : 0
 	);
 
 	let radius = 28;

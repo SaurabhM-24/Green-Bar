@@ -7,7 +7,7 @@
 	import { goto } from '$app/navigation';
 	import { supabase } from '$lib/supabase';
 	import { untrack } from 'svelte';
-	import { appData } from '$lib/data.svelte.js';
+	import { appData, parseDate } from '$lib/data.svelte.js';
 	import TransactionCard from '$lib/components/TransactionCard.svelte';
 	import TransactionDetailsModal from '$lib/components/editCards/TransactionDetailsModal.svelte';
 	import Footer from '$lib/components/Footer.svelte';
@@ -92,7 +92,11 @@
 			let isOutOfCycle = false;
 			const category = categories.find((c) => c.category_id === tx.category_id);
 			if (category && category.current_period_start) {
-				if (new Date(tx.transaction_date) < new Date(category.current_period_start)) {
+				const txCompDate =
+					category.period_type === 'manual' && tx.created_at
+						? new Date(tx.created_at)
+						: parseDate(tx.transaction_date);
+				if (txCompDate < new Date(category.current_period_start)) {
 					isOutOfCycle = true;
 				}
 			}
@@ -202,6 +206,8 @@
 			selectedTransaction = null;
 			await appData.loadData();
 			loadData();
+		} else {
+			alert('Failed to delete transaction: ' + error.message);
 		}
 	}
 
@@ -234,6 +240,8 @@
 			selectedTransaction = null;
 			await appData.loadData();
 			loadData();
+		} else {
+			alert('Failed to update transaction: ' + error.message);
 		}
 	}
 
@@ -265,6 +273,7 @@
 
 		<div class="relative z-40">
 			<button
+				id="history-filter-btn"
 				class="bg-[#111111] text-gray-300 text-sm tracking-wide py-3 px-4 rounded-xl focus:outline-none box-3d flex items-center gap-2"
 				onclick={() => {
 					isFilterMenuOpen = !isFilterMenuOpen;
@@ -423,7 +432,7 @@
 			></div>
 		</div>
 	{:else if transactions.length === 0}
-		<div class="text-center mt-12 bg-[#0a0a0a] rounded-3xl p-8 flex flex-col items-center box-3d">
+		<div id="transaction-list-empty" class="text-center mt-12 bg-[#0a0a0a] rounded-3xl p-8 flex flex-col items-center box-3d">
 			<span class="text-gray-500 tracking-wide text-base mb-4">No transactions found.</span>
 			<button
 				onclick={() => goto('/add')}

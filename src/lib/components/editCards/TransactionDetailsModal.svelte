@@ -18,6 +18,7 @@
 
 	let isEditing = $state(false);
 	let isDeleting = $state(false);
+	let loading = $state(false);
 
 	// svelte-ignore state_referenced_locally
 	let editData = $state({ ...transaction });
@@ -30,12 +31,28 @@
 		editData = { ...transaction, amount: Math.abs(transaction.amount) };
 	}
 
-	function handleSave() {
-		let finalAmount = Math.abs(editData.amount);
-		if (editData.transaction_type?.toLowerCase() === 'debit') {
-			finalAmount = -finalAmount;
+	async function handleSave() {
+		if (loading) return;
+		loading = true;
+		try {
+			let finalAmount = Math.abs(editData.amount);
+			if (editData.transaction_type?.toLowerCase() === 'debit') {
+				finalAmount = -finalAmount;
+			}
+			await onsave({ ...editData, amount: finalAmount });
+		} finally {
+			loading = false;
 		}
-		onsave({ ...editData, amount: finalAmount });
+	}
+
+	async function handleDelete() {
+		if (loading) return;
+		loading = true;
+		try {
+			await ondelete(transaction.id);
+		} finally {
+			loading = false;
+		}
 	}
 
 	let isDebit = $derived(transaction.transaction_type?.toLowerCase() === 'debit');
@@ -334,14 +351,23 @@
 						</p>
 						<div class="flex gap-4">
 							<button
-								class="flex-1 py-3.5 rounded-xl bg-[#222] hover:bg-[#2a2a2a] text-white font-medium box-3d tracking-wide transition-all active:scale-[0.98]"
-								onclick={() => (isDeleting = false)}>Cancel</button
+								class="flex-1 py-3.5 rounded-xl bg-[#222] hover:bg-[#2a2a2a] text-white font-medium box-3d tracking-wide transition-all active:scale-[0.98] disabled:opacity-50"
+								onclick={() => (isDeleting = false)}
+								disabled={loading}>Cancel</button
 							>
 							<button
 								id="modal-confirm-delete-btn"
-								class="flex-1 py-3.5 rounded-xl bg-[#ff6b6b] hover:bg-[#ff8787] text-black font-bold box-3d tracking-wide transition-all active:scale-[0.98]"
-								onclick={() => ondelete(transaction.id)}>Confirm Delete</button
+								class="flex-1 py-3.5 rounded-xl bg-[#ff6b6b] hover:bg-[#ff8787] text-black font-bold box-3d tracking-wide transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+								onclick={handleDelete}
+								disabled={loading}
 							>
+								{#if loading}
+									<div class="h-4 w-4 rounded-full border-2 border-black border-t-transparent animate-spin"></div>
+									<span>Deleting...</span>
+								{:else}
+									<span>Confirm Delete</span>
+								{/if}
+							</button>
 						</div>
 					</div>
 				{:else if isEditing}
@@ -351,16 +377,25 @@
 						out:fade={{ duration: 150 }}
 					>
 						<button
-							class="flex-1 py-3.5 rounded-xl bg-[#222] hover:bg-[#2a2a2a] text-white font-medium box-3d tracking-wide transition-all active:scale-[0.98]"
+							class="flex-1 py-3.5 rounded-xl bg-[#222] hover:bg-[#2a2a2a] text-white font-medium box-3d tracking-wide transition-all active:scale-[0.98] disabled:opacity-50"
 							onclick={() => {
 								isEditing = false;
 								editData = { ...transaction };
-							}}>Cancel</button
+							}}
+							disabled={loading}>Cancel</button
 						>
 						<button
-							class="flex-1 py-3.5 rounded-xl bg-white hover:bg-gray-200 text-black font-bold box-3d tracking-wide transition-all active:scale-[0.98]"
-							onclick={handleSave}>Save</button
+							class="flex-1 py-3.5 rounded-xl bg-white hover:bg-gray-200 text-black font-bold box-3d tracking-wide transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+							onclick={handleSave}
+							disabled={loading}
 						>
+							{#if loading}
+								<div class="h-4 w-4 rounded-full border-2 border-black border-t-transparent animate-spin"></div>
+								<span>Saving...</span>
+							{:else}
+								<span>Save</span>
+							{/if}
+						</button>
 					</div>
 				{:else}
 					<div
