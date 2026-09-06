@@ -352,15 +352,9 @@ class DataStore {
 		const corpusCatId = corpusBudgetObj ? corpusBudgetObj.category_id : null;
 		const corpusNetSpent = corpusCatId ? categoryNetSpent[corpusCatId] || 0 : 0;
 
-		let calculatedCorpusLeft = 0;
-		let corpusExtra = 0;
-		if (corpusNetSpent < 0) {
-			calculatedCorpusLeft = leftAtReset; // Clamped to left_at_reset
-			corpusExtra = Math.abs(corpusNetSpent);
-		} else {
-			calculatedCorpusLeft = leftAtReset - corpusNetSpent;
-			corpusExtra = 0;
-		}
+		// Current liquid balance = money at reset minus net spent (credits increase balance, debits decrease balance)
+		const calculatedCorpusLeft = leftAtReset - corpusNetSpent;
+		const corpusExtra = corpusNetSpent < 0 ? Math.abs(corpusNetSpent) : 0;
 
 		this.categoryTotals = categoryUsed;
 		this.categoryCredits = {};

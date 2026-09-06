@@ -93,23 +93,16 @@
 			}
 
 			if (userId) {
-				// 1. Delete transactions_encrypted
-				await supabase.from('transactions_encrypted').delete().eq('user_id', userId);
+				// Call atomic RPC delete_user function
+				const { error: rpcErr } = await supabase.rpc('delete_user');
 
-				// 2. Delete budgets_encrypted
-				await supabase.from('budgets_encrypted').delete().eq('user_id', userId);
-
-				// 3. Delete user_keys
-				await supabase.from('user_keys').delete().eq('user_id', userId);
-
-				// 4. Delete profile
-				await supabase.from('profiles').delete().eq('id', userId);
-
-				// 5. Delete from auth.users using RPC if configured
-				try {
-					await supabase.rpc('delete_user');
-				} catch (rpcErr) {
-					console.warn('delete_user RPC call note:', rpcErr);
+				if (rpcErr) {
+					console.warn('delete_user RPC failed, falling back to manual cascade:', rpcErr);
+					// Fallback manual deletes
+					await supabase.from('transactions_encrypted').delete().eq('user_id', userId);
+					await supabase.from('budgets_encrypted').delete().eq('user_id', userId);
+					await supabase.from('user_keys').delete().eq('user_id', userId);
+					await supabase.from('profiles').delete().eq('id', userId);
 				}
 			}
 

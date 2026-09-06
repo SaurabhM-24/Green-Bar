@@ -8,7 +8,7 @@
 	import { ChevronRight, ChevronLeft, Check } from 'lucide-svelte';
 	import { supabase } from '$lib/supabase';
 	import { appData } from '$lib/data.svelte.js';
-	import { encryptData } from '$lib/crypto';
+	import { encryptData, decryptData } from '$lib/crypto';
 	import { cryptoStore } from '$lib/cryptoStore.svelte';
 
 	let { onComplete } = $props();
@@ -24,6 +24,8 @@
 	}
 
 	async function handleSaveInitialBalance() {
+		if (loading) return;
+
 		const {
 			data: { session }
 		} = await supabase.auth.getSession();
@@ -35,47 +37,87 @@
 		}
 
 		loading = true;
-		let category_id = appData.corpusBudgets.find(
-			(b) => b.category.toLowerCase() === 'leftover'
-		)?.category_id;
+		try {
+			let category_id = appData.corpusBudgets.find(
+				(b) => b.category?.toLowerCase() === 'leftover'
+			)?.category_id || appData.corpusBudgets[0]?.category_id;
 
-		if (!category_id) {
-			const { data } = await supabase
-				.from('budgets_encrypted')
-				.select('*')
-				.eq('user_id', session.user.id);
-			
-			// Fallback: check if we have leftover in decrypted budgets
-			const found = appData.corpusBudgets[0]?.category_id;
-			if (found) category_id = found;
-		}
+			if (!category_id && cryptoStore.dmk) {
+				const { data: rawBudgets } = await supabase
+					.from('budgets_encrypted')
+					.select('*')
+					.eq('user_id', session.user.id);
 
-		if (cryptoStore.dmk) {
-			const payload = {
-				amount: Number(initialBalance),
-				transaction_type: 'credit',
-				title: 'Initial account status',
-				description: null,
-				category_id: category_id || null,
-				transaction_date: '2000-01-01',
-				created_at: new Date().toISOString()
-			};
-			const encryptedData = await encryptData(payload, cryptoStore.dmk);
-			const { error } = await supabase.from('transactions_encrypted').insert([
-				{
-					id: crypto.randomUUID(),
-					user_id: session.user.id,
-					encrypted_data: encryptedData
+				if (rawBudgets && rawBudgets.length > 0) {
+					for (const row of rawBudgets) {
+						try {
+							const plaintext = await decryptData(row.encrypted_data, cryptoStore.dmk);
+							const parsed = JSON.parse(plaintext);
+							if (parsed.budget_type === 'corpus' || parsed.category?.toLowerCase() === 'leftover') {
+								category_id = row.category_id;
+								break;
+							}
+						} catch (e) {}
+					}
+					if (!category_id && rawBudgets[0]?.category_id) {
+						category_id = rawBudgets[0].category_id;
+					}
+				} else {
+					// Create the Leftover category if missing
+					const newCatId = crypto.randomUUID();
+					const payload = {
+						category: 'Leftover',
+						description: 'Unallocated personal funds',
+						limit_amount: 0,
+						icon_name: 'wallet',
+						budget_type: 'corpus',
+						period_type: 'monthly',
+						reset_date: 1,
+						sort_order: 0,
+						last_manual_reset: null
+					};
+					const enc = await encryptData(payload, cryptoStore.dmk);
+					await supabase.from('budgets_encrypted').insert({
+						category_id: newCatId,
+						user_id: session.user.id,
+						encrypted_data: enc
+					});
+					category_id = newCatId;
 				}
-			]);
-			if (error) {
-				console.error('Error saving initial balance:', error);
-				alert('Error saving balance: ' + error.message);
 			}
-		}
 
-		loading = false;
-		step = 3;
+			if (cryptoStore.dmk) {
+				const todayStr = new Date().toISOString().split('T')[0];
+				const payload = {
+					amount: Number(initialBalance),
+					transaction_type: 'credit',
+					title: 'Initial account status',
+					description: null,
+					category_id: category_id || null,
+					transaction_date: todayStr,
+					created_at: new Date().toISOString()
+				};
+				const encryptedData = await encryptData(payload, cryptoStore.dmk);
+				const { error } = await supabase.from('transactions_encrypted').insert([
+					{
+						id: crypto.randomUUID(),
+						user_id: session.user.id,
+						encrypted_data: encryptedData
+					}
+				]);
+				if (error) {
+					console.error('Error saving initial balance:', error);
+					alert('Error saving balance: ' + error.message);
+					return;
+				}
+			}
+
+			step = 3;
+		} catch (err) {
+			console.error('Failed to save initial balance:', err);
+		} finally {
+			loading = false;
+		}
 	}
 
 	async function finishOnboarding() {
@@ -130,13 +172,12 @@
 					Welcome to Green Bar
 				</h1>
 				<p class="text-gray-400 text-lg leading-relaxed mb-6">
-					A gamified expense tracker where every rupee gets a job. By dividing your money into
-					specific categories upfront, you take total control of your finances.
+					A purposeful money management app where every rupee gets a job. By setting spending limits upfront and monitoring your budget health in real time, you stay in total control of your finances without the guesswork.
 				</p>
 				<div class="bg-[#1a1a1a] border border-gray-800 p-4 rounded-2xl mb-8">
-					<strong class="text-white block mb-1">💡 Pro Tip: <br /> Download the webapp</strong>
+					<strong class="text-white block mb-1">💡 Pro Tip: Install as an App</strong>
 					<span class="text-sm text-gray-400">
-						Tap the Share button in your browser and select <strong>"Add to Home Screen"</strong> for the best app experience.
+						Tap your browser's share or menu icon and select <strong>"Add to Home Screen"</strong> for a fast, native-like experience.
 					</span>
 				</div>
 				<button
@@ -149,10 +190,10 @@
 			{:else if step === 2}
 				<!-- Card 2: Initial Balance -->
 				<h1 class="text-4xl font-display text-white mb-4 tracking-wide leading-tight">
-					Fill Your Vault
+					Set Your Starting Balance
 				</h1>
 				<p class="text-gray-400 text-base leading-relaxed mb-6">
-					To begin using the app, enter your current bank balance. This will become your <strong>Leftover</strong> in the app.
+					Enter your current available bank balance to fund your vault. This becomes your unassigned <strong>Leftover</strong> pool, ready to be divided into specific budgets.
 				</p>
 				<div
 					class="flex items-center text-5xl tracking-wide font-bold text-white border-b-2 border-gray-800 focus-within:border-white transition-colors w-full pb-2 mb-8"
@@ -191,10 +232,10 @@
 						<Check class="w-10 h-10 text-green-500" strokeWidth={3} />
 					</div>
 					<h1 class="text-4xl font-display text-white mb-4 tracking-wide leading-tight">
-						Initial Setup Complete
+						You're Ready to Roll!
 					</h1>
 					<p class="text-gray-400 text-base leading-relaxed mb-8">
-						Your Leftover is ready. Now let's step inside the app to allocate this money into categories.
+						Your initial balance has been recorded in your private, encrypted vault. Let's head to your dashboard and start organizing your money.
 					</p>
 					<button
 						class="w-full bg-white text-black font-bold py-4 text-xl rounded-2xl box-3d flex justify-center items-center gap-2 transition-transform active:scale-95 disabled:opacity-50 cursor-pointer"

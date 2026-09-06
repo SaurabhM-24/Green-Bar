@@ -206,6 +206,8 @@
 			selectedTransaction = null;
 			await appData.loadData();
 			loadData();
+		} else {
+			alert('Failed to delete transaction: ' + error.message);
 		}
 	}
 
@@ -238,6 +240,8 @@
 			selectedTransaction = null;
 			await appData.loadData();
 			loadData();
+		} else {
+			alert('Failed to update transaction: ' + error.message);
 		}
 	}
 

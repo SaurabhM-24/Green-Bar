@@ -44,6 +44,8 @@
 	 * @description Handles the transaction submission process to Supabase.
 	 */
 	async function handleSubmit() {
+		if (loading) return;
+
 		if (!amount || !title || !category) {
 			errorMessage = 'Please fill Amount, Title, and Category fields';
 			showError = true;
@@ -53,63 +55,76 @@
 			return;
 		}
 
-		if (loading) return;
+		if (!cryptoStore.dmk) {
+			errorMessage = 'Vault is locked. Cannot encrypt transaction.';
+			showError = true;
+			return;
+		}
 
 		loading = true;
-		const parsedAmount = Math.abs(Number(amount));
-		const finalAmount = type === 'debit' ? -parsedAmount : parsedAmount;
+		try {
+			const parsedAmount = Math.abs(Number(amount));
+			const finalAmount = type === 'debit' ? -parsedAmount : parsedAmount;
 
-		if (!cryptoStore.dmk) return;
-		const {
-			data: { session }
-		} = await supabase.auth.getSession();
-		const user_id = session?.user?.id;
-		
-		const targetCat =
-			categories.find((c) => c.category === category) ||
-			appData.budgets.find((b) => b.category === category) ||
-			appData.corpusBudgets.find((b) => b.category === category) ||
-			appData.fixedBudgets.find((b) => b.category === category);
-
-		const payload = {
-			transaction_date: date,
-			amount: finalAmount,
-			title: title,
-			description: description || null,
-			category_id: targetCat ? targetCat.category_id : null,
-			transaction_type: type,
-			created_at: new Date().toISOString()
-		};
-
-		const encryptedData = await encryptData(payload, cryptoStore.dmk);
-
-		const { error } = await supabase.from('transactions_encrypted').insert([
-			{
-				id: crypto.randomUUID(),
-				user_id: user_id,
-				encrypted_data: encryptedData
+			const {
+				data: { session }
+			} = await supabase.auth.getSession();
+			const user_id = session?.user?.id;
+			if (!user_id) {
+				throw new Error('User session not found.');
 			}
-		]);
+			
+			const targetCat =
+				categories.find((c) => c.category === category) ||
+				appData.budgets.find((b) => b.category === category) ||
+				appData.corpusBudgets.find((b) => b.category === category) ||
+				appData.fixedBudgets.find((b) => b.category === category);
 
-		if (!error) {
-			successMsg = true;
-			// Reset fields
-			amount = '';
-			title = '';
-			description = '';
-			category = '';
+			const payload = {
+				transaction_date: date,
+				amount: finalAmount,
+				title: title,
+				description: description || null,
+				category_id: targetCat ? targetCat.category_id : null,
+				transaction_type: type,
+				created_at: new Date().toISOString()
+			};
 
-			// Reload global data across the app to reflect new transaction
-			appData.loadData();
+			const encryptedData = await encryptData(payload, cryptoStore.dmk);
 
-			setTimeout(() => {
-				successMsg = false;
-				goto('/list');
-			}, 2000);
-		} else {
-			alert('Failed to save transaction: ' + error.message);
+			const { error } = await supabase.from('transactions_encrypted').insert([
+				{
+					id: crypto.randomUUID(),
+					user_id: user_id,
+					encrypted_data: encryptedData
+				}
+			]);
+
+			if (!error) {
+				successMsg = true;
+				// Reset fields
+				amount = '';
+				title = '';
+				description = '';
+				category = '';
+
+				// Reload global data across the app to reflect new transaction
+				await appData.loadData();
+
+				setTimeout(() => {
+					successMsg = false;
+					goto('/list');
+				}, 2000);
+			} else {
+				alert('Failed to save transaction: ' + error.message);
+			}
+		} catch (err) {
+			const error = /** @type {Error} */ (err);
+			errorMessage = error.message || 'Failed to save transaction.';
+			showError = true;
+		} finally {
+			loading = false;
 		}
-		loading = false;
 	}
 
 	let isCategoryDropdownOpen = $state(false);
